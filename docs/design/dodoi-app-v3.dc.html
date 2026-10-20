@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3ECF4;font-family:"DM Sans",system-ui,sans-serif;color:#2B2233;-webkit-font-smoothing:antialiased}
+a{color:#C04A37;text-decoration:none}a:hover{text-decoration:underline}
+*{box-sizing:border-box}
+@keyframes ddUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes ddPop{0%{transform:scale(.6)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes ddFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes ddStripe{to{background-position:25.46px 0,0 0}}
+@keyframes ddTwinkle{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.25) rotate(20deg)}}
+@keyframes ddPulse{0%{box-shadow:0 0 0 0 rgba(192,74,55,.5)}100%{box-shadow:0 0 0 8px rgba(192,74,55,0)}}
+@keyframes ddPulseSoft{0%{box-shadow:0 0 0 0 rgba(244,167,157,.7)}100%{box-shadow:0 0 0 10px rgba(244,167,157,0)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+
+<section id="t3" style="padding:48px 56px 56px;border-bottom:1px solid #EADFD3">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:28px">
+    <a href="#t3" style="font:700 11px 'DM Sans',sans-serif;padding:3px 8px;background:#2B2233;color:#fff;border-radius:4px;text-decoration:none">3</a>
+    <span style="font-size:15px;font-weight:700;color:#2B2233">Open questions resolved · system additions and tablet</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+    <div id="3a" style="display:flex;flex-direction:column;gap:10px;width:620px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#3a" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">3a</a>Decisions</div>
+      <div style="background:#FFF8F0;border:1px solid #EADFD3;border-radius:14px;display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-07</b><span>Saved per user. Material checks and step progress persist to the account and sync across devices. See <a href="#1e">1e</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-09</b><span>Skill hints ship in Phase 1 as editor-set tags. "Make something with what you have" is Phase 2 and shows as coming soon in <a href="#1d">1d</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-10</b><span>Attribution block (source, author, license, who added it) sits below the steps on every seeded post. See <a href="#1e">1e</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-12</b><span>Sidebar everywhere. Full sidebar on Home; it collapses to an icon rail on detail pages that dock the companion. See <a href="#2c">2c</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-13</b><span>Tablet (768–1279px): icon rail, 2-column feed, no right rail. See <a href="#3c">3c</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-14</b><span>Skill chips now use plum #5B3F8F on lavender. Empty checkbox borders darkened to #7A6E78.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-15</b><span>Error color added. See <a href="#3b">3b</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-16</b><span>Focus ring: 3px plum outline, 2px offset, on every interactive element via :focus-visible. See <a href="#3b">3b</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-18</b><span>3 onboarding steps: interests, familiarity (optional), skills you can help with (optional). Minimum 3 interests; the button stays disabled until then. See <a href="#1b">1b</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;border-bottom:1px solid #F3EADF;font-size:14px;line-height:1.45"><b>DC-19</b><span>Coming soon: dashed border, muted text, butter "Coming soon" pill, not tappable. See <a href="#3b">3b</a>.</span></div>
+        <div style="display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;padding:14px 18px;font-size:14px;line-height:1.45"><b>DC-20</b><span>Phase 1 right rail: "New to you" and "You could help with". Live sessions show as coming soon. See <a href="#2b">2b</a>.</span></div>
+      </div>
+    </div>
+    <div id="3b" style="display:flex;flex-direction:column;gap:10px;width:420px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#3b" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">3b</a>Error, focus, coming soon</div>
+      <div style="background:#FFF8F0;border:1px solid #EADFD3;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">Error</span>
+          <div style="display:flex;gap:10px"><span style="width:56px;height:40px;border-radius:8px;background:#B3261E"></span><span style="width:56px;height:40px;border-radius:8px;background:#FBE3E0;border:1px solid #F2C4BE"></span><span style="font-size:13px;line-height:1.4;color:#2B2233">#B3261E text, borders, icons<br>#FBE3E0 background</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:14px;font-weight:700;color:#2B2233">Email</span>
+            <span style="height:46px;border-radius:12px;border:1.5px solid #B3261E;background:#FFF8F0;display:flex;align-items:center;padding:0 14px;font-size:15px;color:#2B2233">aanya@gmail</span>
+            <span style="font-size:13px;color:#B3261E;display:flex;align-items:center;gap:6px"><span style="width:16px;height:16px;border-radius:50%;background:#B3261E;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center">!</span>Add the part after the @, like gmail.com</span>
+          </div>
+          <div style="padding:10px 14px;border-radius:12px;background:#FBE3E0;font-size:14px;color:#2B2233">Couldn't upload your photo. Check your connection and try again.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">Keyboard focus</span>
+          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+            <span style="height:44px;padding:0 20px;border-radius:999px;background:#F4A79D;font-weight:700;font-size:15px;display:flex;align-items:center;outline:3px solid #5B3F8F;outline-offset:2px">Save</span>
+            <span style="height:38px;padding:0 14px;border-radius:999px;border:1px solid #EADFD3;font-size:14px;display:flex;align-items:center;outline:3px solid #5B3F8F;outline-offset:2px">Crochet</span>
+            <span style="width:20px;height:20px;border-radius:6px;border:1.5px solid #7A6E78;outline:3px solid #5B3F8F;outline-offset:2px"></span>
+          </div>
+          <span style="font-size:13px;color:#5A4E5E">3px #5B3F8F outline, 2px offset. Shown on :focus-visible only, never on tap.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">Coming soon</span>
+          <div aria-disabled="true" style="border-radius:14px;border:1.5px dashed #B3A8AE;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:700;color:#5A4E5E">Feature name</span><span style="font-size:13px;color:#5A4E5E">One line on what it will do.</span></div>
+            <span style="flex:none;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2B2233;background:#FBE7A1;padding:4px 9px;border-radius:999px">Coming soon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="3c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#3c" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">3c</a>Home · tablet portrait (834)</div>
+      <div data-screen-label="3c Home tablet" style="width:834px;height:1112px;border-radius:28px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;display:grid;grid-template-columns:76px minmax(0,1fr)">
+        <div style="border-right:1px solid #EADFD3;background:#FFF8F0;padding:28px 0;display:flex;flex-direction:column;align-items:center;gap:6px;color:#5A4E5E">
+          <span style="font-size:22px;font-weight:700;color:#C04A37;padding-bottom:14px">d<span style="color:#F5C96B">.</span></span>
+          <span style="width:48px;height:48px;border-radius:12px;background:#F9D0D3;color:#2B2233;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg></span>
+          <span style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg></span>
+          <span style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg></span>
+          <span style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></span>
+          <span style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+          <span style="margin-top:10px;width:48px;height:48px;border-radius:50%;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+        </div>
+        <div style="min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative">
+          <div style="flex:none;padding:28px 28px 0;display:flex;gap:12px;align-items:center">
+            <div style="flex:1;height:46px;border-radius:999px;border:1px solid #EADFD3;background:#FFF8F0;display:flex;align-items:center;gap:10px;padding:0 18px;color:#7A6E78;font-size:15px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Search skills, projects, makers</div>
+            <span style="width:46px;height:46px;border-radius:50%;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3"></span>
+          </div>
+          <h2 style="flex:none;margin:0;padding:24px 28px 0;font-size:30px;font-weight:700;color:#2B2233;letter-spacing:-.02em">What will you make tonight, Aanya?</h2>
+          <div style="flex:none;display:flex;gap:8px;padding:16px 28px 18px;flex-wrap:wrap">
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5">
+              <sc-if value="{{ f.on }}" hint-placeholder-val="{{ false }}"><button onClick="{{ f.pick }}" style="height:38px;padding:0 16px;border-radius:999px;border:none;background:#2B2233;color:#fff;font:700 15px 'DM Sans';cursor:pointer">{{ f.name }}</button></sc-if>
+              <sc-if value="{{ f.off }}" hint-placeholder-val="{{ true }}"><button onClick="{{ f.pick }}" style="height:38px;padding:0 16px;border-radius:999px;border:1px solid #EADFD3;background:#FFF8F0;color:#2B2233;font:400 15px 'DM Sans';cursor:pointer">{{ f.name }}</button></sc-if>
+            </sc-for>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:0 28px 28px">
+            <div style="columns:2;column-gap:16px">
+              <div style="break-inside:avoid;margin-bottom:18px;background:repeating-linear-gradient(-45deg, rgba(255,255,255,.55) 0 8px, transparent 8px 18px), #D6C8F5;border-radius:18px;padding:18px;color:#2B2233;display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">New to you</span>
+                <span style="font-size:22px;font-weight:700;line-height:1.1">Punch needle</span>
+                <span style="font-size:14px;line-height:1.4">Like embroidery, but faster and fluffier. 3 beginner projects under an hour.</span>
+              </div>
+              <sc-for list="{{ feed }}" as="item" hint-placeholder-count="6">
+                <div style="break-inside:avoid;margin-bottom:18px;display:flex;flex-direction:column;gap:8px">
+                  <div style="height:{{ item.hd }}px;background:{{ item.bg }};border-radius:18px;position:relative;display:flex;align-items:flex-end;padding:12px">
+                    <span style="font-size:12px;color:#5A4E5E">{{ item.ph }}</span>
+                    <span style="position:absolute;top:10px;left:10px;background:#FFF8F0;color:#2B2233;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px">{{ item.type }}</span>
+                  </div>
+                  <span style="font-size:17px;font-weight:700;color:#2B2233;line-height:1.2">{{ item.t }}</span>
+                  <span style="font-size:14px;color:#7A6E78">{{ item.by }} · {{ item.skill }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:absolute;right:24px;bottom:24px;height:48px;padding:0 18px 0 14px;border-radius:999px;background:#2B2233;color:#fff;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;box-shadow:0 8px 24px rgba(43,34,51,.25)"><svg width="18" height="18" viewBox="0 0 24 24" fill="#FBE7A1"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>Ask dodoi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="t2" style="padding:48px 56px 56px;border-bottom:1px solid #EADFD3">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:28px">
+    <a href="#t2" style="font:700 11px 'DM Sans',sans-serif;padding:3px 8px;background:#2B2233;color:#fff;border-radius:4px;text-decoration:none">2</a>
+    <span style="font-size:15px;font-weight:700;color:#2B2233">Web · desktop layouts (same system as the mobile flow in turn 1)</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:48px;align-items:flex-start">
+
+    <!-- 2a Landing -->
+    <div id="2a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#2a" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">2a</a>Landing page · web</div>
+      <div data-screen-label="2a Landing web" style="width:1280px;height:860px;border-radius:14px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;display:flex;flex-direction:column">
+        <div style="height:36px;flex:none;background:#F3EADF;display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:#F4A79D"></span><span style="width:11px;height:11px;border-radius:50%;background:#F5C96B"></span><span style="width:11px;height:11px;border-radius:50%;background:#CDE8D6"></span><span style="margin-left:16px;height:22px;padding:0 14px;border-radius:6px;background:#FFF8F0;font-size:12px;color:#7A6E78;display:flex;align-items:center">dodoi.app</span></div>
+        <div style="flex:none;height:76px;display:flex;align-items:center;justify-content:space-between;padding:0 56px">
+          <div style="display:flex;align-items:center;gap:2px;font-size:28px;font-weight:700;color:#C04A37;letter-spacing:-.02em">dodoi<span style="width:8px;height:8px;border-radius:50%;background:#F5C96B;margin-top:10px"></span></div>
+          <div style="display:flex;gap:32px;font-size:16px;color:#2B2233"><span>Discover</span><span>Learn</span><span>Community</span><span>Companion</span></div>
+          <div style="display:flex;gap:10px"><button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:44px;padding:0 20px;border-radius:999px;border:1.5px solid #2B2233;background:transparent;font:700 15px 'DM Sans';color:#2B2233;cursor:pointer">Log in</button><button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:44px;padding:0 22px;border-radius:999px;border:none;background:#F4A79D;font:700 15px 'DM Sans';color:#2B2233;cursor:pointer" style-hover="background:#EE948A">Join free</button></div>
+        </div>
+        <div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:56px;padding:40px 56px 0;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:22px;padding-top:40px">
+            <span style="align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5B3F8F;background:#E2D9F7;padding:6px 12px;border-radius:999px">A creative space for curious makers</span>
+            <h1 style="margin:0;font-size:68px;line-height:.98;letter-spacing:-.03em;color:#2B2233;font-weight:700;text-wrap:balance">For the things you love making, and all the things you haven't tried yet.</h1>
+            <p style="margin:0;font-size:20px;line-height:1.45;color:#5A4E5E;max-width:500px">Discover ideas, try a new craft, keep a journal of what you make and learn from people who make things too. No experience needed.</p>
+            <div style="display:flex;gap:12px;padding-top:6px">
+              <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:56px;padding:0 28px;border-radius:999px;border:none;background:#F4A79D;color:#2B2233;font:700 17px 'DM Sans';display:flex;align-items:center;gap:10px;cursor:pointer"><span style="width:22px;height:22px;border-radius:50%;background:#FFF8F0;font-size:13px;display:flex;align-items:center;justify-content:center">G</span>Continue with Google</button>
+              <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:56px;padding:0 28px;border-radius:999px;border:1.5px solid #2B2233;background:transparent;color:#2B2233;font:700 17px 'DM Sans';cursor:pointer">Sign up with email</button>
+            </div>
+            <div style="display:flex;gap:28px;padding-top:24px;border-top:1px solid #EADFD3;margin-top:12px">
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:700;color:#2B2233">Discover</span><span style="font-size:14px;color:#7A6E78">Ideas across 40+ crafts</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:700;color:#2B2233">Create</span><span style="font-size:14px;color:#7A6E78">Share progress, not perfection</span></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:17px;font-weight:700;color:#2B2233">Connect</span><span style="font-size:14px;color:#7A6E78">Ask, help, make together</span></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:120px;gap:12px;position:relative">
+            <div style="grid-row:span 3;border-radius:20px;animation:ddFloat 6s ease-in-out 0.0s infinite;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1;display:flex;align-items:flex-end;padding:14px;font-size:12px;color:#5A4E5E">photo — crochet</div>
+            <div style="grid-row:span 2;border-radius:20px;animation:ddFloat 6s ease-in-out 0.5s infinite;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7;display:flex;align-items:flex-end;padding:14px;font-size:12px;color:#5A4E5E">photo — sketchbook</div>
+            <div style="grid-row:span 2;border-radius:20px;animation:ddFloat 6s ease-in-out 1.0s infinite;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3;display:flex;align-items:flex-end;padding:14px;font-size:12px;color:#5A4E5E">photo — embroidery</div>
+            <div style="grid-row:span 2;border-radius:20px;animation:ddFloat 6s ease-in-out 1.5s infinite;background:radial-gradient(circle at 50% 100%, transparent 7px, rgba(255,255,255,.65) 7.5px 9.5px, transparent 10px) 0 0/22px 11px, #CDE8D6;display:flex;align-items:flex-end;padding:14px;font-size:12px;color:#5A4E5E">photo — clay</div>
+            <div style="grid-row:span 3;border-radius:20px;animation:ddFloat 6s ease-in-out 2.0s infinite;background:conic-gradient(rgba(255,255,255,.45) 25%, transparent 0 50%, rgba(255,255,255,.45) 0 75%, transparent 0) 0 0/22px 22px, #CFE3F5;display:flex;align-items:flex-end;padding:14px;font-size:12px;color:#5A4E5E">photo — watercolor</div>
+            <div style="grid-row:span 2;border-radius:20px;animation:ddFloat 6s ease-in-out 2.5s infinite;background:repeating-linear-gradient(-45deg, rgba(255,255,255,.55) 0 8px, transparent 8px 18px), #D6C8F5;animation:ddStripe 2.5s linear infinite;padding:18px;display:flex;flex-direction:column;justify-content:space-between;color:#2B2233"><span style="font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">New to you</span><span style="font-size:24px;font-weight:700;line-height:1.05">Punch needle in under an hour</span></div>
+            <div style="grid-row:span 1;border-radius:20px;animation:ddFloat 6s ease-in-out 3.0s infinite;background:radial-gradient(rgba(255,255,255,.4) 1.5px, transparent 2px) 0 0/10px 10px, #F4A79D;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#2B2233">+ 40 more crafts</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2b Desktop home -->
+    <div id="2b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#2b" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">2b</a>Home feed · web (sidebar nav, right rail)</div>
+      <div data-screen-label="2b Home web" style="width:1280px;height:860px;border-radius:14px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;display:flex;flex-direction:column">
+        <div style="height:36px;flex:none;background:#F3EADF;display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:#F4A79D"></span><span style="width:11px;height:11px;border-radius:50%;background:#F5C96B"></span><span style="width:11px;height:11px;border-radius:50%;background:#CDE8D6"></span><span style="margin-left:16px;height:22px;padding:0 14px;border-radius:6px;background:#FFF8F0;font-size:12px;color:#7A6E78;display:flex;align-items:center">dodoi.app/home</span></div>
+        <div style="flex:1;min-height:0;display:grid;grid-template-columns:232px minmax(0,1fr) 300px">
+          <div style="border-right:1px solid #EADFD3;background:#FFF8F0;padding:24px 16px;display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:center;gap:2px;font-size:26px;font-weight:700;color:#C04A37;letter-spacing:-.02em;padding:0 12px 20px">dodoi<span style="width:7px;height:7px;border-radius:50%;background:#F5C96B;margin-top:9px"></span></div>
+            <div style="height:44px;border-radius:12px;background:#F9D0D3;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;font-weight:700;color:#2B2233"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg>Home</div>
+            <div style="height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;color:#5A4E5E" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Explore</div>
+            <div style="height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;color:#5A4E5E" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg>Community</div>
+            <div style="height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;color:#5A4E5E" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"></path></svg>Messages<span style="margin-left:auto;font-size:12px;font-weight:700;background:#F4A79D;color:#2B2233;border-radius:999px;padding:1px 8px">2</span></div>
+            <div style="height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;color:#5A4E5E" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>Saved</div>
+            <div style="height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;color:#5A4E5E" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 4h12l4 4v12H4z"></path><path d="M8 10h8M8 14h6"></path></svg>Journal</div>
+            <div style="height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;color:#5A4E5E" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</div>
+            <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;margin-top:16px;height:48px;border-radius:999px;border:none;background:#F4A79D;color:#2B2233;font:700 16px 'DM Sans';display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Create</button>
+            <div style="margin-top:auto;border-radius:16px;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <span style="display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:#2B2233"><svg style="animation:ddTwinkle 2.4s ease-in-out infinite;transform-origin:center" width="16" height="16" viewBox="0 0 24 24" fill="#5B3F8F"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>Ask dodoi</span>
+              <span style="font-size:14px;line-height:1.35;color:#5A4E5E">Stuck on a stitch? Show me a photo.</span>
+            </div>
+          </div>
+          <div style="min-width:0;display:flex;flex-direction:column;overflow:hidden">
+            <div style="flex:none;padding:20px 28px 0;display:flex;align-items:center;gap:12px">
+              <div style="flex:1;height:46px;border-radius:999px;background:#FFF8F0;border:1px solid #EADFD3;display:flex;align-items:center;gap:10px;padding:0 18px;color:#7A6E78;font-size:15px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Search skills, projects, makers, communities</div>
+              <span style="width:46px;height:46px;border-radius:50%;border:1px solid #EADFD3;background:#FFF8F0;display:flex;align-items:center;justify-content:center;color:#2B2233;position:relative"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg><span style="position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:50%;background:#C04A37;animation:ddPulse 1.8s ease-out infinite"></span></span>
+              <span style="width:46px;height:46px;border-radius:50%;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3"></span>
+            </div>
+            <div style="flex:none;padding:24px 28px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+              <h2 style="margin:0;font-size:34px;font-weight:700;color:#2B2233;letter-spacing:-.02em">What will you make tonight, Aanya?</h2>
+            </div>
+            <div style="flex:none;display:flex;gap:8px;padding:16px 28px 18px">
+              <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5">
+                <sc-if value="{{ f.on }}" hint-placeholder-val="{{ false }}">
+                  <button style-active="transform:scale(.96)" onClick="{{ f.pick }}" style="transition:transform .15s ease, background-color .2s ease;height:38px;padding:0 16px;border-radius:999px;border:none;background:#2B2233;color:#fff;font:700 15px 'DM Sans';cursor:pointer">{{ f.name }}</button>
+                </sc-if>
+                <sc-if value="{{ f.off }}" hint-placeholder-val="{{ true }}">
+                  <button style-active="transform:scale(.96)" onClick="{{ f.pick }}" style="transition:transform .15s ease, background-color .2s ease;height:38px;padding:0 16px;border-radius:999px;border:1px solid #EADFD3;background:#FFF8F0;color:#2B2233;font:400 15px 'DM Sans';cursor:pointer">{{ f.name }}</button>
+                </sc-if>
+              </sc-for>
+            </div>
+            <div style="flex:1;overflow-y:auto;padding:0 28px 28px">
+              <div style="columns:3;column-gap:16px">
+                <sc-for list="{{ feed }}" as="item" hint-placeholder-count="6">
+                  <div style="break-inside:avoid;margin-bottom:18px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1);animation:ddUp .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ item.delay }}ms" style-hover="transform:translateY(-4px)">
+                    <div style="height:{{ item.hd }}px;background:{{ item.bg }};border-radius:18px;position:relative;display:flex;align-items:flex-end;padding:12px">
+                      <span style="font-size:12px;color:#5A4E5E">{{ item.ph }}</span>
+                      <span style="position:absolute;top:10px;left:10px;background:#FFF8F0;color:#2B2233;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px">{{ item.type }}</span>
+                      <button style-active="transform:scale(.96)" onClick="{{ item.toggle }}" aria-label="Save" style="transition:transform .15s ease, background-color .2s ease;position:absolute;top:6px;right:6px;width:40px;height:40px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center">
+                        <span style="width:34px;height:34px;border-radius:50%;background:#FFF8F0;display:flex;align-items:center;justify-content:center">
+                          <sc-if value="{{ item.saved }}" hint-placeholder-val="{{ false }}"><svg style="animation:ddPop .35s ease-out" width="16" height="16" viewBox="0 0 24 24" fill="#E98A7E" stroke="#E98A7E" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></sc-if>
+                          <sc-if value="{{ item.unsaved }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2B2233" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></sc-if>
+                        </span>
+                      </button>
+                    </div>
+                    <span style="font-size:17px;font-weight:700;color:#2B2233;line-height:1.2;padding:0 2px">{{ item.t }}</span>
+                    <span style="font-size:14px;color:#7A6E78;padding:0 2px">{{ item.by }} · {{ item.skill }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="border-left:1px solid #EADFD3;background:#FFF8F0;padding:24px 20px;display:flex;flex-direction:column;gap:18px;overflow:hidden">
+            <div style="border-radius:18px;background:repeating-linear-gradient(-45deg, rgba(255,255,255,.55) 0 8px, transparent 8px 18px), #D6C8F5;animation:ddStripe 2.5s linear infinite;padding:18px;display:flex;flex-direction:column;gap:8px;color:#2B2233">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">New to you</span>
+              <span style="font-size:22px;font-weight:700;line-height:1.1">Punch needle</span>
+              <span style="font-size:14px;line-height:1.4">Like embroidery, but faster and fluffier. 3 beginner projects under an hour.</span>
+              <span style="font-size:15px;font-weight:700;padding-top:2px">Try it →</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:16px;font-weight:700;color:#2B2233">You could help with</span><span style="font-size:14px;font-weight:700;color:#C04A37">All</span></div>
+              <div style="border:1px solid #EADFD3;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFF8F0;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)">
+                <span style="font-size:15px;font-weight:700;color:#2B2233;line-height:1.25">What causes these blotchy marks in my sky?</span>
+                <span style="font-size:13px;color:#7A6E78">Watercolor · Ravi · 2h ago</span>
+              </div>
+              <div style="border:1px solid #EADFD3;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;background:#FFF8F0;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)">
+                <span style="font-size:15px;font-weight:700;color:#2B2233;line-height:1.25">Why does my yarn keep splitting?</span>
+                <span style="font-size:13px;color:#7A6E78">Crochet · Meera · 5h ago</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:700;color:#5A4E5E">Live sessions</span><span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2B2233;background:#FBE7A1;padding:4px 9px;border-radius:999px">Coming soon</span></div>
+              <div aria-disabled="true" style="border-radius:14px;border:1.5px dashed #B3A8AE;padding:14px;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:15px;font-weight:700;color:#5A4E5E">Book a 30-min call with a maker</span>
+                <span style="font-size:13px;color:#5A4E5E">We'll let you know when this opens.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2c Desktop tutorial + companion -->
+    <div id="2c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#2c" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">2c</a>Tutorial detail · web, collapsed sidebar + companion docked</div>
+      <div data-screen-label="2c Tutorial web" style="width:1280px;height:860px;border-radius:14px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;display:flex;flex-direction:column">
+        <div style="height:36px;flex:none;background:#F3EADF;display:flex;align-items:center;gap:8px;padding:0 14px"><span style="width:11px;height:11px;border-radius:50%;background:#F4A79D"></span><span style="width:11px;height:11px;border-radius:50%;background:#F5C96B"></span><span style="width:11px;height:11px;border-radius:50%;background:#CDE8D6"></span><span style="margin-left:16px;height:22px;padding:0 14px;border-radius:6px;background:#FFF8F0;font-size:12px;color:#7A6E78;display:flex;align-items:center">dodoi.app/p/pipe-cleaner-bonsai</span></div>
+        <div style="flex:1;min-height:0;display:grid;grid-template-columns:76px minmax(0,1fr) 380px">
+          <div style="border-right:1px solid #EADFD3;background:#FFF8F0;padding:20px 0;display:flex;flex-direction:column;align-items:center;gap:6px;color:#5A4E5E">
+            <span style="font-size:22px;font-weight:700;color:#C04A37;padding-bottom:14px">d<span style="color:#F5C96B">.</span></span>
+            <span title="Home" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg></span>
+            <span title="Explore" style="width:48px;height:48px;border-radius:12px;background:#F9D0D3;color:#2B2233;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg></span>
+            <span title="Community" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg></span>
+            <span title="Saved" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></span>
+            <span title="Profile" style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center" style-hover="background:#F3EADF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+            <span title="Create" style="margin-top:10px;width:48px;height:48px;border-radius:50%;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+          </div>
+          <div style="overflow-y:auto;padding:28px 36px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:32px;align-content:start">
+            <div style="height:600px;border-radius:22px;background:radial-gradient(circle at 50% 100%, transparent 7px, rgba(255,255,255,.65) 7.5px 9.5px, transparent 10px) 0 0/22px 11px, #CDE8D6;display:flex;align-items:flex-end;padding:16px;font-size:13px;color:#5A4E5E">photo — pipe cleaner bonsai, finished</div>
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span style="font-size:13px;font-weight:700;padding:4px 12px;border-radius:999px;background:#E2D9F7;color:#5B3F8F">Pipe cleaner art</span>
+                <span style="font-size:13px;padding:4px 12px;border-radius:999px;background:#F3EADF;color:#2B2233">Beginner</span>
+                <span style="font-size:13px;padding:4px 12px;border-radius:999px;background:#F3EADF;color:#2B2233">45 min</span>
+              </div>
+              <h1 style="margin:0;font-size:40px;line-height:1.02;font-weight:700;color:#2B2233;letter-spacing:-.02em">Pipe cleaner bonsai for your desk</h1>
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:50%;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/10px 10px, #FBE7A1"></span><span style="font-size:15px;color:#2B2233"><b>Leo Mathew</b> · helps with wire crafts</span><span style="margin-left:auto;font-size:15px;font-weight:700;color:#C04A37">Follow</span></div>
+              <div style="display:flex;gap:10px">
+                <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:46px;padding:0 22px;border-radius:999px;border:none;background:#F4A79D;color:#2B2233;font:700 15px 'DM Sans';cursor:pointer">Save to collection</button>
+                <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:46px;padding:0 22px;border-radius:999px;border:1.5px solid #2B2233;background:transparent;color:#2B2233;font:700 15px 'DM Sans';cursor:pointer">Start as my project</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Materials</span>
+                <div style="display:flex;flex-direction:column;border:1px solid #EADFD3;border-radius:14px;background:#FFF8F0">
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #F3EADF;font-size:15px"><span style="width:20px;height:20px;border-radius:6px;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"></path></svg></span>20 brown pipe cleaners</div>
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #F3EADF;font-size:15px"><span style="width:20px;height:20px;border-radius:6px;border:1.5px solid #7A6E78"></span>10 green pipe cleaners</div>
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;font-size:15px"><span style="width:20px;height:20px;border-radius:6px;border:1.5px solid #7A6E78"></span>Small pot or bottle cap</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Steps</span>
+                <div style="display:flex;gap:12px"><span style="flex:none;width:28px;height:28px;border-radius:50%;background:#2B2233;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center">1</span><p style="margin:0;font-size:15px;line-height:1.45">Twist 10 brown stems together at one end to form the trunk base.</p></div>
+                <div style="display:flex;gap:12px"><span style="flex:none;width:28px;height:28px;border-radius:50%;border:1.5px solid #2B2233;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center">2</span><p style="margin:0;font-size:15px;line-height:1.45">Split the top into three branches and bend each one outwards.</p></div>
+              </div>
+            </div>
+          </div>
+          <div style="border-left:1px solid #EADFD3;background:radial-gradient(rgba(170,150,220,.25) 1px, transparent 1.4px) 0 0/16px 16px, #F8F3FB;display:flex;flex-direction:column;min-height:0">
+            <div style="flex:none;padding:16px 20px;border-bottom:1px solid #EADFD3;display:flex;flex-direction:column;gap:2px">
+              <span style="display:flex;align-items:center;gap:6px;font-size:17px;font-weight:700;color:#2B2233"><svg style="animation:ddTwinkle 2.4s ease-in-out infinite;transform-origin:center" width="16" height="16" viewBox="0 0 24 24" fill="#5B3F8F"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>dodoi companion</span>
+              <span style="font-size:13px;color:#7A6E78">Talking about: Pipe cleaner bonsai</span>
+            </div>
+            <div style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+              <div style="animation:ddUp .5s cubic-bezier(.2,.8,.2,1) backwards;align-self:flex-end;max-width:85%;background:#F4A79D;color:#2B2233;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:15px;line-height:1.4">I only have white pipe cleaners. Will it still work?</div>
+              <div style="animation:ddUp .6s cubic-bezier(.2,.8,.2,1) .45s backwards;align-self:flex-start;max-width:92%;background:#FFF8F0;border:1px solid #EADFD3;padding:14px;border-radius:16px 16px 16px 4px;font-size:15px;line-height:1.45;color:#2B2233;display:flex;flex-direction:column;gap:8px">
+                <span>Yes. The shape comes from twisting, so color doesn't change the steps. Two options:</span>
+                <span><b>1.</b> Make a snowy "winter bonsai" and keep it white.</span>
+                <span><b>2.</b> Color the leaves afterwards with a green marker. Test on one stem first, as some markers bleed.</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <span style="height:34px;padding:0 12px;border-radius:999px;background:#FFF8F0;border:1px solid #DCCFC2;font-size:14px;display:flex;align-items:center">Make a materials checklist</span>
+                <span style="height:34px;padding:0 12px;border-radius:999px;background:#FFF8F0;border:1px solid #DCCFC2;font-size:14px;display:flex;align-items:center">Easier version for kids</span>
+              </div>
+            </div>
+            <div style="flex:none;padding:14px 20px 18px;border-top:1px solid #EADFD3;background:#FFF8F0;display:flex;gap:8px;align-items:center">
+              <span style="width:42px;height:42px;border-radius:50%;background:#F3EADF;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
+              <span style="flex:1;height:42px;border-radius:999px;border:1px solid #DCCFC2;display:flex;align-items:center;padding:0 16px;font-size:15px;color:#7A6E78">Ask about this project…</span>
+              <span style="width:42px;height:42px;border-radius:50%;background:#F4A79D;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p style="margin:32px 0 0;font-size:14px;color:#7A6E78">Try next: "tablet layout for <a href="#2b">2b</a>" · "desktop messages and session scheduling" · "web profile and collections"</p>
+</section>
+
+<section id="t1" style="padding:48px 56px 56px">
+  <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+    <a href="#t1" style="font:700 11px 'DM Sans',sans-serif;padding:3px 8px;background:#2B2233;color:#fff;border-radius:4px;text-decoration:none">1</a>
+    <span style="font-size:15px;font-weight:700;color:#2B2233">dodoi — core mobile PWA flow</span>
+  </div>
+
+  <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;max-width:1240px;margin:20px 0 40px;padding:24px 28px;background:#FFF8F0;border-radius:12px;border:1px solid #EADFD3">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Scope</span>
+        <p style="margin:0;font-size:15px;line-height:1.5">Phase 1–4 journey on mobile: welcome → interests → feed → explore → tutorial → AI companion → journal → community help → profile. Desktop and edge states come next.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Visual system</span>
+        <p style="margin:0;font-size:15px;line-height:1.5">Pastel palette on a dotted cream paper base: soft coral for actions, lavender stripes for "new to you", and butter, blush, lavender, mint and sky tiles carrying craft-inspired patterns (polka dots, ticking stripes, gingham, scallops, checks).</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Principles in the UI</span>
+        <p style="margin:0;font-size:15px;line-height:1.5">No public scores or like counts. Post types (first attempt, WIP, journal) are first-class labels. AI is a context-aware pill, not a separate app.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Placeholders</span>
+        <p style="margin:0;font-size:15px;line-height:1.5">Colored tiles stand in for user photos. Interactive: interest chips, feed filters and save buttons.</p>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+    <!-- 1a Welcome -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1a" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1a</a>Welcome</div>
+      <div data-screen-label="1a Welcome" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="padding:20px 24px 0;display:flex;align-items:center;gap:2px;font-size:26px;font-weight:700;color:#C04A37;letter-spacing:-.02em">dodoi<span style="width:8px;height:8px;border-radius:50%;background:#F5C96B;margin-top:10px"></span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:84px;gap:8px;padding:24px 24px 0">
+          <div style="background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1;border-radius:12px;grid-row:span 2;display:flex;align-items:flex-end;padding:10px;animation:ddFloat 5s ease-in-out 0.0s infinite;font-size:11px;color:#5A4E5E">crochet</div>
+          <div style="background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7;border-radius:12px;display:flex;align-items:flex-end;padding:10px;animation:ddFloat 5s ease-in-out 0.6s infinite;font-size:11px;color:#5A4E5E">sketch</div>
+          <div style="background:radial-gradient(circle at 50% 100%, transparent 7px, rgba(255,255,255,.65) 7.5px 9.5px, transparent 10px) 0 0/22px 11px, #CDE8D6;border-radius:12px;grid-row:span 2;display:flex;align-items:flex-end;padding:10px;animation:ddFloat 5s ease-in-out 1.2s infinite;font-size:11px;color:#2B2233">clay</div>
+          <div style="background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3;border-radius:12px;grid-row:span 2;display:flex;align-items:flex-end;padding:10px;animation:ddFloat 5s ease-in-out 1.8s infinite;font-size:11px;color:#5A4E5E">embroidery</div>
+          <div style="background:conic-gradient(rgba(255,255,255,.45) 25%, transparent 0 50%, rgba(255,255,255,.45) 0 75%, transparent 0) 0 0/22px 22px, #CFE3F5;border-radius:12px;display:flex;align-items:flex-end;padding:10px;animation:ddFloat 5s ease-in-out 2.4s infinite;font-size:11px;color:#2B2233">paint</div>
+          <div style="background:#F4A79D;border-radius:12px;display:flex;align-items:flex-end;padding:10px;animation:ddFloat 5s ease-in-out 3.0s infinite;font-size:11px;color:#2B2233">+ 40 more</div>
+        </div>
+        <div style="padding:32px 24px 0;display:flex;flex-direction:column;gap:12px">
+          <h1 style="margin:0;font-size:36px;line-height:1.05;letter-spacing:-.02em;color:#2B2233;font-weight:700;text-wrap:balance">For the things you love making, and all the things you haven't tried yet.</h1>
+          <p style="margin:0;font-size:16px;line-height:1.45;color:#5A4E5E">Find ideas, try new crafts and share what you make. Beginners welcome.</p>
+        </div>
+        <div style="margin-top:auto;padding:0 24px 36px;display:flex;flex-direction:column;gap:10px">
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:52px;border-radius:999px;border:none;background:#F4A79D;color:#2B2233;font:700 16px 'DM Sans';display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer" style-hover="background:#EE948A"><span style="width:20px;height:20px;border-radius:50%;background:#FFF8F0;color:#C04A37;font-size:13px;display:flex;align-items:center;justify-content:center">G</span>Continue with Google</button>
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:52px;border-radius:999px;border:1.5px solid #2B2233;background:#FFF8F0;color:#2B2233;font:700 16px 'DM Sans';cursor:pointer">Sign up with email</button>
+          <span style="text-align:center;font-size:15px;color:#5A4E5E;padding-top:6px">Already making with us? <a href="#1c" style="font-weight:700">Log in</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1b Interests -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1b" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1b</a>Onboarding · interests</div>
+      <div data-screen-label="1b Interests" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column">
+        <div style="height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:6px"><span style="width:28px;height:4px;border-radius:2px;background:#F4A79D"></span><span style="width:28px;height:4px;border-radius:2px;background:#EADFD3"></span><span style="width:28px;height:4px;border-radius:2px;background:#EADFD3"></span></div>
+          <span style="font-size:15px;color:#7A6E78">Skip</span>
+        </div>
+        <div style="padding:28px 24px 0;display:flex;flex-direction:column;gap:8px">
+          <h2 style="margin:0;font-size:32px;line-height:1.05;letter-spacing:-.02em;color:#2B2233;font-weight:700">What do you like making?</h2>
+          <p style="margin:0;font-size:16px;color:#5A4E5E;line-height:1.4">Pick as many as you like, including ones you're only curious about. You can change these any time.</p>
+        </div>
+        <div style="margin:20px 24px 0;height:46px;border-radius:999px;background:#F4ECE1;border:1px solid #EADFD3;display:flex;align-items:center;gap:10px;padding:0 16px;color:#7A6E78;font-size:15px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Search crafts, e.g. macramé
+        </div>
+        <div style="padding:20px 24px 0;display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ interests }}" as="it" hint-placeholder-count="14">
+            <sc-if value="{{ it.on }}" hint-placeholder-val="{{ false }}">
+              <button style-active="transform:scale(.96)" onClick="{{ it.toggle }}" style="transition:transform .15s ease, background-color .2s ease;animation:ddPop .3s ease-out;height:40px;padding:0 16px;border-radius:999px;border:1.5px solid #E98A7E;background:#F4A79D;color:#2B2233;font:700 15px 'DM Sans';cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5 9-10"></path></svg>{{ it.name }}</button>
+            </sc-if>
+            <sc-if value="{{ it.off }}" hint-placeholder-val="{{ true }}">
+              <button style-active="transform:scale(.96)" onClick="{{ it.toggle }}" style="transition:transform .15s ease, background-color .2s ease;height:40px;padding:0 16px;border-radius:999px;border:1.5px solid #DCCFC2;background:#FFF8F0;color:#2B2233;font:400 15px 'DM Sans';cursor:pointer" style-hover="border-color:#C04A37">{{ it.name }}</button>
+            </sc-if>
+          </sc-for>
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:40px;padding:0 16px;border-radius:999px;border:1.5px dashed #B3A8AE;background:#FFF8F0;color:#5A4E5E;font:400 15px 'DM Sans';cursor:pointer">+ Add your own</button>
+        </div>
+        <div style="margin-top:auto;padding:16px 24px 36px;border-top:1px solid #F3EADF;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:14px;color:#7A6E78">Step 1 of 3 · Next: how familiar are you with each?</span>
+          <sc-if value="{{ canContinue }}" hint-placeholder-val="{{ true }}">
+            <button style-active="transform:scale(.96)" style-focus="outline:3px solid #5B3F8F;outline-offset:2px" style="transition:transform .15s ease, background-color .2s ease;height:52px;border-radius:999px;border:none;background:#F4A79D;color:#2B2233;font:700 16px 'DM Sans';cursor:pointer">Continue with {{ selectedCount }} interests</button>
+          </sc-if>
+          <sc-if value="{{ cantContinue }}" hint-placeholder-val="{{ false }}">
+            <button disabled="" style="height:52px;border-radius:999px;border:none;background:#EADFD3;color:#5A4E5E;font:700 16px 'DM Sans';cursor:not-allowed">Pick {{ needMore }} more to continue</button>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1c Home feed -->
+    <div id="1c" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1c" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1c</a>Home · discovery feed</div>
+      <div data-screen-label="1c Home" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="flex:none;padding:8px 20px 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:2px;font-size:24px;font-weight:700;color:#C04A37;letter-spacing:-.02em">dodoi<span style="width:7px;height:7px;border-radius:50%;background:#F5C96B;margin-top:9px"></span></div>
+          <div style="display:flex;gap:4px;color:#2B2233">
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></span>
+            <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;position:relative"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10 21a2 2 0 0 0 4 0"></path></svg><span style="position:absolute;top:10px;right:11px;width:8px;height:8px;border-radius:50%;background:conic-gradient(rgba(255,255,255,.45) 25%, transparent 0 50%, rgba(255,255,255,.45) 0 75%, transparent 0) 0 0/22px 22px, #CFE3F5;animation:ddPulse 1.8s ease-out infinite;border:1.5px solid #FFFBF5"></span></span>
+          </div>
+        </div>
+        <div style="flex:none;padding:8px 20px 0">
+          <span style="font-size:22px;font-weight:700;color:#2B2233;letter-spacing:-.01em">What will you make tonight, Aanya?</span>
+        </div>
+        <div style="flex:none;display:flex;gap:8px;padding:14px 20px 12px;overflow-x:auto">
+          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="5">
+            <sc-if value="{{ f.on }}" hint-placeholder-val="{{ false }}">
+              <button style-active="transform:scale(.96)" onClick="{{ f.pick }}" style="transition:transform .15s ease, background-color .2s ease;flex:none;height:36px;padding:0 14px;border-radius:999px;border:none;background:#2B2233;color:#fff;font:700 14px 'DM Sans';cursor:pointer">{{ f.name }}</button>
+            </sc-if>
+            <sc-if value="{{ f.off }}" hint-placeholder-val="{{ true }}">
+              <button style-active="transform:scale(.96)" onClick="{{ f.pick }}" style="transition:transform .15s ease, background-color .2s ease;flex:none;height:36px;padding:0 14px;border-radius:999px;border:1px solid #EADFD3;background:#F4ECE1;color:#2B2233;font:400 14px 'DM Sans';cursor:pointer">{{ f.name }}</button>
+            </sc-if>
+          </sc-for>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:0 14px 120px">
+          <div style="columns:2;column-gap:10px">
+            <div style="break-inside:avoid;margin-bottom:10px;background:repeating-linear-gradient(-45deg, rgba(255,255,255,.55) 0 8px, transparent 8px 18px), #D6C8F5;animation:ddStripe 2.5s linear infinite;border-radius:14px;padding:16px;color:#2B2233;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase">New to you</span>
+              <span style="font-size:20px;font-weight:700;line-height:1.1">Punch needle</span>
+              <span style="font-size:14px;line-height:1.35">Like embroidery, but faster and fluffier. 3 beginner projects under an hour.</span>
+              <span style="font-size:14px;font-weight:700;padding-top:4px">Try it →</span>
+            </div>
+            <sc-for list="{{ feed }}" as="item" hint-placeholder-count="6">
+              <div style="break-inside:avoid;margin-bottom:12px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1);animation:ddUp .55s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:{{ item.delay }}ms" style-hover="transform:translateY(-4px)">
+                <div style="height:{{ item.h }}px;background:{{ item.bg }};border-radius:14px;position:relative;display:flex;align-items:flex-end;padding:10px">
+                  <span style="font-size:11px;color:#5A4E5E">{{ item.ph }}</span>
+                  <span style="position:absolute;top:8px;left:8px;background:#FFF8F0;color:#2B2233;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px">{{ item.type }}</span>
+                  <button style-active="transform:scale(.96)" onClick="{{ item.toggle }}" aria-label="Save" style="transition:transform .15s ease, background-color .2s ease;position:absolute;top:4px;right:4px;width:36px;height:36px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center">
+                    <span style="width:30px;height:30px;border-radius:50%;background:#FFF8F0;display:flex;align-items:center;justify-content:center;color:#C04A37">
+                      <sc-if value="{{ item.saved }}" hint-placeholder-val="{{ false }}"><svg style="animation:ddPop .35s ease-out" width="15" height="15" viewBox="0 0 24 24" fill="#E98A7E" stroke="#E98A7E" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></sc-if>
+                      <sc-if value="{{ item.unsaved }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2B2233" stroke-width="1.8" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></sc-if>
+                    </span>
+                  </button>
+                </div>
+                <span style="font-size:15px;font-weight:700;color:#2B2233;line-height:1.2;padding:0 2px">{{ item.t }}</span>
+                <span style="font-size:13px;color:#7A6E78;padding:0 2px">{{ item.by }} · {{ item.skill }}</span>
+              </div>
+            </sc-for>
+            <div style="break-inside:avoid;margin-bottom:12px;background:#F4ECE1;border:1px solid #EADFD3;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Help request</span>
+              <span style="font-size:16px;font-weight:700;color:#2B2233;line-height:1.2">Why does my yarn keep splitting?</span>
+              <span style="font-size:13px;color:#5A4E5E">Crochet · 4 makers replied</span>
+              <span style="font-size:14px;font-weight:700;color:#C04A37">Share a tip</span>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;right:16px;bottom:100px;height:44px;padding:0 16px 0 12px;border-radius:999px;background:#2B2233;color:#fff;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;box-shadow:0 8px 24px rgba(43,34,51,.25)">
+          <svg style="animation:ddTwinkle 2.4s ease-in-out infinite;transform-origin:center" width="18" height="18" viewBox="0 0 24 24" fill="#FBE7A1"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>Ask dodoi
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#FFF8F0;border-top:1px solid #F3EADF;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px 22px;font-size:11px;color:#7A6E78">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#C04A37;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg>Home</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Explore</div>
+          <div style="display:flex;justify-content:center"><span style="width:48px;height:48px;border-radius:16px;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center;margin-top:-4px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg>Community</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1d Explore -->
+    <div id="1d" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1d" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1d</a>Explore · search</div>
+      <div data-screen-label="1d Explore" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="padding:12px 20px 0;display:flex;flex-direction:column;gap:12px">
+          <h2 style="margin:0;font-size:30px;font-weight:700;color:#2B2233;letter-spacing:-.02em">Explore</h2>
+          <div style="height:48px;border-radius:999px;background:#F4ECE1;border:1px solid #EADFD3;display:flex;align-items:center;gap:10px;padding:0 16px;color:#7A6E78;font-size:15px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Skills, projects, makers, communities
+          </div>
+        </div>
+        <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:18px;font-weight:700;color:#2B2233">Themes this week</span>
+          <div style="display:flex;gap:10px;overflow-x:auto;margin-right:-20px;padding-right:20px">
+            <div style="flex:none;width:180px;height:160px;border-radius:16px;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1;padding:16px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s cubic-bezier(.2,.8,.2,1);cursor:pointer" style-hover="transform:translateY(-4px) rotate(-1.5deg)">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">12 ideas</span>
+              <span style="font-size:20px;font-weight:700;line-height:1.05;color:#2B2233">Things to make with leftover yarn</span>
+            </div>
+            <div style="flex:none;width:180px;height:160px;border-radius:16px;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7;padding:16px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s cubic-bezier(.2,.8,.2,1);cursor:pointer" style-hover="transform:translateY(-4px) rotate(-1.5deg)">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">8 ideas</span>
+              <span style="font-size:20px;font-weight:700;line-height:1.05;color:#2B2233">Small crafts for a relaxing evening</span>
+            </div>
+            <div style="flex:none;width:180px;height:160px;border-radius:16px;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3;padding:16px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .3s cubic-bezier(.2,.8,.2,1);cursor:pointer" style-hover="transform:translateY(-4px) rotate(-1.5deg)">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">15 ideas</span>
+              <span style="font-size:20px;font-weight:700;line-height:1.05;color:#2B2233">Colorful handmade gifts</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:18px;font-weight:700;color:#2B2233">Skills to try</span><span style="font-size:14px;color:#C04A37;font-weight:700">See all</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="border:1px solid #EADFD3;border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)"><span style="width:40px;height:40px;border-radius:10px;background:#CDE8D6;flex:none"></span><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:700;color:#2B2233">Macramé</span><span style="font-size:12px;color:#7A6E78">Beginner friendly</span></div></div>
+            <div style="border:1px solid #EADFD3;border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)"><span style="width:40px;height:40px;border-radius:10px;background:#E2D9F7;flex:none"></span><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:700;color:#2B2233">Linocut</span><span style="font-size:12px;color:#7A6E78">Pairs with drawing</span></div></div>
+            <div style="border:1px solid #EADFD3;border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)"><span style="width:40px;height:40px;border-radius:10px;background:#FBE7A1;flex:none"></span><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:700;color:#2B2233">Paper quilling</span><span style="font-size:12px;color:#7A6E78">Under ₹300 to start</span></div></div>
+            <div style="border:1px solid #EADFD3;border-radius:14px;padding:12px;display:flex;gap:10px;align-items:center;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)"><span style="width:40px;height:40px;border-radius:10px;background:#CFE3F5;flex:none"></span><div style="display:flex;flex-direction:column"><span style="font-size:15px;font-weight:700;color:#2B2233">Felting</span><span style="font-size:12px;color:#7A6E78">Pairs with crochet</span></div></div>
+          </div>
+        </div>
+        <div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:18px;font-weight:700;color:#5A4E5E;white-space:nowrap">Use what you have</span><span style="flex:none;white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2B2233;background:#FBE7A1;padding:4px 9px;border-radius:999px">Coming soon</span></div>
+          <div aria-disabled="true" style="display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;padding:8px;border:1.5px dashed #B3A8AE;border-radius:14px;color:#5A4E5E;margin-bottom:96px">
+            <span style="flex:none;white-space:nowrap;height:34px;padding:0 12px;border-radius:999px;border:1px solid #DCCFC2;display:flex;align-items:center;font-size:14px">Leftover yarn</span>
+            <span style="flex:none;white-space:nowrap;height:34px;padding:0 12px;border-radius:999px;border:1px solid #DCCFC2;display:flex;align-items:center;font-size:14px">Old jeans</span>
+            <span style="flex:none;white-space:nowrap;height:34px;padding:0 12px;border-radius:999px;border:1px solid #DCCFC2;display:flex;align-items:center;font-size:14px">Pipe cleaners</span>
+            <span style="flex:none;white-space:nowrap;height:34px;padding:0 12px;border-radius:999px;border:1px solid #DCCFC2;display:flex;align-items:center;font-size:14px">Cardboard</span>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#FFF8F0;border-top:1px solid #F3EADF;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px 22px;font-size:11px;color:#7A6E78">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg>Home</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#C04A37;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Explore</div>
+          <div style="display:flex;justify-content:center"><span style="width:48px;height:48px;border-radius:16px;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center;margin-top:-4px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg>Community</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1e Tutorial detail -->
+    <div id="1e" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1e" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1e</a>Tutorial detail</div>
+      <div data-screen-label="1e Tutorial" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:340px;flex:none;background:radial-gradient(circle at 50% 100%, transparent 7px, rgba(255,255,255,.65) 7.5px 9.5px, transparent 10px) 0 0/22px 11px, #CDE8D6;position:relative;display:flex;align-items:flex-end;padding:16px 20px">
+          <span style="font-size:12px;color:#2B2233">photo — pipe cleaner bonsai, finished</span>
+          <div style="position:absolute;top:52px;left:16px;right:16px;display:flex;justify-content:space-between">
+            <span style="width:44px;height:44px;border-radius:50%;background:#FFF8F0;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span>
+            <span style="width:44px;height:44px;border-radius:50%;background:#FFF8F0;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg></span>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:20px 20px 110px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#E2D9F7;color:#5B3F8F">Pipe cleaner art</span>
+              <span style="font-size:12px;padding:4px 10px;border-radius:999px;background:#F3EADF;color:#2B2233">Beginner</span>
+              <span style="font-size:12px;padding:4px 10px;border-radius:999px;background:#F3EADF;color:#2B2233">45 min</span>
+            </div>
+            <h2 style="margin:0;font-size:28px;line-height:1.05;font-weight:700;color:#2B2233;letter-spacing:-.02em">Pipe cleaner bonsai for your desk</h2>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:50%;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1"></span><span style="font-size:14px;color:#2B2233"><b>Leo Mathew</b> · helps with wire crafts</span><span style="margin-left:auto;font-size:14px;font-weight:700;color:#C04A37">Follow</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Materials</span><span style="font-size:12px;color:#5A4E5E">{{ matsDone }} of 3 · saved to your account</span></div>
+            <div style="display:flex;flex-direction:column;border:1px solid #EADFD3;border-radius:12px">
+              <sc-for list="{{ materials }}" as="m" hint-placeholder-count="3">
+                <button onClick="{{ m.toggle }}" style-focus="outline:3px solid #5B3F8F;outline-offset:-3px" style="display:flex;align-items:center;gap:12px;min-height:46px;padding:12px 14px;border:none;border-bottom:1px solid #F3EADF;background:transparent;font:400 15px 'DM Sans';color:#2B2233;text-align:left;cursor:pointer;border-radius:12px">
+                  <sc-if value="{{ m.done }}" hint-placeholder-val="{{ false }}"><span style="flex:none;width:20px;height:20px;border-radius:6px;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center;animation:ddPop .3s ease-out"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"></path></svg></span></sc-if>
+                  <sc-if value="{{ m.todo }}" hint-placeholder-val="{{ true }}"><span style="flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid #7A6E78"></span></sc-if>
+                  {{ m.name }}
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Step 1 of 5 · progress saved</span>
+            <div style="display:flex;gap:12px"><span style="flex:none;width:28px;height:28px;border-radius:50%;background:#2B2233;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center">1</span><p style="margin:0;font-size:15px;line-height:1.45">Twist 10 brown stems together at one end to form the trunk base.</p></div>
+            <div style="display:flex;gap:12px;opacity:.55"><span style="flex:none;width:28px;height:28px;border-radius:50%;border:1.5px solid #2B2233;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center">2</span><p style="margin:0;font-size:15px;line-height:1.45">Split the top into three branches and bend each one outwards.</p></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;background:#F4ECE1">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#5A4E5E">Source</span>
+            <span style="font-size:14px;line-height:1.4;color:#2B2233">Adapted from "Desk bonsai" by Leo Mathew on <a href="#1e" style="font-weight:700">wirecraft.example</a></span>
+            <span style="font-size:13px;color:#5A4E5E">License: CC BY 4.0 · Added by dodoi editors</span>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 30px;background:#FFF8F0;border-top:1px solid #F3EADF;display:flex;gap:10px">
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;flex:1;height:50px;border-radius:999px;border:1.5px solid #2B2233;background:#FFF8F0;font:700 15px 'DM Sans';color:#2B2233;display:flex;align-items:center;justify-content:center;gap:8px"><svg style="animation:ddTwinkle 2.4s ease-in-out infinite;transform-origin:center" style="animation:ddPop .35s ease-out" width="16" height="16" viewBox="0 0 24 24" fill="#E98A7E"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>Ask about this</button>
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;flex:1;height:50px;border-radius:999px;border:none;background:#F4A79D;font:700 15px 'DM Sans';color:#2B2233">Save to collection</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1f AI companion -->
+    <div id="1f" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1f" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1f</a>AI companion · image troubleshooting</div>
+      <div data-screen-label="1f AI companion" style="width:390px;height:844px;background:radial-gradient(rgba(170,150,220,.25) 1px, transparent 1.4px) 0 0/16px 16px, #F8F3FB;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="flex:none;padding:6px 16px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #EADFD3">
+          <span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span>
+          <div style="display:flex;flex-direction:column"><span style="font-size:17px;font-weight:700;color:#2B2233">dodoi companion</span><span style="font-size:13px;color:#7A6E78">Looking at: your crochet coaster</span></div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div style="animation:ddUp .5s cubic-bezier(.2,.8,.2,1) backwards;align-self:flex-end;max-width:78%;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <div style="width:170px;height:130px;border-radius:14px;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1;display:flex;align-items:flex-end;padding:8px;font-size:11px;color:#5A4E5E">your photo</div>
+            <div style="background:#F4A79D;color:#2B2233;padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:15px;line-height:1.4">Why does my edge look so wavy?</div>
+          </div>
+          <div style="animation:ddUp .6s cubic-bezier(.2,.8,.2,1) .45s backwards;align-self:flex-start;max-width:88%;background:#FFF8F0;border:1px solid #EADFD3;padding:14px;border-radius:16px 16px 16px 4px;font-size:15px;line-height:1.45;color:#2B2233;display:flex;flex-direction:column;gap:10px">
+            <span>A wavy edge usually means too many stitches per round. From the photo, your last two rounds look like they have extra increases.</span>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <span><b>1.</b> Count the stitches in your last round.</span>
+              <span><b>2.</b> Compare with the pattern total.</span>
+              <span><b>3.</b> If you're over, frog back one round and redo it.</span>
+            </div>
+            <div style="background:#F4ECE1;border-radius:8px;padding:8px 10px;font-size:13px;color:#5A4E5E">I can't see the stitch count clearly in this photo, so this is my best guess. A close-up of one edge would help.</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <span style="height:36px;padding:0 14px;border-radius:999px;background:#FFF8F0;border:1px solid #DCCFC2;font-size:14px;display:flex;align-items:center">Show me a diagram</span>
+            <span style="height:36px;padding:0 14px;border-radius:999px;background:#FFF8F0;border:1px solid #DCCFC2;font-size:14px;display:flex;align-items:center">Ask the crochet community</span>
+          </div>
+        </div>
+        <div style="flex:none;padding:12px 16px 30px;background:#FFF8F0;border-top:1px solid #EADFD3;display:flex;gap:8px;align-items:center">
+          <span style="width:44px;height:44px;border-radius:50%;background:#F3EADF;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
+          <span style="flex:1;height:44px;border-radius:999px;border:1px solid #DCCFC2;display:flex;align-items:center;padding:0 16px;font-size:15px;color:#7A6E78">Ask about a technique…</span>
+          <span style="width:44px;height:44px;border-radius:50%;background:#F4A79D;display:flex;align-items:center;justify-content:center;color:#2B2233"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1g Journal -->
+    <div id="1g" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1g" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1g</a>Creative journal · project</div>
+      <div data-screen-label="1g Journal" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="flex:none;padding:12px 20px 0;display:flex;flex-direction:column;gap:8px">
+          <span style="align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#2B2233;background:#F3EADF;padding:5px 9px;border-radius:2px">Project · in progress</span>
+          <h2 style="margin:0;font-size:30px;line-height:1.05;font-weight:700;color:#2B2233;letter-spacing:-.02em">My first embroidered flower</h2>
+          <span style="font-size:14px;color:#7A6E78">Embroidery · started 6 days ago · 3 entries</span>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:24px 20px 110px;display:flex;flex-direction:column">
+          <div style="display:grid;grid-template-columns:28px 1fr;column-gap:14px">
+            <div style="display:flex;flex-direction:column;align-items:center"><span style="width:14px;height:14px;border-radius:50%;background:#F4A79D;margin-top:4px;animation:ddPulseSoft 2s ease-out infinite"></span><span style="flex:1;width:2px;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7"></span></div>
+            <div style="padding-bottom:22px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:13px;color:#7A6E78">Entry 3 · today</span>
+              <span style="font-size:17px;font-weight:700;color:#2B2233">Finished the petals!</span>
+              <div style="height:150px;border-radius:12px;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3;display:flex;align-items:flex-end;padding:8px;font-size:11px;color:#5A4E5E">photo — hoop with petals</div>
+              <span style="font-size:15px;line-height:1.4">Satin stitch is slower than I thought. Shorter thread helped a lot.</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center"><span style="width:14px;height:14px;border-radius:50%;background:#FFF8F0;border:2px solid #C04A37;margin-top:4px"></span><span style="flex:1;width:2px;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7"></span></div>
+            <div style="padding-bottom:22px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:13px;color:#7A6E78">Entry 2 · 3 days ago</span>
+              <span style="font-size:17px;font-weight:700;color:#2B2233">Practicing the first stitch</span>
+              <div style="display:flex;gap:8px"><span style="width:90px;height:70px;border-radius:10px;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1"></span><span style="width:90px;height:70px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7"></span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center"><span style="width:14px;height:14px;border-radius:50%;background:#FFF8F0;border:2px solid #C04A37;margin-top:4px"></span></div>
+            <div style="padding-bottom:22px;display:flex;flex-direction:column;gap:6px">
+              <span style="font-size:13px;color:#7A6E78">Entry 1 · 6 days ago</span>
+              <span style="font-size:17px;font-weight:700;color:#2B2233">Choosing materials</span>
+              <span style="font-size:15px;line-height:1.4;color:#5A4E5E">Cotton fabric, 6-inch hoop, 4 floss colors.</span>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 20px 30px;background:#FFF8F0;border-top:1px solid #F3EADF;display:flex;gap:10px">
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;flex:1;height:50px;border-radius:999px;border:none;background:#F4A79D;font:700 15px 'DM Sans';color:#2B2233;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add progress entry</button>
+          <button style-active="transform:scale(.96)" style="transition:transform .15s ease, background-color .2s ease;height:50px;padding:0 18px;border-radius:999px;border:1.5px solid #2B2233;background:#FFF8F0;font:700 15px 'DM Sans';color:#2B2233">Share</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1h Community help -->
+    <div id="1h" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1h" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1h</a>Community · peer help</div>
+      <div data-screen-label="1h Community" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="flex:none;padding:12px 20px 0;display:flex;flex-direction:column;gap:12px">
+          <h2 style="margin:0;font-size:30px;font-weight:700;color:#2B2233;letter-spacing:-.02em">Community</h2>
+          <div style="display:flex;gap:20px;border-bottom:1px solid #EADFD3;font-size:15px">
+            <span style="padding-bottom:10px;color:#7A6E78">Your circles</span>
+            <span style="padding-bottom:10px;color:#C04A37;font-weight:700;border-bottom:2px solid #C04A37">Help requests</span>
+            <span style="padding-bottom:10px;color:#7A6E78">Sessions</span>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:16px 20px 110px;display:flex;flex-direction:column;gap:12px">
+          <div style="background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+            <span style="font-size:16px;font-weight:700;color:#2B2233">You can help with: watercolor, sketching</span>
+            <span style="font-size:14px;color:#5A4E5E">3 open requests match your skills.</span>
+          </div>
+          <div style="border:1px solid #EADFD3;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#5B3F8F;background:#E2D9F7;padding:3px 9px;border-radius:999px">Watercolor</span><span style="font-size:12px;font-weight:700;color:#4F7A3A;display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#4F7A3A"></span>Open</span></div>
+            <span style="font-size:17px;font-weight:700;color:#2B2233;line-height:1.2">What causes these blotchy marks in my sky?</span>
+            <div style="display:flex;gap:8px"><span style="width:72px;height:56px;border-radius:8px;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1"></span><span style="width:72px;height:56px;border-radius:8px;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3"></span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#7A6E78">Ravi · 2h ago · 1 reply</span><span style="font-size:14px;font-weight:700;color:#C04A37">Offer help</span></div>
+          </div>
+          <div style="border:1px solid #EADFD3;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#5B3F8F;background:#E2D9F7;padding:3px 9px;border-radius:999px">Sketching</span><span style="font-size:12px;font-weight:700;color:#5A4E5E;display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#F5C96B"></span>In progress</span></div>
+            <span style="font-size:17px;font-weight:700;color:#2B2233;line-height:1.2">Would anyone do a 30-min call on hand proportions?</span>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:#7A6E78">Tara · session proposed Sat 5 PM</span><span style="font-size:14px;font-weight:700;color:#C04A37">View</span></div>
+          </div>
+          <div style="border:1px solid #EADFD3;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;opacity:.7;transition:transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s" style-hover="transform:translateY(-2px);box-shadow:0 8px 20px rgba(110,60,40,.10)">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:700;color:#5B3F8F;background:#E2D9F7;padding:3px 9px;border-radius:999px">Watercolor</span><span style="font-size:12px;font-weight:700;color:#7A6E78;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"></path></svg>Resolved</span></div>
+            <span style="font-size:17px;font-weight:700;color:#2B2233;line-height:1.2">Best paper for a total beginner?</span>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#FFF8F0;border-top:1px solid #F3EADF;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px 22px;font-size:11px;color:#7A6E78">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg>Home</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Explore</div>
+          <div style="display:flex;justify-content:center"><span style="width:48px;height:48px;border-radius:16px;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center;margin-top:-4px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#C04A37;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg>Community</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1i Profile -->
+    <div id="1i" style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;align-items:baseline;font-size:13px;color:#7A6E78"><a href="#1i" style="font:700 11px 'DM Sans';padding:3px 7px;background:rgba(0,0,0,.08);color:#2B2233;border-radius:5px">1i</a>Profile · collections</div>
+      <div data-screen-label="1i Profile" style="width:390px;height:844px;background:radial-gradient(rgba(214,170,190,.28) 1px, transparent 1.4px) 0 0/16px 16px, #FFF8F0;border-radius:40px;overflow:hidden;box-shadow:0 12px 32px rgba(110,60,40,.10);display:flex;flex-direction:column;position:relative">
+        <div style="height:44px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:700;color:#2B2233"><span>9:41</span><span style="width:22px;height:10px;border:1.5px solid #2B2233;border-radius:3px"></span></div>
+        <div style="flex:1;overflow-y:auto;padding:12px 20px 110px;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;gap:14px;align-items:center">
+            <span style="width:72px;height:72px;border-radius:50%;background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3;flex:none"></span>
+            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;font-weight:700;color:#2B2233">Aanya Verma</span><span style="font-size:14px;color:#7A6E78">@aanyamakes · 128 following</span></div>
+          </div>
+          <p style="margin:0;font-size:15px;line-height:1.45">Watercolor most evenings. Currently bad at crochet and loving it.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;border-top:1px solid #EADFD3;padding-top:16px">
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Can help with</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:14px;font-weight:700;padding:4px 12px;border-radius:999px;background:#F4A79D;color:#2B2233">Watercolor</span><span style="font-size:14px;font-weight:700;padding:4px 12px;border-radius:999px;background:#F4A79D;color:#2B2233">Sketching</span></div></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Learning</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:14px;padding:4px 12px;border-radius:999px;background:#FBE7A1;color:#2B2233">Crochet</span><span style="font-size:14px;padding:4px 12px;border-radius:999px;background:#FBE7A1;color:#2B2233">Embroidery</span></div></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7A6E78">Curious about</span><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:14px;padding:4px 12px;border-radius:999px;border:1px solid #DCCFC2;color:#2B2233">Pottery</span><span style="font-size:14px;padding:4px 12px;border-radius:999px;border:1px solid #DCCFC2;color:#2B2233">Linocut</span></div></div>
+          </div>
+          <div style="display:flex;gap:20px;border-bottom:1px solid #EADFD3;font-size:15px">
+            <span style="padding-bottom:10px;color:#7A6E78">Projects</span>
+            <span style="padding-bottom:10px;color:#C04A37;font-weight:700;border-bottom:2px solid #C04A37">Collections</span>
+            <span style="padding-bottom:10px;color:#7A6E78">Posts</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:6px"><div style="height:120px;border-radius:12px;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px;overflow:hidden"><span style="grid-row:span 2;background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1"></span><span style="background:radial-gradient(circle at 50% 100%, transparent 7px, rgba(255,255,255,.65) 7.5px 9.5px, transparent 10px) 0 0/22px 11px, #CDE8D6"></span><span style="background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3"></span></div><span style="font-size:15px;font-weight:700;color:#2B2233">Crochet ideas to try</span><span style="font-size:13px;color:#7A6E78">18 saved · Private</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><div style="height:120px;border-radius:12px;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px;overflow:hidden"><span style="grid-row:span 2;background:linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7"></span><span style="background:#F4A79D"></span><span style="background:#F4ECE1"></span></div><span style="font-size:15px;font-weight:700;color:#2B2233">Color palettes I love</span><span style="font-size:13px;color:#7A6E78">32 saved · Public</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><div style="height:120px;border-radius:12px;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px;overflow:hidden"><span style="grid-row:span 2;background:conic-gradient(rgba(255,255,255,.45) 25%, transparent 0 50%, rgba(255,255,255,.45) 0 75%, transparent 0) 0 0/22px 22px, #CFE3F5"></span><span style="background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3"></span><span style="background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1"></span></div><span style="font-size:15px;font-weight:700;color:#2B2233">Things to make as gifts</span><span style="font-size:13px;color:#7A6E78">9 saved · Private</span></div>
+            <div style="height:120px;border-radius:12px;border:1.5px dashed #B3A8AE;display:flex;align-items:center;justify-content:center;font-size:15px;color:#5A4E5E">+ New collection</div>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#FFF8F0;border-top:1px solid #F3EADF;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px 22px;font-size:11px;color:#7A6E78">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg>Home</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Explore</div>
+          <div style="display:flex;justify-content:center"><span style="width:48px;height:48px;border-radius:16px;background:#F4A79D;color:#2B2233;display:flex;align-items:center;justify-content:center;margin-top:-4px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"></path></svg>Community</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#C04A37;font-weight:700"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>Profile</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p style="margin:32px 0 0;font-size:14px;color:#7A6E78">Try next: "desktop version of <a href="#1c">1c</a>" · "messages and session scheduling" · "empty, offline and error states"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showNotes&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;}}">
+class Component extends DCLogic {
+  state = {
+    on: { Watercolor: true, Sketching: true, Crochet: true, Embroidery: true },
+    saved: { 2: true },
+    mats: { 0: true },
+    filter: 'For you',
+  };
+  renderVals() {
+    const names = ['Drawing','Sketching','Watercolor','Crochet','Embroidery','Knitting','Pipe cleaner art','Pottery','Coloring','Journaling','DIY','Photography','Paper craft','Jewelry'];
+    const interests = names.map(n => {
+      const on = !!this.state.on[n];
+      return { name: n, on, off: !on, toggle: () => this.setState(s => ({ on: { ...s.on, [n]: !s.on[n] } })) };
+    });
+    const filters = ['For you','Crochet','Watercolor','Embroidery','New to you'].map(n => ({
+      name: n, on: this.state.filter === n, off: this.state.filter !== n, pick: () => this.setState({ filter: n }),
+    }));
+    const raw = [
+      { t: 'My first amigurumi bee', by: 'Meera', skill: 'Crochet', type: 'First attempt', h: 210, bg: '#FBE7A1', ph: 'photo — amigurumi bee' },
+      { t: 'Pressed-flower bookmarks', by: 'Jonah', skill: 'DIY', type: 'Tutorial · 20 min', h: 150, bg: '#F9D0D3', ph: 'photo — bookmarks' },
+      { t: 'Ink and thread portrait', by: 'Sana', skill: 'Embroidery × Drawing', type: 'Work in progress', h: 250, bg: '#E2D9F7', ph: 'photo — hoop portrait' },
+      { t: 'Pipe cleaner bonsai', by: 'Leo', skill: 'Pipe cleaner art', type: 'Tutorial · 45 min', h: 170, bg: '#CDE8D6', ph: 'photo — bonsai' },
+      { t: 'Sky study, day 12', by: 'Ravi', skill: 'Watercolor', type: 'Journal', h: 190, bg: '#CFE3F5', ph: 'photo — sky study' },
+      { t: 'Tiny clay mushrooms', by: 'Priya', skill: 'Pottery', type: 'Finished', h: 160, bg: '#CFE3F5', ph: 'photo — mushrooms' },
+    ];
+    const PAT = {"#FBE7A1":"radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1","#F9D0D3":"repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3","#E2D9F7":"linear-gradient(90deg, rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, linear-gradient(rgba(255,255,255,.45) 50%, transparent 50%) 0 0/18px 18px, #E2D9F7","#CDE8D6":"radial-gradient(circle at 50% 100%, transparent 7px, rgba(255,255,255,.65) 7.5px 9.5px, transparent 10px) 0 0/22px 11px, #CDE8D6","#CFE3F5":"conic-gradient(rgba(255,255,255,.45) 25%, transparent 0 50%, rgba(255,255,255,.45) 0 75%, transparent 0) 0 0/22px 22px, #CFE3F5","#F4A79D":"radial-gradient(rgba(255,255,255,.4) 1.5px, transparent 2px) 0 0/10px 10px, #F4A79D"};
+    const feed = raw.map((it, i) => {
+      const saved = !!this.state.saved[i];
+      return { ...it, hd: Math.round(it.h * 1.25), delay: 120 + i * 80, bg: PAT[it.bg] || it.bg, saved, unsaved: !saved, toggle: (e) => { e && e.stopPropagation(); this.setState(s => ({ saved: { ...s.saved, [i]: !s.saved[i] } })); } };
+    });
+    return {
+      interests, filters, feed,
+      selectedCount: interests.filter(i => i.on).length,
+      canContinue: interests.filter(i => i.on).length >= 3,
+      cantContinue: interests.filter(i => i.on).length < 3,
+      needMore: Math.max(0, 3 - interests.filter(i => i.on).length),
+      materials: ['20 brown pipe cleaners','10 green pipe cleaners','Small pot or bottle cap'].map((m, i) => {
+        const done = !!(this.state.mats || {})[i];
+        return { name: m, done, todo: !done, last: i === 2, toggle: () => this.setState(s => ({ mats: { ...(s.mats || {}), [i]: !(s.mats || {})[i] } })) };
+      }),
+      matsDone: Object.values(this.state.mats || {}).filter(Boolean).length,
+      showNotes: this.props.showNotes ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>
