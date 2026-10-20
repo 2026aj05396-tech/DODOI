@@ -246,7 +246,7 @@ Production readiness note: polling-based messaging (P3) and stateless JWT sessio
 
 ## 14. Architecture Decision Records
 
-ADRs live in `docs/adr/NNNN-title.md` (create the folder at scaffold time). Template: Context · Decision · Alternatives · Consequences · Status.
+ADRs live in [`docs/adr/`](adr/README.md). Template: Status · Date · Context · Decision · Alternatives · Consequences.
 
 | ADR | Title | Status |
 |---|---|---|
@@ -258,4 +258,4 @@ ADRs live in `docs/adr/NNNN-title.md` (create the folder at scaffold time). Temp
 | 0006 | Tailwind + shadcn/ui | Accepted |
 | 0007 | Rules-based feed ranking | Accepted (weights PROPOSED) |
 | 0008 | Polling for messaging (P3) | Accepted |
-| 0009 | Local-only hosting until deployment decision | Accepted |
+| 0009 | Three environments; hosting deferred | Accepted |
