@@ -117,7 +117,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | P0-08 | ADR folder with ADRs 0001–0009 (SYSTEM_ARCHITECTURE §14) | S | AI | P0-01 | `docs/adr/*` | Files exist per template | ☑ |
 | P0-09 | GitHub Actions: lint, typecheck, format check, unit/integration (Postgres service), build, E2E; branch protection on `main`; secret scanning + push protection | M | AI+PO | P0-06, GitHub repo | `.github/workflows/*` | CI green on `main`; PRs blocked on failing checks | ☐ |
 | P0-10 | Design-system primitives in `components/ui/`: Button, Chip (filter/interest/meta/skill/suggestion/dashed-add), SearchField, Tabs, Sheet, Dialog, Toast, Skeleton, EmptyState, ErrorState, FieldError, ErrorBanner, ComingSoonCard, "Soon" pill, PatternTile, Wordmark | L | AI+PO | P0-04 | Components + component tests | Match design `3b`/UI_UX §4; keyboard + focus ring; axe clean on a `/dev/ui` preview page (dev-only) | ☐ |
-| P0-11 | ESLint boundary rules (`no-restricted-imports` for server/client and module internals), `no-console`, `no-explicit-any`; optional cycle detection if approved | S | AI | P0-01, P0-02 | `eslint` config | Violations fail `pnpm lint` (verified with a deliberate bad import) | ☐ |
+| P0-11 | ESLint boundary rules (`no-restricted-imports` for server/client and module internals), `no-console`, `no-explicit-any`; optional cycle detection if approved | S | AI | P0-01, P0-02 | `eslint` config | Violations fail `pnpm lint` (verified with a deliberate bad import) | ☑ |
 
 **Exit (M0):** README setup works from a clean clone; CI green; `/dev/ui` shows all primitives matching the design.
 
