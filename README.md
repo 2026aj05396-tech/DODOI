@@ -103,7 +103,7 @@ The full list of open decisions lives in [docs/PRODUCT_REQUIREMENTS.md §9](docs
 
 | Tool | Version | Notes |
 |---|---|---|
-| Node.js | Current LTS | Exact version pinned in `.nvmrc` at scaffold time |
+| Node.js | 24 (LTS) | Pinned in `.nvmrc` and `package.json` `engines` |
 | pnpm | Latest stable | `corepack enable` then `corepack prepare pnpm@latest --activate` |
 | Docker + Docker Compose | Current stable | Runs local PostgreSQL |
 | Git | Any recent | Version control; remote on GitHub |

@@ -31,9 +31,9 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 
 | Layer | Choice | Status |
 |---|---|---|
-| Framework | Next.js, App Router | CONFIRMED |
+| Framework | Next.js 16 (App Router, Turbopack, React Compiler, Cache Components — framework defaults) + React 19 | CONFIRMED |
 | Language | TypeScript, `strict: true` | CONFIRMED |
-| Styling | Tailwind CSS + shadcn/ui | CONFIRMED |
+| Styling | Tailwind CSS 4 + shadcn/ui | CONFIRMED |
 | Backend | Route Handlers + service layer (same app) | CONFIRMED |
 | Database | PostgreSQL | CONFIRMED |
 | ORM | Prisma | CONFIRMED |
@@ -48,9 +48,9 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Messaging transport (P3) | Polling | CONFIRMED |
 | AI provider (P4) | — | OPEN (OD-02) |
 
-## 3. Proposed Supporting Libraries (need approval at scaffold time)
+## 3. Supporting Libraries (APPROVED before P0-02)
 
-Per the dependency rule, each must be approved before installation.
+All libraries below were approved by the product owner, including `eslint-plugin-import` for circular-import checks.
 
 | Purpose | Library | Why |
 |---|---|---|
@@ -102,6 +102,7 @@ src/
 ├── components/
 │   ├── ui/                             # shadcn primitives (restyled)
 │   ├── feed/ post/ collections/ profile/ onboarding/ layout/ admin/
+├── hooks/                              # Domain-free client hooks (approved P0-01)
 ├── server/
 │   ├── auth/                           # Auth.js config, session helpers, password utils
 │   ├── db/                             # Prisma client singleton
@@ -120,6 +121,8 @@ src/
 │   │   └── ai/      (P4, provider OPEN)
 │   └── lib/                            # errors, logger, rate-limit, pagination, http helpers
 ├── lib/
+│   ├── api-client/                     # Typed browser → /api calls (approved P0-01)
+│   ├── constants/                      # Cross-cutting constants (approved P0-01)
 │   ├── schemas/                        # Zod schemas shared client/server
 │   ├── types/
 │   └── utils/

@@ -24,10 +24,10 @@
 | Auth | Auth.js (Credentials + Google) | CONFIRMED |
 | Tests | Vitest + Testing Library, Playwright + axe | CONFIRMED |
 | Package manager | pnpm | CONFIRMED |
-| Runtime validation | Zod | PROPOSED |
-| Client data fetching / cache | TanStack Query | PROPOSED |
-| Forms | React Hook Form | PROPOSED |
-| Lint / format | ESLint (Next config) + Prettier + `prettier-plugin-tailwindcss` | PROPOSED |
+| Runtime validation | Zod | CONFIRMED |
+| Client data fetching / cache | TanStack Query | CONFIRMED |
+| Forms | React Hook Form | CONFIRMED |
+| Lint / format | ESLint (Next config) + Prettier + `prettier-plugin-tailwindcss` + `eslint-plugin-import` | CONFIRMED |
 
 ---
 
@@ -141,7 +141,7 @@ Names must say what a thing **is** or **does**, in plain English, without the re
 
 ### 3.1 Folder structure
 
-This matches [SYSTEM_ARCHITECTURE §5](docs/SYSTEM_ARCHITECTURE.md#5-folder-structure). The three folders marked **(added)** are not yet in that document; they are PROPOSED here because the architecture does not yet say where client hooks and the client API layer live. Add them to SYSTEM_ARCHITECTURE §5 when approved.
+This matches [SYSTEM_ARCHITECTURE §5](docs/SYSTEM_ARCHITECTURE.md#5-folder-structure). The three folders marked **(added)** were approved and added to SYSTEM_ARCHITECTURE §5 in P0-01.
 
 ```
 src/
