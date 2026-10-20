@@ -383,3 +383,4 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-30 | Full predefined skill list (landing claims "40+ crafts") with description, pitch and hint per skill | Skills seed | P1-02 |
 | OD-31 | Minimum seed content per skill / post type for launch | Seed production, launch gate | P1-19 |
 | OD-32 | PostgreSQL text-search config: `simple` vs `english` | Search migration | P1-01 |
+| OD-33 | Icon set: the design uses simple outline icons (home, search, bookmark, bell…). Options: Lucide (shadcn default, matches the style) or hand-made SVGs from the design | P0-10 components | P0-10 |

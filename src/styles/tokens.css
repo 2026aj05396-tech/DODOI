@@ -1,0 +1,123 @@
+/*
+ * dodoi design tokens — values from docs/design/dodoi-app-v3.dc.html (UI_UX_GUIDELINES §2).
+ * Palette tokens are used only in this file. Components use the semantic tokens below through
+ * Tailwind utilities (bg-primary, text-muted-foreground, ...). Semantic names follow shadcn/ui
+ * conventions so its components pick up dodoi colours. Dark mode (later) = new semantic values
+ * under [data-theme="dark"]; palette and components stay the same.
+ */
+
+:root {
+  /* Palette */
+  --palette-paper: #fff8f0;
+  --palette-paper-dots: rgb(214 170 190 / 0.28);
+  --palette-sand: #f3eadf;
+  --palette-sand-input: #f4ece1;
+  --palette-line: #eadfd3;
+  --palette-line-strong: #dccfc2;
+  --palette-ink: #2b2233;
+  --palette-ink-2: #5a4e5e;
+  --palette-ink-muted: #7a6e78;
+  --palette-ink-faint: #b3a8ae;
+  --palette-coral: #f4a79d;
+  --palette-coral-hover: #ee948a;
+  --palette-coral-deep: #e98a7e;
+  --palette-brick: #c04a37;
+  --palette-butter: #fbe7a1;
+  --palette-butter-strong: #f5c96b;
+  --palette-blush: #f9d0d3;
+  --palette-lavender: #e2d9f7;
+  --palette-lavender-strong: #d6c8f5;
+  --palette-plum: #5b3f8f;
+  --palette-mint: #cde8d6;
+  --palette-sky: #cfe3f5;
+  --palette-leaf: #4f7a3a;
+  --palette-danger: #b3261e;
+  --palette-danger-surface: #fbe3e0;
+  --palette-danger-line: #f2c4be;
+  --palette-ai-surface: #f8f3fb;
+  --palette-ai-dots: rgb(170 150 220 / 0.25);
+  --palette-white: #ffffff;
+
+  /* Semantic — surfaces and text */
+  --background: var(--palette-paper);
+  --foreground: var(--palette-ink);
+  --foreground-secondary: var(--palette-ink-2);
+  --card: var(--palette-paper);
+  --card-foreground: var(--palette-ink);
+  --popover: var(--palette-paper);
+  --popover-foreground: var(--palette-ink);
+  --muted: var(--palette-sand);
+  --muted-foreground: var(--palette-ink-muted);
+  --field: var(--palette-sand-input);
+
+  /* Semantic — actions */
+  --primary: var(--palette-coral);
+  --primary-foreground: var(--palette-ink);
+  --primary-hover: var(--palette-coral-hover);
+  --selected-border: var(--palette-coral-deep);
+  --secondary: var(--palette-sand);
+  --secondary-foreground: var(--palette-ink);
+  --accent: var(--palette-sand);
+  --accent-foreground: var(--palette-ink);
+  --inverse: var(--palette-ink);
+  --inverse-foreground: var(--palette-white);
+  --link: var(--palette-brick);
+
+  /* Semantic — lines, focus, status */
+  --border: var(--palette-line);
+  --border-strong: var(--palette-line-strong);
+  --border-faint: var(--palette-ink-faint);
+  --input: var(--palette-line-strong);
+  --checkbox: var(--palette-ink-muted);
+  --ring: var(--palette-plum);
+  --destructive: var(--palette-danger);
+  --destructive-surface: var(--palette-danger-surface);
+  --destructive-border: var(--palette-danger-line);
+  --success: var(--palette-leaf);
+
+  /* Semantic — decorative accents (never used as text colour on paper) */
+  --accent-butter: var(--palette-butter);
+  --accent-butter-strong: var(--palette-butter-strong);
+  --accent-blush: var(--palette-blush);
+  --accent-lavender: var(--palette-lavender);
+  --accent-lavender-strong: var(--palette-lavender-strong);
+  --accent-plum: var(--palette-plum);
+  --accent-mint: var(--palette-mint);
+  --accent-sky: var(--palette-sky);
+  --accent-coral: var(--palette-coral);
+  --ai-surface: var(--palette-ai-surface);
+
+  /* Craft patterns (UI_UX_GUIDELINES §2.3): overlay layers drawn on top of an accent colour */
+  --pattern-dots: radial-gradient(rgb(255 255 255 / 0.75) 2px, transparent 2.5px) 0 0 / 14px 14px;
+  --pattern-stripes: repeating-linear-gradient(
+    45deg,
+    rgb(255 255 255 / 0.5) 0 5px,
+    transparent 5px 13px
+  );
+  --pattern-gingham:
+    linear-gradient(90deg, rgb(255 255 255 / 0.45) 50%, transparent 50%) 0 0 / 18px 18px,
+    linear-gradient(rgb(255 255 255 / 0.45) 50%, transparent 50%) 0 0 / 18px 18px;
+  --pattern-scallops: radial-gradient(
+      circle at 50% 100%,
+      transparent 7px,
+      rgb(255 255 255 / 0.65) 7.5px 9.5px,
+      transparent 10px
+    )
+    0 0 / 22px 11px;
+  --pattern-checks: conic-gradient(
+      rgb(255 255 255 / 0.45) 25%,
+      transparent 0 50%,
+      rgb(255 255 255 / 0.45) 0 75%,
+      transparent 0
+    )
+    0 0 / 22px 22px;
+  --pattern-small-dots: radial-gradient(rgb(255 255 255 / 0.4) 1.5px, transparent 2px) 0 0 / 10px
+    10px;
+  --pattern-new-stripes: repeating-linear-gradient(
+    -45deg,
+    rgb(255 255 255 / 0.55) 0 8px,
+    transparent 8px 18px
+  );
+  --pattern-paper: radial-gradient(var(--palette-paper-dots) 1px, transparent 1.4px) 0 0 / 16px 16px;
+  --pattern-ai-paper: radial-gradient(var(--palette-ai-dots) 1px, transparent 1.4px) 0 0 / 16px 16px;
+}

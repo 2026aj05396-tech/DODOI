@@ -61,22 +61,28 @@ Defined once as CSS custom properties in `src/styles/tokens.css`, mapped into th
 
 ### 2.2 Semantic tokens
 
-| Token | Maps to |
-|---|---|
-| `--color-bg` | paper (+ paper-dots texture) |
-| `--color-surface` | paper |
-| `--color-surface-subtle` | sand |
-| `--color-input` | sand-input |
-| `--color-text` / `-secondary` / `-muted` | ink / ink-2 / ink-muted |
-| `--color-primary` / `--color-on-primary` / `-hover` | coral / ink / coral-hover |
-| `--color-selected-border` | coral-deep |
-| `--color-link` (also active nav, text actions) | brick |
-| `--color-inverse` / `--color-on-inverse` | ink / white |
-| `--color-border` / `-strong` | line / line-strong |
-| `--color-focus` | plum `#5B3F8F` — **3px outline, 2px offset, `:focus-visible` only, never on tap** (design `3b`) |
-| `--color-danger` / `--color-danger-surface` | danger / danger-surface |
-| `--color-success` | leaf |
-| `--color-accent-{butter,blush,lavender,mint,sky}` | tile accents |
+Implemented in `src/styles/tokens.css` and mapped to Tailwind utilities in `src/styles/globals.css` (P0-04). Names follow shadcn/ui conventions so its components use dodoi colours. Use the utility in components, e.g. `bg-primary text-primary-foreground`.
+
+| Token (CSS var) | Tailwind utility | Maps to |
+|---|---|---|
+| `--background` | `bg-background`, `bg-paper` (with dot texture) | paper |
+| `--foreground` / `--foreground-secondary` / `--muted-foreground` | `text-foreground` / `text-foreground-secondary` / `text-muted-foreground` | ink / ink-2 / ink-muted |
+| `--card`, `--popover` | `bg-card`, `bg-popover` | paper |
+| `--muted`, `--secondary`, `--accent` | `bg-muted`, `bg-secondary`, `bg-accent` | sand |
+| `--field` | `bg-field` | sand-input |
+| `--primary` / `--primary-foreground` / `--primary-hover` | `bg-primary text-primary-foreground hover:bg-primary-hover` | coral / ink / coral-hover |
+| `--selected-border` | `border-selected-border` | coral-deep |
+| `--link` | `text-link` (links, active nav, text actions) | brick |
+| `--inverse` / `--inverse-foreground` | `bg-inverse text-inverse-foreground` | ink / white |
+| `--border` / `--border-strong` / `--border-faint` | `border-border` / `border-border-strong` / `border-border-faint` | line / line-strong / ink-faint |
+| `--input` / `--checkbox` | `border-input` / `border-checkbox` | line-strong / `#7A6E78` |
+| `--ring` | global `:focus-visible` (3px outline, 2px offset), `ring-ring` | plum |
+| `--destructive` / `--destructive-surface` / `--destructive-border` | `text-destructive`, `bg-destructive-surface` | danger / danger-surface / danger-line |
+| `--success` | `text-success` | leaf |
+| Accents | `bg-butter`, `bg-blush`, `bg-lavender`, `bg-lavender-strong`, `bg-mint`, `bg-sky`, `bg-coral`, `text-plum` | tile accents |
+| Patterns | `bg-pattern-{butter,blush,lavender,mint,sky,coral,new-to-you}`, `bg-ai-paper` | §2.3 |
+
+Type scale: `text-hero`, `text-hero-web`, `text-title`, `text-title-web`, `text-greeting(-web)`, `text-section`, `text-card-title(-web)`, `text-body-lg(-web)`, `text-body`, `text-meta(-web)`, `text-chip`, `text-overline`, `text-tab`. Radii: `rounded-xs/sm/md/card/lg/xl/full`. Shadows: `shadow-hover/float/frame`. Motion: `animate-dd-up/pop/float/stripe/twinkle/pulse/pulse-soft`, easing `ease-soft`.
 
 **Contrast notes (computed from design values, to be re-verified with a checker):**
 - Ink on paper, ink on coral (primary buttons), muted on paper, brick on paper, leaf on paper: pass WCAG AA for normal text.

@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
+import { DM_Sans } from "next/font/google";
 
 import "@/styles/globals.css";
+
+// DM Sans is the only typeface (UI_UX_GUIDELINES §2.4). Self-hosted at build time by next/font.
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "dodoi",
@@ -9,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en">
+    <html lang="en" className={dmSans.variable}>
       <body>{children}</body>
     </html>
   );
