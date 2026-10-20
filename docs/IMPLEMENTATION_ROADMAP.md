@@ -207,6 +207,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | P1-28 | Account deletion: deactivate, 14-day grace, cancel, hard-delete job; unverified-account (30-day) cleanup | M | P1-05, P1-33 | SECURITY §7.3 rules (integration tests); Cloudinary avatar deleted | ☐ |
 | P1-33 | Daily jobs runner (`pnpm jobs:daily`): purge tokens, feed sessions, rate-limit buckets, orphan media; run deletion jobs. Trigger mechanism per deployment (OD-01) | S | P1-01 | Each job idempotent and tested | ☐ |
 | P1-31 | Accessibility + performance pass on all P1 screens (mobile, tablet, desktop) | M | All UI tasks | axe: no serious/critical; keyboard walkthrough; CWV targets measured on mobile profile | ☐ |
+| P1-35 | Test environment: provision hosting (OD-01), separate DB/OAuth/Cloudinary/Resend credentials, `APP_ENV=test`, auto-deploy from `main`, `migrate deploy`, noindex + TEST badge, scheduled jobs | S | OD-01, P0-09 | PO can sign up and use every Phase 1 feature on the hosted test site | ☐ |
 | P1-34 | Full E2E suite (E2E-01…18) green in CI across mobile + desktop; WebKit/Firefox smoke subset | S | All above | CI green | ☐ |
 | P1-32 | Analytics events (only if OD-19/OD-20 decided) | S | OD-19, OD-20 | Events documented; no sensitive data | ☐ (optional) |
 
@@ -277,7 +278,7 @@ Recommendation improvements, cross-interest discovery, offline mutation queue, p
 
 ## 8. Pre-launch Gate (before any public release)
 
-- [ ] OD-01 deployment target chosen and configured (production env vars, HTTPS, scheduled jobs trigger)
+- [ ] Production environment provisioned (OD-01): own database, OAuth client, Cloudinary, Resend, secrets, HTTPS, scheduled jobs; deploy from version tag after PO sign-off on the test environment
 - [ ] OD-26 privacy policy and terms of service published (DPDP notice, grievance contact, 18+ eligibility)
 - [ ] OD-05 content licensing and takedown process documented
 - [ ] Legal review of DPDP compliance and age-gate approach

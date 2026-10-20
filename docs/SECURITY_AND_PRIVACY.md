@@ -159,6 +159,7 @@ Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed wi
 
 - `.env.local` is git-ignored; `.env.example` contains placeholders only.
 - Server-only modules import `server-only`; client code may read only `NEXT_PUBLIC_*`.
+- Every environment (local, test, production) has its own secrets; a secret is never reused across environments. Hosted secrets live only in the host's secret store.
 - Rotate any secret that is accidentally committed; enable GitHub secret scanning and push protection on the repository (OD-24: GitHub).
 
 ## 10. Security Checklist per Feature (copy into PR/summary)

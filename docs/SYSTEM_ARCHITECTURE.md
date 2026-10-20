@@ -236,11 +236,25 @@ Daily maintenance (PROPOSED trigger: GitHub Actions scheduled workflow calling a
 
 ## 13. Environments
 
-| Environment | Status |
-|---|---|
-| Local development | CONFIRMED — Docker PostgreSQL, Cloudinary dev folder, Resend test mode |
-| Test (CI) | GitHub Actions with a PostgreSQL service container (CONFIRMED, OD-24) |
-| Staging / Production | OPEN (OD-01). Free-tier candidates discussed: Vercel Hobby (non-commercial use only) + Neon free Postgres. Not decided. |
+Three application environments (CONFIRMED) plus automated test runs:
+
+| Environment | `APP_ENV` | Purpose | Where | Data |
+|---|---|---|---|---|
+| **Local development** | `local` | Developers run the app on their machine | Docker PostgreSQL (`dodoi`), `pnpm dev` | Disposable dev data |
+| **Test** (hosted QA) | `test` | PO and testers try features before production | Hosting OPEN (OD-01) | Own database; seed + test accounts only, never real user data |
+| **Production** | `production` | Real users | Hosting OPEN (OD-01) | Real user data |
+| *Automated test runs* | *(not an app environment)* | Vitest / Playwright locally and in CI | Local `dodoi_test` DB; CI Postgres service container (OD-24) | Created and wiped by the tests |
+
+**Naming:** "Test environment" always means the hosted QA site. Automated tests are called "automated test runs"; they run with `NODE_ENV=test`. `APP_ENV` (not `NODE_ENV`) identifies the deployed environment, because both hosted environments build with `NODE_ENV=production`.
+
+**Isolation (CONFIRMED — fully separate):** each environment has its own database, Auth.js secret, Google OAuth client (with its own redirect URIs), Cloudinary account or product environment, and Resend API key / sending domain. No secret or database is shared, and test data never touches production.
+
+**Promotion flow (PROPOSED):** feature branch → PR (CI green) → merge to `main` → automatic deploy to **test** → PO verifies → production deploy from a version tag (`vX.Y.Z`) after PO approval. Database migrations run with `prisma migrate deploy` as part of each deploy; never `migrate dev` outside local.
+
+**Environment-specific behaviour:**
+- Non-production environments send `X-Robots-Tag: noindex` and show a small "TEST" badge so testers never confuse them with production.
+- Seed/import scripts refuse to run against `APP_ENV=production` unless an explicit confirmation flag is passed (PROPOSED).
+- Test-only helpers (e.g. E2E sign-in route) are enabled only in automated test runs, never in the hosted test or production environments.
 
 Production readiness note: polling-based messaging (P3) and stateless JWT sessions are both compatible with serverless hosting if chosen later.
 

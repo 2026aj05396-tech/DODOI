@@ -351,7 +351,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 
 | ID | Decision | Blocks | Phase |
 |---|---|---|---|
-| OD-01 | Deployment/hosting target (currently local only) | Deployment tasks, production env | Before launch |
+| OD-01 | Hosting for the **test** and **production** environments (three environments CONFIRMED: local, test, production — SYSTEM_ARCHITECTURE §13). Must be free for now | Deployment tasks | Before first test deploy |
 | OD-02 | AI provider and model(s) | All AI work | P4 |
 | OD-03 | Video calls: integrated vs external provider | Sessions | P3 |
 | OD-04 | Monetization | — | Later |

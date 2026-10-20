@@ -164,6 +164,8 @@ pnpm dev
 
 ## 5. Environment Variables
 
+Each environment (local, test, production) has its **own values for every variable** — separate database, OAuth client, Cloudinary and Resend credentials. Hosted environments set them in the host's secret settings, never in files.
+
 `.env.example` must list every variable with a placeholder and comment. Never commit real values.
 
 | Variable | Required | Description |
@@ -178,6 +180,7 @@ pnpm dev
 | `CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Yes | Cloudinary API key (server only) |
 | `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret (server only) |
+| `APP_ENV` | Yes | `local`, `test` or `production` (SYSTEM_ARCHITECTURE §13) |
 | `NEXT_PUBLIC_APP_URL` | Yes | Public base URL used in client code |
 | `SEED_ADMIN_EMAIL` | Seed only | Email of the account promoted to ADMIN by the seed script |
 
