@@ -1,0 +1,10 @@
+// Source of truth for models: docs/DATABASE_SCHEMA.md. Phase 1 models are added in P1-01.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

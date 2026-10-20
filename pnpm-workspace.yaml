@@ -1,3 +1,8 @@
+# Dependencies allowed to run install scripts (pnpm blocks all others by default).
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - prisma
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

@@ -130,7 +130,7 @@ pnpm install
 cp .env.example .env.local
 #    then fill in values (see §5)
 
-# 3. Start PostgreSQL
+# 3. Start PostgreSQL (host port 5433; creates databases dodoi and dodoi_test)
 docker compose up -d db
 
 # 4. Apply database migrations (also enables pg_trgm extension)
