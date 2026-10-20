@@ -18,6 +18,8 @@
 ## 2. Test Environment
 
 - **Database:** separate PostgreSQL database for tests (same Docker container, different DB name, e.g. `app_test`), migrated with `prisma migrate deploy`. Isolation between integration tests: truncate tables per test file or transaction rollback (PROPOSED: truncate; decide in P0-06).
+- **E2E server:** Playwright builds the app and runs `next start` on port 3100 against `dodoi_test` (Next.js allows only one `next dev` per project, and this matches CI).
+- **Fakes and factories** are added together with the interfaces and models they stand in for (email fake in P1-05, media fake in P1-03, model factories with P1-01).
 - **External services:** Cloudinary, Resend and Google are **never** called in automated tests. Use fakes implementing the integration interfaces (`FakeEmailProvider` captures sent emails so tests can read verification links).
 - **Auth in tests:** helper to create a user and obtain a session cookie; E2E uses a test-only sign-in route **enabled only when `NODE_ENV=test`** (PROPOSED) or real credentials flow.
 - **Fixtures:** factories for User, Skill, Post (with attribution and media), Collection.
