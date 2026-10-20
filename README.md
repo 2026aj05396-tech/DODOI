@@ -152,7 +152,7 @@ pnpm dev
 | `pnpm build` / `pnpm start` | Production build / serve |
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm format` | Prettier |
+| `pnpm format` / `pnpm format:check` | Prettier write / check (Markdown excluded) |
 | `pnpm test` | Vitest unit + integration tests |
 | `pnpm test:e2e` | Playwright end-to-end + accessibility tests |
 | `pnpm db:migrate` | `prisma migrate dev` |

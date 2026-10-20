@@ -87,8 +87,8 @@ Entry: `[Welcome]` (design `1a`) is the pre-auth screen with "Continue with Goog
 2. Actions: Save (F-09), Share (Web Share API → fallback copy link with toast).
 3. Tap a skill chip → F-08 skill page. Creator row (invited creators only) → profile (F-11); stock/Creative Commons posts show "via dodoi editors" and the attribution block links to the original source.
 4. Tutorial progress: tick materials; tap a step number to mark it done (tap again to undo); "Next step" scrolls to the next unfinished step; all saved to the account.
-4. Related posts below → open another detail.
-5. ⚠ Post unpublished or not found → `[Not found]` with link home.
+5. Related posts below → open another detail.
+6. ⚠ Post unpublished or not found → `[Not found]` with link home.
 
 ### F-08 Search and Explore (SRCH-01…07)
 

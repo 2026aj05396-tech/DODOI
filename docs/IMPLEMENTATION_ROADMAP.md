@@ -108,7 +108,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | ID | Task | Size | Owner | Depends on | Deliverables | Acceptance criteria | Status |
 |---|---|---|---|---|---|---|---|
 | P0-01 | Scaffold Next.js (App Router, TS strict per CODE_QUALITY §6.1), Tailwind, ESLint, pnpm, `.nvmrc`, folder skeleton per SYSTEM_ARCHITECTURE §5 + approved folders; `@/` alias | S | AI | §0.2-B folders | `package.json`, `tsconfig.json`, `src/**` skeleton | `pnpm dev`, `pnpm lint`, `pnpm typecheck` pass | ☑ |
-| P0-02 | Install approved libraries; record each with justification (ADR or README) | S | AI+PO | §0.2-B libraries | Updated `package.json`, ADR note | Only approved deps present; lockfile committed | ☐ |
+| P0-02 | Install approved libraries; record each with justification (ADR or README) | S | AI+PO | §0.2-B libraries | Updated `package.json`, ADR note | Only approved deps present; lockfile committed | ☑ |
 | P0-03 | `docker-compose.yml` (PostgreSQL), Prisma init, `server/db` client singleton, `db:*` scripts | S | AI | P0-01 | Compose file, `prisma/schema.prisma` (empty), scripts | `docker compose up -d db` + `pnpm db:migrate` succeed | ☐ |
 | P0-04 | shadcn/ui init; `tokens.css` with all design tokens (UI_UX §2: palette, semantic, patterns, type scale, radii, shadows, motion, focus ring); Tailwind theme mapping; DM Sans via `next/font` | M | AI | P0-01 | `src/styles/*`, `tailwind` config, pattern utilities | Token-driven Button renders; no raw hex outside `tokens.css`; reduced-motion respected | ☐ |
 | P0-05 | Server lib: `AppError` hierarchy, `withRouteHandler` wrapper, error format, logger (requestId), cursor pagination helpers, `Actor` type | M | AI | P0-01 | `src/server/lib/*` | Unit tests for error mapping, cursor encode/decode | ☐ |

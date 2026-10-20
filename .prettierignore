@@ -1,0 +1,10 @@
+docs/design/
+pnpm-lock.yaml
+.next/
+node_modules/
+coverage/
+playwright-report/
+test-results/
+AGENTS.md
+# Markdown docs keep their hand-written table layout
+*.md

@@ -52,17 +52,21 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 
 All libraries below were approved by the product owner, including `eslint-plugin-import` for circular-import checks.
 
-| Purpose | Library | Why |
-|---|---|---|
-| Runtime validation | Zod | Shared request/response schemas for client + server; integrates with forms |
-| Forms | React Hook Form + `@hookform/resolvers` | Accessible, performant forms with Zod |
-| Client data fetching/cache | TanStack Query | Infinite feed pagination, optimistic save, retries |
-| PWA / service worker | Serwist (`@serwist/next`) | Maintained Next.js service-worker tooling |
-| Password hashing | `argon2` (or `bcryptjs` if native build is problematic) | Secure password storage |
-| Cloudinary SDK | `cloudinary` (server) | Signed uploads, deletion |
-| Email | `resend` SDK | Transactional email |
-| Lint/format | ESLint (Next config) + Prettier + `prettier-plugin-tailwindcss` | Consistency |
-| Test a11y | `@axe-core/playwright` | Automated accessibility checks |
+Libraries are installed in the task that first uses them, so the project never carries unused packages (CODE_QUALITY §12.3).
+
+| Purpose | Library | Why | Installed in |
+|---|---|---|---|
+| Runtime validation | Zod | Shared request/response schemas for client + server; integrates with forms | P0-02 ☑ |
+| Server-only guard | `server-only` | Build error if server code is imported by client code | P0-02 ☑ |
+| Formatting | Prettier + `prettier-plugin-tailwindcss` | Consistent formatting and Tailwind class order (Markdown excluded to keep doc tables readable) | P0-02 ☑ |
+| Import rules | `eslint-plugin-import` | Import order and circular-dependency checks | P0-02 ☑ |
+| Forms | React Hook Form + `@hookform/resolvers` | Accessible, performant forms with Zod | P1-07 |
+| Client data fetching/cache | TanStack Query | Infinite feed pagination, optimistic save, retries | P1-07 / first data-driven client UI |
+| PWA / service worker | Serwist | Maintained Next.js service-worker tooling (verify Turbopack support at P1-27) | P1-27 |
+| Password hashing | `argon2` (or `bcryptjs` if native build is problematic) | Secure password storage | P1-04 |
+| Cloudinary SDK | `cloudinary` (server) | Signed uploads, verification, deletion | P1-03 |
+| Email | `resend` SDK | Transactional email | P1-05 |
+| Test a11y | `@axe-core/playwright` | Automated accessibility checks | P0-06 |
 
 ## 4. Architectural Rules
 
