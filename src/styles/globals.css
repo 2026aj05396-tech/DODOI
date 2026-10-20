@@ -102,6 +102,32 @@
   --text-tab: 0.6875rem;
   --text-tab--line-height: 1.2;
 
+  /* "Coming soon" / "Soon" pills (design 3b) */
+  --text-badge: 0.6875rem;
+  --text-badge--line-height: 1.2;
+  --text-badge--letter-spacing: 0.1em;
+  --text-badge--font-weight: 700;
+  --text-badge-sm: 0.625rem;
+  --text-badge-sm--line-height: 1;
+  --text-badge-sm--letter-spacing: 0.1em;
+  --text-badge-sm--font-weight: 700;
+
+  /* Logo wordmark */
+  --text-wordmark: 1.625rem;
+  --text-wordmark--line-height: 1;
+  --text-wordmark--letter-spacing: -0.02em;
+  --text-wordmark--font-weight: 700;
+
+  /* Control labels (buttons, chips, inputs) */
+  --text-control-sm: 0.875rem;
+  --text-control-sm--line-height: 1.2;
+  --text-control: 0.9375rem;
+  --text-control--line-height: 1.2;
+  --text-control-lg: 1rem;
+  --text-control-lg--line-height: 1.2;
+  --text-control-xl: 1.0625rem;
+  --text-control-xl--line-height: 1.2;
+
   --radius-xs: 2px;
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -208,6 +234,10 @@
 }
 @utility bg-pattern-new-to-you {
   background: var(--pattern-new-stripes), var(--accent-lavender-strong);
+}
+/* 1.5px borders used by outline buttons, interest chips and dashed "add" tiles in the design. */
+@utility border-control {
+  border-width: 1.5px;
 }
 @utility bg-paper {
   background: var(--pattern-paper), var(--background);

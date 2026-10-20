@@ -204,7 +204,7 @@ Spacing: page gutter 20px mobile (24px onboarding/welcome), 28px web feed, 56px 
 
 ## 4. Components (from design)
 
-Primitives from shadcn/ui in `src/components/ui/`, restyled with tokens. Product components in `src/components/<domain>/`.
+Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-ui` package, icons from **Lucide**). Preview them at `/dev/ui` in local development: Button, Tag / ToggleChip / ActionChip, Input, Label, FieldError, ErrorBanner, SearchField, Tabs, Dialog (dialog + sheet layouts), Toaster / `showToast()`, Skeleton, EmptyState, ErrorState, ComingSoonCard / ComingSoonBadge, PatternTile, Wordmark. Product components in `src/components/<domain>/`.
 
 | Component | Design ref | Spec |
 |---|---|---|

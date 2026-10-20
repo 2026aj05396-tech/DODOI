@@ -78,6 +78,7 @@ Read the documents in this order before writing any code.
 | Code hosting / CI | GitHub + GitHub Actions | CONFIRMED |
 | Usernames | Auto-generated at sign-up, editable; 3–20 chars `[a-z][a-z0-9_-]`, reserved names blocked, one change per 30 days | CONFIRMED |
 | Seeded post creators | Invited creators = real accounts; team/stock/Creative Commons (CC BY, BY-SA only) = "via dodoi editors" + attribution | CONFIRMED |
+| Icons | Lucide (`lucide-react`) | CONFIRMED |
 | Coming-soon nav items | Muted + butter "Soon" pill, tooltip only | CONFIRMED |
 | Undesigned Phase 1 screens | Built from the design system (tokens + components); product owner reviews | CONFIRMED |
 | Profile default visibility | Public | CONFIRMED |
