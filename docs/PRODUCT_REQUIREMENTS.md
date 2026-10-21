@@ -384,3 +384,4 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-31 | Minimum seed content per skill / post type for launch | Seed production, launch gate | P1-19 |
 | OD-32 | PostgreSQL text-search config: `simple` vs `english` | Search migration | P1-01 |
 | OD-33 | ~~Icon set~~ — **RESOLVED: Lucide** (`lucide-react`) | — | — |
+| OD-34 | Branch protection (required CI checks on `main`) and secret scanning are paid features for private GitHub repos. Options: stay free and rely on the agent rules + reviewing CI before merging · upgrade GitHub plan · make the repository public | Repo safety | Before more contributors join |
