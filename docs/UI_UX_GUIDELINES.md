@@ -104,7 +104,7 @@ Each accent has a signature pattern. Used for: media placeholders/fallbacks (FEE
 | coral | Small dots | `radial-gradient(rgba(255,255,255,.4) 1.5px, transparent 2px) 0 0/10px 10px` |
 | lavender-strong | Animated stripes ("New to you" only) | `repeating-linear-gradient(-45deg, rgba(255,255,255,.55) 0 8px, transparent 8px 18px)` + `ddStripe` |
 
-Implement as Tailwind utilities (`bg-pattern-butter`, …). Skill accent assignment stored on Skill (`accentToken`).
+Implement as Tailwind utilities (`bg-pattern-butter`, …). Skill accent assignment stored on Skill (`accent`: BUTTER | BLUSH | LAVENDER | MINT | SKY | CORAL).
 
 ### 2.4 Typography (from design)
 

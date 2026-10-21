@@ -382,6 +382,6 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-29 | Can signed-out visitors browse feed / explore / post detail read-only, or only the landing page? | Middleware, `User*` API permissions, landing, SEO | P1-07 |
 | OD-30 | Full predefined skill list (landing claims "40+ crafts") with description, pitch and hint per skill | Skills seed | P1-02 |
 | OD-31 | Minimum seed content per skill / post type for launch | Seed production, launch gate | P1-19 |
-| OD-32 | PostgreSQL text-search config: `simple` vs `english` | Search migration | P1-01 |
+| OD-32 | ~~Text-search config~~ — **RESOLVED: `simple`** (language-neutral) | — | — |
 | OD-33 | ~~Icon set~~ — **RESOLVED: Lucide** (`lucide-react`) | — | — |
-| OD-34 | Branch protection (required CI checks on `main`) and secret scanning are paid features for private GitHub repos. Options: stay free and rely on the agent rules + reviewing CI before merging · upgrade GitHub plan · make the repository public | Repo safety | Before more contributors join |
+| OD-34 | ~~Branch protection / secret scanning~~ — **RESOLVED: stay on free GitHub for now**; rely on agent rules and checking CI before merging; revisit before adding contributors | — | — |

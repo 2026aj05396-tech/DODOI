@@ -55,7 +55,9 @@ Read the documents in this order before writing any code.
 | Hosting | **Local development only for now** (PostgreSQL via Docker). Deployment target is OPEN. | CONFIRMED / OPEN |
 | Cost constraint | No paid services at this stage; free tiers only | CONFIRMED |
 | Media storage | Cloudinary (free tier) | CONFIRMED |
-| Search | PostgreSQL full-text search + `pg_trgm` trigram matching | CONFIRMED |
+| Search | PostgreSQL full-text search (`simple` config) + `pg_trgm` trigram matching | CONFIRMED |
+| Data conventions | cuid ids, snake_case tables/columns via `@map`, text limits per DATABASE_SCHEMA | CONFIRMED |
+| GitHub plan | Free; no branch protection or secret scanning for now (OD-34) | CONFIRMED |
 | Styling | Tailwind CSS + shadcn/ui | CONFIRMED |
 | Typeface | DM Sans (Google Fonts, free), via `next/font` | CONFIRMED |
 | Package manager | pnpm | CONFIRMED |

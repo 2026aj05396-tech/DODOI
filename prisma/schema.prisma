@@ -1,4 +1,6 @@
-// Source of truth for models: docs/DATABASE_SCHEMA.md. Phase 1 models are added in P1-01.
+// Source of truth: docs/DATABASE_SCHEMA.md. Keep both in sync in the same change.
+// Conventions: cuid ids, PascalCase models mapped to snake_case tables, camelCase fields mapped to
+// snake_case columns, explicit onDelete on every relation.
 
 generator client {
   provider = "prisma-client"
@@ -7,4 +9,633 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ExperienceLevel {
+  CURIOUS
+  BEGINNER
+  INTERMEDIATE
+  EXPERIENCED
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum CollectionVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum SkillOrigin {
+  PREDEFINED
+  CUSTOM
+}
+
+enum SkillStatus {
+  ACTIVE
+  HIDDEN
+}
+
+/// Design accent used for a skill's chips, swatch and placeholder pattern (UI_UX_GUIDELINES §2.3).
+enum SkillAccent {
+  BUTTER
+  BLUSH
+  LAVENDER
+  MINT
+  SKY
+  CORAL
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+}
+
+enum PostType {
+  FIRST_ATTEMPT
+  TUTORIAL
+  WORK_IN_PROGRESS
+  JOURNAL
+  FINISHED
+  TIP
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+/// CREATIVE_COMMONS is limited to CC BY and CC BY-SA. USER_UPLOAD is used from Phase 2.
+enum SourceType {
+  TEAM_ORIGINAL
+  INVITED_CREATOR
+  STOCK_LICENSED
+  CREATIVE_COMMONS
+  USER_UPLOAD
+}
+
+enum AuthTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum FeedbackType {
+  NOT_INTERESTED
+}
+
+enum ReportTargetType {
+  SKILL
+  PROFILE
+}
+
+enum ReportReason {
+  OFFENSIVE
+  SPAM
+  IMPERSONATION
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+// ---------------------------------------------------------------------------
+// Identity and auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id                    String    @id @default(cuid())
+  /// Stored lowercased.
+  email                 String    @unique
+  emailVerified         DateTime? @map("email_verified")
+  /// Null for Google-only accounts.
+  passwordHash          String?   @map("password_hash")
+  role                  Role      @default(USER)
+  /// Incremented to invalidate every JWT session of the user.
+  sessionVersion        Int       @default(0) @map("session_version")
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+  /// Set when the date-of-birth check passes (18+). The date of birth itself is never stored.
+  ageConfirmedAt        DateTime? @map("age_confirmed_at")
+  /// Account deactivated at this time; hard-deleted 14 days later.
+  deletionRequestedAt   DateTime? @map("deletion_requested_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  profile         Profile?
+  accounts        Account[]
+  authTokens      AuthToken[]
+  skills          UserSkill[]
+  createdSkills   Skill[]        @relation("SkillCreator")
+  authoredPosts   Post[]
+  ownedMedia      MediaAsset[]
+  saves           Save[]
+  collections     Collection[]
+  feedSessions    FeedSession[]
+  feedFeedback    FeedFeedback[]
+  postProgress    PostProgress[]
+  auditLogs       AuditLog[]
+  reportsFiled    Report[]       @relation("ReportReporter")
+  reportsResolved Report[]       @relation("ReportResolver")
+
+  @@map("user")
+}
+
+/// Required by the Auth.js Prisma adapter (Google accounts). Field names follow the adapter.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String        @map("user_id")
+  type      AuthTokenType
+  /// SHA-256 of the raw token; the raw token exists only in the email.
+  tokenHash String        @unique @map("token_hash")
+  expiresAt DateTime      @map("expires_at")
+  usedAt    DateTime?     @map("used_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@map("auth_token")
+}
+
+// ---------------------------------------------------------------------------
+// Profile and skills
+// ---------------------------------------------------------------------------
+
+model Profile {
+  userId            String            @id @map("user_id")
+  /// 3–20 chars, [a-z][a-z0-9_-]*, auto-generated at sign-up.
+  username          String            @unique
+  /// Enforces at most one username change per 30 days.
+  usernameChangedAt DateTime?         @map("username_changed_at")
+  displayName       String            @map("display_name") @db.VarChar(50)
+  bio               String?           @db.VarChar(300)
+  avatarMediaId     String?           @unique @map("avatar_media_id")
+  visibility        ProfileVisibility @default(PUBLIC)
+  /// Hidden by an admin after a report.
+  isHidden          Boolean           @default(false) @map("is_hidden")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar MediaAsset? @relation("ProfileAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
+
+  @@index([username(ops: raw("gin_trgm_ops"))], type: Gin, map: "profile_username_trgm_idx")
+  @@index([displayName(ops: raw("gin_trgm_ops"))], type: Gin, map: "profile_display_name_trgm_idx")
+  @@map("profile")
+}
+
+model Skill {
+  id             String      @id @default(cuid())
+  /// Display form, e.g. "Pipe cleaner art".
+  name           String
+  /// Lowercased, trimmed, whitespace collapsed — used to reuse an existing skill.
+  normalizedName String      @unique @map("normalized_name")
+  slug           String      @unique
+  description    String?
+  /// Editor-set skill card tag, e.g. "Pairs with drawing".
+  hint           String?     @db.VarChar(40)
+  /// "New to you" one-liner.
+  pitch          String?     @db.VarChar(140)
+  origin         SkillOrigin @default(PREDEFINED)
+  status         SkillStatus @default(ACTIVE)
+  accent         SkillAccent
+  coverMediaId   String?     @map("cover_media_id")
+  /// Set for custom skills.
+  createdById    String?     @map("created_by_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  createdBy   User?           @relation("SkillCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  coverMedia  MediaAsset?     @relation("SkillCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  userSkills  UserSkill[]
+  postSkills  PostSkill[]
+  relatedFrom SkillRelation[] @relation("SkillRelationFrom")
+  relatedTo   SkillRelation[] @relation("SkillRelationTo")
+
+  @@index([origin, status])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "skill_name_trgm_idx")
+  @@map("skill")
+}
+
+/// Admin-curated "related skills".
+model SkillRelation {
+  fromSkillId String @map("from_skill_id")
+  toSkillId   String @map("to_skill_id")
+
+  from Skill @relation("SkillRelationFrom", fields: [fromSkillId], references: [id], onDelete: Cascade)
+  to   Skill @relation("SkillRelationTo", fields: [toSkillId], references: [id], onDelete: Cascade)
+
+  @@id([fromSkillId, toSkillId])
+  @@index([toSkillId])
+  @@map("skill_relation")
+}
+
+/// One row per (user, skill); a row with all three flags false is deleted by the service.
+model UserSkill {
+  userId       String           @map("user_id")
+  skillId      String           @map("skill_id")
+  isInterest   Boolean          @default(false) @map("is_interest")
+  canHelp      Boolean          @default(false) @map("can_help")
+  wantsToLearn Boolean          @default(false) @map("wants_to_learn")
+  /// Null = not specified.
+  level        ExperienceLevel?
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([userId, skillId])
+  @@index([skillId])
+  @@map("user_skill")
+}
+
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
+
+model Post {
+  id               String                   @id @default(cuid())
+  /// Set for invited-creator posts; null for team, stock and Creative Commons posts.
+  authorId         String?                  @map("author_id")
+  /// Stable key of a seeded post so the importer is idempotent.
+  seedKey          String?                  @unique @map("seed_key")
+  type             PostType
+  status           PostStatus               @default(DRAFT)
+  title            String                   @db.VarChar(120)
+  description      String?                  @db.Text
+  difficulty       ExperienceLevel?
+  estimatedMinutes Int?                     @map("estimated_minutes")
+  publishedAt      DateTime?                @map("published_at")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  /// Full-text vector ('simple' config): title weight A, description B, skill names C.
+  /// Written by the content service; queried with $queryRaw.
+  searchVector     Unsupported("tsvector")? @map("search_vector")
+
+  author      User?            @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  skills      PostSkill[]
+  media       PostMedia[]
+  steps       PostStep[]
+  materials   PostMaterial[]
+  attribution PostAttribution?
+  saves       Save[]
+  themePosts  ThemePost[]
+  impressions FeedImpression[]
+  feedback    FeedFeedback[]
+  progress    PostProgress[]
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([authorId])
+  @@index([searchVector], type: Gin, map: "post_search_vector_idx")
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "post_title_trgm_idx")
+  @@map("post")
+}
+
+model PostSkill {
+  postId    String  @map("post_id")
+  skillId   String  @map("skill_id")
+  /// Exactly one primary skill per post (service-enforced).
+  isPrimary Boolean @default(false) @map("is_primary")
+
+  post  Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Restrict)
+
+  @@id([postId, skillId])
+  @@index([skillId])
+  @@map("post_skill")
+}
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  /// Uploader.
+  ownerId     String?   @map("owner_id")
+  type        MediaType
+  provider    String    @default("cloudinary")
+  /// Cloudinary public_id.
+  publicId    String    @unique @map("public_id")
+  format      String
+  width       Int
+  height      Int
+  bytes       Int
+  /// Video only.
+  durationSec Float?    @map("duration_sec")
+  /// Required for content images (service-enforced).
+  altText     String?   @map("alt_text") @db.VarChar(300)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  owner         User?       @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  postMedia     PostMedia[]
+  stepMedia     PostStep[]
+  profileAvatar Profile?    @relation("ProfileAvatar")
+  skillCovers   Skill[]     @relation("SkillCover")
+  themeCovers   Theme[]     @relation("ThemeCover")
+
+  @@index([ownerId])
+  @@map("media_asset")
+}
+
+model PostMedia {
+  postId   String @map("post_id")
+  mediaId  String @map("media_id")
+  position Int
+
+  post  Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([postId, mediaId])
+  @@unique([postId, position])
+  @@index([mediaId])
+  @@map("post_media")
+}
+
+model PostStep {
+  id       String  @id @default(cuid())
+  postId   String  @map("post_id")
+  position Int
+  text     String  @db.Text
+  mediaId  String? @map("media_id")
+
+  post  Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset? @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@unique([postId, position])
+  @@index([mediaId])
+  @@map("post_step")
+}
+
+model PostMaterial {
+  id       String  @id @default(cuid())
+  postId   String  @map("post_id")
+  position Int
+  name     String  @db.VarChar(120)
+  /// E.g. quantity or an alternative.
+  note     String? @db.VarChar(200)
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, position])
+  @@map("post_material")
+}
+
+/// Required for every seeded post.
+model PostAttribution {
+  postId          String     @id @map("post_id")
+  sourceType      SourceType @map("source_type")
+  /// E.g. "Owned", "Pexels License", "CC BY 4.0".
+  license         String
+  /// Shown in the attribution block.
+  attributionText String     @map("attribution_text")
+  originalAuthor  String?    @map("original_author")
+  originalUrl     String?    @map("original_url")
+  /// Internal reference to written permission (invited creators).
+  permissionRef   String?    @map("permission_ref")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_attribution")
+}
+
+/// Admin-curated explore themes.
+model Theme {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  description  String?
+  coverMediaId String?  @map("cover_media_id")
+  isPublished  Boolean  @default(false) @map("is_published")
+  position     Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  coverMedia MediaAsset? @relation("ThemeCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  posts      ThemePost[]
+
+  @@map("theme")
+}
+
+model ThemePost {
+  themeId  String @map("theme_id")
+  postId   String @map("post_id")
+  position Int
+
+  theme Theme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  post  Post  @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([themeId, postId])
+  @@index([postId])
+  @@map("theme_post")
+}
+
+// ---------------------------------------------------------------------------
+// Saves and collections
+// ---------------------------------------------------------------------------
+
+model Save {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post            Post             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  collectionItems CollectionItem[]
+
+  @@unique([userId, postId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([postId])
+  @@map("save")
+}
+
+/// Deleting a collection removes only its items; the saves remain in "All saved".
+model Collection {
+  id             String               @id @default(cuid())
+  userId         String               @map("user_id")
+  name           String               @db.VarChar(80)
+  /// Lowercased and trimmed name; unique per user.
+  nameNormalized String               @map("name_normalized") @db.VarChar(80)
+  visibility     CollectionVisibility @default(PRIVATE)
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CollectionItem[]
+
+  @@unique([userId, nameNormalized])
+  @@index([userId])
+  @@map("collection")
+}
+
+model CollectionItem {
+  collectionId String   @map("collection_id")
+  saveId       String   @map("save_id")
+  addedAt      DateTime @default(now()) @map("added_at")
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  save       Save       @relation(fields: [saveId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, saveId])
+  @@index([saveId])
+  @@map("collection_item")
+}
+
+// ---------------------------------------------------------------------------
+// Feed
+// ---------------------------------------------------------------------------
+
+model FeedSession {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  /// for-you | skill:<slug> | new-to-you
+  filter    String   @default("for-you")
+  createdAt DateTime @default(now()) @map("created_at")
+  expiresAt DateTime @map("expires_at")
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impressions FeedImpression[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("feed_session")
+}
+
+model FeedImpression {
+  sessionId String   @map("session_id")
+  postId    String   @map("post_id")
+  servedAt  DateTime @default(now()) @map("served_at")
+
+  session FeedSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  post    Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, postId])
+  @@index([postId])
+  @@map("feed_impression")
+}
+
+model FeedFeedback {
+  userId    String       @map("user_id")
+  postId    String       @map("post_id")
+  type      FeedbackType
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId, type])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([postId])
+  @@map("feed_feedback")
+}
+
+// ---------------------------------------------------------------------------
+// Tutorial progress
+// ---------------------------------------------------------------------------
+
+/// Private to the user. Stale material ids are ignored on read and dropped on the next write.
+model PostProgress {
+  userId                 String   @map("user_id")
+  postId                 String   @map("post_id")
+  checkedMaterialIds     String[] @map("checked_material_ids")
+  /// Steps marked done; "Step n of N" counts them.
+  completedStepPositions Int[]    @map("completed_step_positions")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+  @@index([postId])
+  @@map("post_progress")
+}
+
+// ---------------------------------------------------------------------------
+// Admin, reports and rate limits
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?  @map("actor_id")
+  /// E.g. "post.publish", "skill.hide".
+  action     String
+  targetType String   @map("target_type")
+  targetId   String   @map("target_id")
+  /// Never contains sensitive content.
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([targetType, targetId])
+  @@index([createdAt(sort: Desc)])
+  @@index([actorId])
+  @@map("audit_log")
+}
+
+/// One open report per reporter and target is enforced by the reports service.
+model Report {
+  id           String           @id @default(cuid())
+  reporterId   String?          @map("reporter_id")
+  targetType   ReportTargetType @map("target_type")
+  targetId     String           @map("target_id")
+  reason       ReportReason
+  note         String?          @db.VarChar(500)
+  status       ReportStatus     @default(OPEN)
+  resolvedById String?          @map("resolved_by_id")
+  resolvedAt   DateTime?        @map("resolved_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  reporter   User? @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  resolvedBy User? @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+  @@index([reporterId])
+  @@index([resolvedById])
+  @@map("report")
+}
+
+model RateLimitBucket {
+  /// E.g. "signin:ip:203.0.113.7".
+  key         String
+  windowStart DateTime @map("window_start")
+  count       Int      @default(0)
+
+  @@id([key, windowStart])
+  @@index([windowStart])
+  @@map("rate_limit_bucket")
 }

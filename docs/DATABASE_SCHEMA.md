@@ -12,8 +12,8 @@ Markers: **CONFIRMED** / **PROPOSED** / **OPEN**.
 
 | Rule | Value |
 |---|---|
-| Primary keys | `String @id @default(cuid())` (PROPOSED) — stable, non-sequential, not guessable |
-| Table names | Prisma model names in PascalCase; mapped to snake_case tables via `@@map` (PROPOSED) |
+| Primary keys | `String @id @default(cuid())` (CONFIRMED) — stable, non-sequential, not guessable |
+| Table names | Prisma model names in PascalCase; mapped to snake_case tables via `@@map` (CONFIRMED) |
 | Column names | camelCase in Prisma, `@map` to snake_case |
 | Timestamps | `createdAt @default(now())`, `updatedAt @updatedAt`; stored as `timestamptz` (UTC); displayed in user's local time zone |
 | Soft delete | Only where stated (`deletedAt`) |
@@ -21,6 +21,7 @@ Markers: **CONFIRMED** / **PROPOSED** / **OPEN**.
 | Enums | Prisma enums for closed sets |
 | Text limits | Enforced in Zod and with `@db.VarChar(n)` where a hard limit is decided |
 | Authorization | IDs are never authorization; every query is scoped by actor in the service layer |
+| Exact definition | `prisma/schema.prisma` (built in P1-01). Listings below are the logical spec; implementation differences are recorded in §4.8 |
 | Model listings below | Logical drafts. Some Prisma back-relation fields (e.g. on `MediaAsset` for avatars, skill covers, step media, theme covers) and `@map` attributes are omitted for readability and must be added so `prisma validate` passes |
 
 ## 2. Entity Relationship Overview (Phase 1)
@@ -56,6 +57,7 @@ enum MediaType         { IMAGE VIDEO }
 enum SourceType        { TEAM_ORIGINAL INVITED_CREATOR STOCK_LICENSED CREATIVE_COMMONS USER_UPLOAD }   // CC BY / BY-SA only; USER_UPLOAD from P2
 enum AuthTokenType     { EMAIL_VERIFICATION PASSWORD_RESET }
 enum FeedbackType      { NOT_INTERESTED }
+enum SkillAccent       { BUTTER BLUSH LAVENDER MINT SKY CORAL }   // design accents (UI_UX_GUIDELINES §2.3)
 ```
 
 ## 4. Phase 1 Models
@@ -131,8 +133,8 @@ model Profile {
   userId      String   @id
   username    String   @unique          // 3–20, [a-z][a-z0-9_-]*, auto-generated at sign-up (OD-11, DC-26)
   usernameChangedAt DateTime?           // enforce max one change per 30 days
-  displayName String   @db.VarChar(50)  // limit PROPOSED
-  bio         String?  @db.VarChar(300) // limit PROPOSED
+  displayName String   @db.VarChar(50)  // limit CONFIRMED
+  bio         String?  @db.VarChar(300) // limit CONFIRMED
   avatarMediaId String? @unique
   visibility  ProfileVisibility @default(PUBLIC)
   createdAt   DateTime @default(now())
@@ -147,11 +149,11 @@ model Skill {
   normalizedName String      @unique          // lowercased, trimmed, collapsed whitespace
   slug           String      @unique
   description    String?
-  hint           String?   @db.VarChar(40)    // editor-set skill card tag, e.g. "Pairs with drawing" (SRCH-08); limit PROPOSED
-  pitch          String?   @db.VarChar(140)   // "New to you" one-liner, admin-authored (FEED-14); limit PROPOSED
+  hint           String?   @db.VarChar(40)    // editor-set skill card tag, e.g. "Pairs with drawing" (SRCH-08); limit CONFIRMED
+  pitch          String?   @db.VarChar(140)   // "New to you" one-liner, admin-authored (FEED-14); limit CONFIRMED
   origin         SkillOrigin @default(PREDEFINED)
   status         SkillStatus @default(ACTIVE)
-  accentToken    String                       // one of accent-1..5
+  accent         SkillAccent                  // BUTTER | BLUSH | LAVENDER | MINT | SKY | CORAL (design accents)
   coverMediaId   String?
   createdById    String?                      // set for CUSTOM skills
   createdAt      DateTime    @default(now())
@@ -202,7 +204,7 @@ model Post {
   authorId      String?                     // set for invited-creator posts; null for team/stock/CC posts (OD-18)
   type          PostType
   status        PostStatus @default(DRAFT)
-  title         String     @db.VarChar(120) // limit PROPOSED
+  title         String     @db.VarChar(120) // limit CONFIRMED
   description   String?    @db.Text
   difficulty    ExperienceLevel?
   estimatedMinutes Int?
@@ -289,7 +291,7 @@ model PostAttribution {                   // required for all seeded posts (ADM-
   post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
-model Theme {                             // admin-curated explore themes (PROPOSED entity)
+model Theme {                             // admin-curated explore themes (CONFIRMED entity)
   id          String   @id @default(cuid())
   slug        String   @unique
   title       String
@@ -330,7 +332,7 @@ model Save {
 model Collection {
   id         String               @id @default(cuid())
   userId     String
-  name       String               @db.VarChar(80)   // limit PROPOSED
+  name       String               @db.VarChar(80)   // limit CONFIRMED
   visibility CollectionVisibility @default(PRIVATE)
   createdAt  DateTime             @default(now())
   updatedAt  DateTime             @updatedAt
@@ -394,7 +396,7 @@ model FeedFeedback {
 ### 4.5b Tutorial progress (POST-11, POST-12)
 
 ```prisma
-model PostProgress {                       // PROPOSED shape; behaviour CONFIRMED (DC-07)
+model PostProgress {                       // shape and behaviour CONFIRMED (DC-07)
   userId               String
   postId               String
   checkedMaterialIds   String[]            // PostMaterial ids ticked by the user
@@ -458,6 +460,17 @@ model RateLimitBucket {
 ```
 Profile also gets `isHidden Boolean @default(false)` (admin action after a report).
 
+### 4.8 Implementation notes (P1-01)
+
+Differences between the listings above and `prisma/schema.prisma`, all following §1 conventions:
+
+- **Relations added** for every foreign key the listings left implicit: `FeedImpression.post`, `FeedFeedback.post`, `MediaAsset.owner`, `PostStep.media`, `Theme.coverMedia`, `Report.resolvedBy` (named relations on `MediaAsset`: `ProfileAvatar`, `SkillCover`, `ThemeCover`).
+- **`Skill.accent`** is the `SkillAccent` enum instead of a free-text `accentToken`.
+- **`Profile.isHidden`**, **`Post.seedKey`** and **`Collection.nameNormalized`** are in the model.
+- **Extra indexes** on foreign-key columns used for lookups and cascades (`save.post_id`, `post_media.media_id`, `feed_impression.post_id`, `feed_session.expires_at`, `report.reporter_id`, …).
+- **One open report per reporter and target** is enforced in the reports service; no partial unique index (still PROPOSED).
+- **Auth.js models:** `Session` and `VerificationToken` are not included (JWT sessions, custom verification). **Open for P1-04:** the Auth.js Prisma adapter's default `createUser` writes `name` and `image` from the Google profile, which `User` does not have. P1-04 must either add those columns or override `createUser` to put the name into `Profile.displayName`.
+
 ## 5. Indexes Summary (Phase 1 query patterns)
 
 | Query | Index |
@@ -478,22 +491,18 @@ Profile also gets `isHidden Boolean @default(false)` (admin action after a repor
 
 ## 6. Raw SQL Migration Items
 
-Created in a hand-edited Prisma migration (Prisma cannot express these):
+Implemented in P1-01 (`prisma/migrations/*_init`). Prisma 7 can declare most of it, so drift detection stays clean:
 
-```sql
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+| Item | Where |
+|---|---|
+| `CREATE EXTENSION IF NOT EXISTS pg_trgm;` | **Hand-added** at the top of the init migration (only manual SQL) |
+| `post.search_vector tsvector` | `Post.searchVector Unsupported("tsvector")?` in the schema |
+| `post_search_vector_idx` (GIN) | `@@index([searchVector], type: Gin)` |
+| `post_title_trgm_idx`, `skill_name_trgm_idx`, `profile_username_trgm_idx`, `profile_display_name_trgm_idx` (GIN, `gin_trgm_ops`) | `@@index([field(ops: raw("gin_trgm_ops"))], type: Gin)` |
 
--- Post full-text vector (title A, description B). Skill names are added via
--- a trigger or recomputed in the service on post save (PROPOSED: service-side update).
-ALTER TABLE post ADD COLUMN search_vector tsvector;
-CREATE INDEX post_search_vector_idx ON post USING GIN (search_vector);
-CREATE INDEX post_title_trgm_idx   ON post USING GIN (title gin_trgm_ops);
-CREATE INDEX skill_name_trgm_idx   ON skill USING GIN (name gin_trgm_ops);
-CREATE INDEX profile_username_trgm_idx ON profile USING GIN (username gin_trgm_ops);
-CREATE INDEX profile_display_name_trgm_idx ON profile USING GIN (display_name gin_trgm_ops);
-```
+`search_vector` (title A, description B, skill names C) is written by the content service on save (PROPOSED approach) and queried with tagged `$queryRaw`. A follow-up `prisma migrate dev` after the init migration produces an empty migration (verified: no drift).
 
-Text-search configuration: `'simple'` vs `'english'` — OPEN (depends on whether non-English content is expected).
+Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutral, so Hindi and mixed-language skill names match; no English stemming.
 
 ## 7. Data Lifecycle
 
@@ -514,7 +523,7 @@ Text-search configuration: `'simple'` vs `'english'` — OPEN (depends on whethe
 - `prisma/seed/skills.json` — predefined skills (at minimum those in the master doc: drawing, sketching, embroidery, crochet, pipe cleaner art, painting, coloring, pottery, journaling, DIY, photography; full list OPEN) with descriptions, accent tokens and related-skill pairs.
 - `seed-content/posts/*.json` + media files — posts with attribution (schema in API spec §8).
 - Admin user: promoted by email from `SEED_ADMIN_EMAIL` (account must already exist or is created without password, signing in via Google — PROPOSED).
-- Import is idempotent: posts keyed by a stable `seedKey` (PROPOSED extra unique column `Post.seedKey String? @unique`).
+- Import is idempotent: posts keyed by a stable `seedKey` (CONFIRMED extra unique column `Post.seedKey String? @unique`).
 
 ## 9. Later-Phase Entities (to be specified before each phase)
 

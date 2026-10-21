@@ -62,7 +62,7 @@ Single resource: the resource object. Lists: `{ "items": [...], "nextCursor": ".
 ```ts
 type ExperienceLevel = "CURIOUS" | "BEGINNER" | "INTERMEDIATE" | "EXPERIENCED";
 
-type SkillSummary = { id: string; name: string; slug: string; accentToken: string; origin: "PREDEFINED" | "CUSTOM" };
+type SkillSummary = { id: string; name: string; slug: string; accent: "BUTTER" | "BLUSH" | "LAVENDER" | "MINT" | "SKY" | "CORAL"; origin: "PREDEFINED" | "CUSTOM" };
 
 type Media = {
   id: string; type: "IMAGE" | "VIDEO";

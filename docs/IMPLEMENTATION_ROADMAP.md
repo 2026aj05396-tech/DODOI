@@ -33,7 +33,7 @@ Phase-wise, dependency-ordered plan from an empty repository to a public MVP and
 | OD-29 | Can signed-out visitors browse the feed, explore and post detail (read-only), or only the landing page? | Middleware rules, API permissions (`User*` endpoints), landing page, SEO | P1-07 |
 | OD-30 | Full predefined skill list (landing claims "40+ crafts") + each skill's description, `pitch` and `hint` text | Skills seed | P1-02 |
 | OD-31 | Minimum seed content per skill (and per post type) for launch | Seed production, launch gate | P1-19 |
-| OD-32 | PostgreSQL text-search configuration: `simple` (language-neutral, handles Hindi/mixed names) or `english` (stemming) | Search migration | P1-01 |
+| OD-32 | ~~Text-search configuration~~ — **RESOLVED: `simple`** | — | — |
 
 **B. PROPOSED items to approve as a batch** (agents may not build on them until approved)
 
@@ -41,7 +41,7 @@ Phase-wise, dependency-ordered plan from an empty repository to a public MVP and
 |---|---|---|
 | Libraries | Zod, React Hook Form, TanStack Query, Serwist, argon2, `cloudinary`, `resend`, Prettier + `prettier-plugin-tailwindcss`, `@axe-core/playwright`; optional `eslint-plugin-import` / `madge` (CODE_QUALITY §12) | P0-02 |
 | New folders | `src/hooks/`, `src/lib/api-client/`, `src/lib/constants/` (CODE_QUALITY §3.1) | P0-01 |
-| Data conventions | cuid ids, snake_case table mapping, text length limits, `Theme` entity, `Post.seedKey`, `PostProgress` shape | P1-01 |
+| Data conventions | ~~cuid ids, snake_case table mapping, text length limits, `Theme` entity, `Post.seedKey`, `PostProgress` shape~~ — **APPROVED** | — |
 | Auth & security parameters | JWT sessions (required by Credentials), Argon2id, password min length (8 or 10), token expiry 24h/1h, session max age 30 days, rate-limit numbers, CSP baseline, `/admin` → 404 for non-admins | P1-04 |
 | Behaviour details | Unsave removes the post from all collections; search suggestions from 2 characters; install prompt after first save / second visit, re-show after 30 days; no offline mutation queue in P1 | P1-24, P1-27 |
 | Feed | Ranking weights, 20% discovery quota, diversity rule, suggestion-card rules, feed session expiry 24h | P1-21 (can start; tune later) |
@@ -115,7 +115,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | P0-06 | Vitest + Testing Library; Playwright + axe; test DB (`app_test`), factories/helpers skeleton; fake providers (email, media) | M | AI | P0-03 | Configs, `tests/helpers/*` | `pnpm test` and `pnpm test:e2e` run sample tests | ☑ |
 | P0-07 | `.env.example`; env validation (server + client modules); `server-only` guards | S | AI | P0-01 | `server/lib/env.ts`, `lib/env-client.ts` | App fails fast with a clear message on missing env | ☑ |
 | P0-08 | ADR folder with ADRs 0001–0009 (SYSTEM_ARCHITECTURE §14) | S | AI | P0-01 | `docs/adr/*` | Files exist per template | ☑ |
-| P0-09 | GitHub Actions CI (`.github/workflows/ci.yml`): lint, format check, typecheck, unit/component/integration tests with a Postgres service, production build + E2E on mobile and desktop; Playwright report uploaded on failure | M | AI+PO | P0-06, GitHub repo | `.github/workflows/ci.yml` | CI green on `main` after PO pushes the workflow. Branch protection and secret scanning need a paid GitHub plan for private repos → deferred (OD-34) | ◐ |
+| P0-09 | GitHub Actions CI (`.github/workflows/ci.yml`): lint, format check, typecheck, unit/component/integration tests with a Postgres service, production build + E2E on mobile and desktop; Playwright report uploaded on failure | M | AI+PO | P0-06, GitHub repo | `.github/workflows/ci.yml` | CI green on `main` after PO pushes the workflow. Branch protection and secret scanning skipped: free GitHub plan (OD-34) | ◐ |
 | P0-10 | Design-system primitives in `components/ui/`: Button, Chip (filter/interest/meta/skill/suggestion/dashed-add), SearchField, Tabs, Sheet, Dialog, Toast, Skeleton, EmptyState, ErrorState, FieldError, ErrorBanner, ComingSoonCard, "Soon" pill, PatternTile, Wordmark | L | AI+PO | P0-04, OD-33 | Components + component tests | Match design `3b`/UI_UX §4; keyboard + focus ring; axe clean on a `/dev/ui` preview page (dev-only) | ☑ |
 | P0-11 | ESLint boundary rules (`no-restricted-imports` for server/client and module internals), `no-console`, `no-explicit-any`; optional cycle detection if approved | S | AI | P0-01, P0-02 | `eslint` config | Violations fail `pnpm lint` (verified with a deliberate bad import) | ☑ |
 
@@ -131,7 +131,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 | ID | Task | Size | Depends on | Acceptance criteria | Status |
 |---|---|---|---|---|---|
-| P1-01 | Prisma schema for all Phase 1 models (DATABASE_SCHEMA §3–4.7) + raw SQL migration (`pg_trgm`, `search_vector`, trigram indexes, report partial unique index) | M | P0-03, §0.2-B data conventions, OD-32 | `prisma validate` passes; migration applies on empty DB; schema doc matches | ☐ |
+| P1-01 | Prisma schema for all Phase 1 models (DATABASE_SCHEMA §3–4.7) + raw SQL migration (`pg_trgm`, `search_vector`, trigram indexes, report partial unique index) | M | P0-03 | `prisma validate` passes; migration applies on empty DB; schema doc matches | ☑ |
 | P1-02 | Skills reference seed: `skills.json` (names, slugs, accents, descriptions, pitch, hint, related pairs) + seed script; admin user promotion via `SEED_ADMIN_EMAIL` | S | P1-01, OD-30 | Idempotent `pnpm db:seed`; `normalizedName` unique | ☐ |
 | P1-03 | Media integration: Cloudinary provider behind interface (sign with purpose/folder, verify metadata vs MEDIA-01…05, delete); orphan tracking | M | P0-05, Cloudinary account | Integration tests with fake provider: oversize/wrong type/>60 s rejected and deleted | ☐ |
 | P1-04 | Auth.js: Credentials + Google, Prisma adapter, JWT with `sessionVersion` + role, `signIn` callback linking rules (OD-09), `Actor` from session, middleware protection with return URL | M | P1-01, §0.2-B auth params, OD-29, Google OAuth | Sign in/out both providers; tampered/stale JWT rejected; unverified-account linking removes password | ☐ |
@@ -193,7 +193,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 | ID | Task | Size | Depends on | Acceptance criteria | Status |
 |---|---|---|---|---|---|
-| P1-23 | Search module (FTS + trigram; posts, skills, creators; private/hidden excluded) + explore endpoint (themes, skills to try with hints, popular/new, beginner-friendly) | M | P1-15, P1-09, OD-32 | "croch" finds Crochet; custom skills findable; query limits enforced | ☐ |
+| P1-23 | Search module (FTS + trigram; posts, skills, creators; private/hidden excluded) + explore endpoint (themes, skills to try with hints, popular/new, beginner-friendly) | M | P1-15, P1-09 | "croch" finds Crochet; custom skills findable; query limits enforced | ☐ |
 | P1-26 | Explore (`1d`, "Use what you have" coming soon), search results (tabs), skill page, theme page | M | P1-23, P1-26b | SRCH criteria; no-result state; E2E-05, E2E-09 | ☐ |
 
 **Exit (M5):** E2E-04, -05, -09 pass.
