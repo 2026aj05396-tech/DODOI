@@ -226,7 +226,7 @@ Comments and reporting on posts are P2.
 
 **CONFIRMED rules**
 - Deleting a collection removes only the collection and its memberships. The posts **stay saved** in "All saved".
-- Unsaving a post removes it from all of the user's collections. (PROPOSED — logical consequence; confirm.)
+- Unsaving a post removes it from all of the user's collections (CONFIRMED).
 - Removing a saved item never deletes the original post.
 - Private collections are visible only to their owner.
 
@@ -236,7 +236,7 @@ Comments and reporting on posts are P2.
 
 | ID | Requirement |
 |---|---|
-| PRF-01 | Profile fields: display name, unique username, avatar, short bio |
+| PRF-01 | Profile fields: display name, unique username, avatar, short bio. Users upload or replace their **own avatar** any time in Edit profile (P1-12/P1-14); until then a craft-pattern placeholder is shown. The Google profile photo is **not** imported |
 | PRF-02 | Skill lists kept distinct: **interests**, **can help with**, **want to learn** (CONFIRMED — the design's profile groups "Learning / Curious about" are replaced by these three lists; see UI_UX DC-08) |
 | PRF-03 | Experience level per skill |
 | PRF-04 | Edit own profile |
@@ -379,9 +379,10 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-26 | Privacy policy and terms of service authorship | Launch | Before launch |
 | OD-27 | ~~Rate-limit store~~ — **RESOLVED: PostgreSQL table behind interface** | — | — |
 | OD-28 | ~~Minimum age 13+ vs India's DPDP Act~~ — **RESOLVED: minimum age raised to 18+** (adults only) | — | — |
-| OD-29 | Can signed-out visitors browse feed / explore / post detail read-only, or only the landing page? | Middleware, `User*` API permissions, landing, SEO | P1-07 |
-| OD-30 | Full predefined skill list (landing claims "40+ crafts") with description, pitch and hint per skill | Skills seed | P1-02 |
+| OD-29 | ~~Signed-out browsing~~ — **RESOLVED:** signed-out visitors can see the **landing page** and **published post detail pages** (with related posts) read-only, so shared links work; feed, explore, search, skill/theme pages, profiles, saves and everything else require sign-in | — | — |
+| OD-30 | Full predefined skill list (40+) with description, pitch and hint per skill — **APPROACH APPROVED:** agent drafts the list from the design and docs, PO edits and approves it before P1-02 | Skills seed | P1-02 |
 | OD-31 | Minimum seed content per skill / post type for launch | Seed production, launch gate | P1-19 |
 | OD-32 | ~~Text-search config~~ — **RESOLVED: `simple`** (language-neutral) | — | — |
 | OD-33 | ~~Icon set~~ — **RESOLVED: Lucide** (`lucide-react`) | — | — |
 | OD-34 | ~~Branch protection / secret scanning~~ — **RESOLVED: stay on free GitHub for now**; rely on agent rules and checking CI before merging; revisit before adding contributors | — | — |
+| OD-35 | ~~CSP approach~~ — **RESOLVED: static policy without nonces (option A)**; keeps static rendering; revisit if user HTML is rendered | — | — |

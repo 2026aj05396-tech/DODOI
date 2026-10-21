@@ -3,6 +3,8 @@ import { DM_Sans } from "next/font/google";
 
 import "@/styles/globals.css";
 
+import { Toaster } from "@/components/ui/toast";
+
 // DM Sans is the only typeface (UI_UX_GUIDELINES §2.4). Self-hosted at build time by next/font.
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -20,7 +22,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={dmSans.variable}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

@@ -53,7 +53,7 @@ Single resource: the resource object. Lists: `{ "items": [...], "nextCursor": ".
 ### 1.3 Permission legend
 `Public` = no session needed · `User` = signed in · `Owner` = signed in and owns the resource · `Admin` = role ADMIN.
 
-> **OPEN:** whether feed/explore/post detail are publicly viewable without an account (USER_FLOWS F-01). Endpoints below marked `User*` become `Public` (read-only, non-personalized) if that is approved.
+> **Signed-out access (CONFIRMED, OD-29):** only `GET /api/posts/{postId}` and `GET /api/posts/{postId}/related` are `Public` (read-only, non-personalised: `isSaved` is always `false`). Every other endpoint marked `User*` below requires a signed-in user (`User`).
 
 ---
 

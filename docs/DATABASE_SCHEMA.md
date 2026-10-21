@@ -124,7 +124,7 @@ model AuthToken {
 
 Notes:
 - Auth.js `Session` and `VerificationToken` models: not needed with JWT sessions and custom verification. Include only if the adapter version requires them (verify at scaffold time).
-- Token expiry durations: PROPOSED 24h (verification), 1h (reset).
+- Token expiry durations: CONFIRMED 24h (verification), 1h (reset).
 
 ### 4.2 Profile and skills
 
@@ -356,7 +356,7 @@ model CollectionItem {
 
 Rules (CONFIRMED unless marked):
 - Deleting a `Collection` cascades only to `CollectionItem`; `Save` rows remain → posts stay in "All saved".
-- Deleting a `Save` cascades to its `CollectionItem`s → unsave removes from all collections (PROPOSED, confirm).
+- Deleting a `Save` cascades to its `CollectionItem`s → unsave removes from all collections (CONFIRMED).
 - `CollectionItem` references `Save`, so an item can only be in a collection if it is saved, and always belongs to the collection owner's save (service also checks `save.userId == collection.userId`).
 - Collection names are unique per user, case-insensitive (`nameNormalized`, CONFIRMED OD-17); max 100 collections per user and 1,000 items per collection (service-enforced).
 
@@ -469,7 +469,7 @@ Differences between the listings above and `prisma/schema.prisma`, all following
 - **`Profile.isHidden`**, **`Post.seedKey`** and **`Collection.nameNormalized`** are in the model.
 - **Extra indexes** on foreign-key columns used for lookups and cascades (`save.post_id`, `post_media.media_id`, `feed_impression.post_id`, `feed_session.expires_at`, `report.reporter_id`, …).
 - **One open report per reporter and target** is enforced in the reports service; no partial unique index (still PROPOSED).
-- **Auth.js models:** `Session` and `VerificationToken` are not included (JWT sessions, custom verification). **Open for P1-04:** the Auth.js Prisma adapter's default `createUser` writes `name` and `image` from the Google profile, which `User` does not have. P1-04 must either add those columns or override `createUser` to put the name into `Profile.displayName`.
+- **Auth.js models:** `Session` and `VerificationToken` are not included (JWT sessions, custom verification). **Open for P1-04:** the Auth.js Prisma adapter's default `createUser` writes `name` and `image` from the Google profile, which `User` does not have. **Decided:** P1-04 overrides `createUser`; the Google name pre-fills `Profile.displayName` and the photo is not imported (no columns added).
 
 ## 5. Indexes Summary (Phase 1 query patterns)
 
@@ -512,9 +512,9 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 | Unverified accounts | Hard-deleted after 30 days (OD-08) |
 | Rate-limit buckets | Purged daily after their window expires |
 | Auth tokens | Deleted after use or expiry (cleanup script, PROPOSED daily) |
-| Feed sessions/impressions | Deleted after expiry (PROPOSED: 7 days) |
+| Feed sessions/impressions | Deleted 7 days after expiry (CONFIRMED) |
 | Feed feedback | Retained while account exists (PROPOSED) |
-| Media assets | Deleted from Cloudinary when DB record deleted; orphans cleaned after 24h (PROPOSED) |
+| Media assets | Deleted from Cloudinary when DB record deleted; orphans cleaned after 24h (CONFIRMED) |
 | Unpublished posts | Retained; admin can delete |
 | Audit logs | Retained; retention period OPEN |
 

@@ -110,6 +110,24 @@ describe("withRouteHandler", () => {
     expect(response.headers.get("retry-after")).toBe("30");
   });
 
+  it("rejects a mutation sent from another site before running the handler", async () => {
+    let handlerRan = false;
+    const handler = withRouteHandler({}, async () => {
+      handlerRan = true;
+      return noContent();
+    });
+    const request = new NextRequest("http://dodoi.test/api/test", {
+      method: "POST",
+      headers: { origin: "https://evil.example", host: "dodoi.test" },
+    });
+
+    const response = await handler(request, noParams);
+
+    expect(response.status).toBe(403);
+    expect((await readError(response)).code).toBe("CROSS_ORIGIN_REQUEST");
+    expect(handlerRan).toBe(false);
+  });
+
   it("returns a generic 500 for unexpected errors without leaking internals", async () => {
     const handler = withRouteHandler({}, async () => {
       throw new Error("relation users does not exist");

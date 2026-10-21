@@ -22,7 +22,7 @@ import { PATTERN_ACCENTS, PatternTile } from "@/components/ui/pattern-tile";
 import { SearchField } from "@/components/ui/search-field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { showToast, Toaster } from "@/components/ui/toast";
+import { showToast } from "@/components/ui/toast";
 import { Wordmark } from "@/components/ui/wordmark";
 
 const FEED_FILTERS = ["For you", "Crochet", "Watercolor", "New to you"];
@@ -229,8 +229,6 @@ export function UiPreview() {
           <ErrorState onRetry={() => undefined} />
         </div>
       </Section>
-
-      <Toaster />
     </main>
   );
 }

@@ -30,8 +30,8 @@ Phase-wise, dependency-ordered plan from an empty repository to a public MVP and
 
 | ID | Decision | Blocks | Needed by |
 |---|---|---|---|
-| OD-29 | Can signed-out visitors browse the feed, explore and post detail (read-only), or only the landing page? | Middleware rules, API permissions (`User*` endpoints), landing page, SEO | P1-07 |
-| OD-30 | Full predefined skill list (landing claims "40+ crafts") + each skill's description, `pitch` and `hint` text | Skills seed | P1-02 |
+| OD-29 | ~~Signed-out browsing~~ — **RESOLVED:** landing + published post detail public; rest requires sign-in | — | — |
+| OD-30 | Skill list — approach approved: agent drafts, PO approves | Skills seed | P1-02 |
 | OD-31 | Minimum seed content per skill (and per post type) for launch | Seed production, launch gate | P1-19 |
 | OD-32 | ~~Text-search configuration~~ — **RESOLVED: `simple`** | — | — |
 
@@ -42,11 +42,11 @@ Phase-wise, dependency-ordered plan from an empty repository to a public MVP and
 | Libraries | Zod, React Hook Form, TanStack Query, Serwist, argon2, `cloudinary`, `resend`, Prettier + `prettier-plugin-tailwindcss`, `@axe-core/playwright`; optional `eslint-plugin-import` / `madge` (CODE_QUALITY §12) | P0-02 |
 | New folders | `src/hooks/`, `src/lib/api-client/`, `src/lib/constants/` (CODE_QUALITY §3.1) | P0-01 |
 | Data conventions | ~~cuid ids, snake_case table mapping, text length limits, `Theme` entity, `Post.seedKey`, `PostProgress` shape~~ — **APPROVED** | — |
-| Auth & security parameters | JWT sessions (required by Credentials), Argon2id, password min length (8 or 10), token expiry 24h/1h, session max age 30 days, rate-limit numbers, CSP baseline, `/admin` → 404 for non-admins | P1-04 |
-| Behaviour details | Unsave removes the post from all collections; search suggestions from 2 characters; install prompt after first save / second visit, re-show after 30 days; no offline mutation queue in P1 | P1-24, P1-27 |
+| Auth & security parameters | ~~JWT, Argon2id, password min 10, tokens 24h/1h, sessions 30 days, rate limits, CSP, `/admin` → 404~~ — **APPROVED** | — |
+| Behaviour details | ~~Unsave removes the post from all collections~~ (APPROVED); search suggestions from 2 characters; install prompt after first save / second visit, re-show after 30 days; no offline mutation queue in P1 | P1-24, P1-27 |
 | Feed | Ranking weights, 20% discovery quota, diversity rule, suggestion-card rules, feed session expiry 24h | P1-21 (can start; tune later) |
 | PWA | Offline matrix (SYSTEM_ARCHITECTURE §9) | P1-27 |
-| Retention | Feed sessions 7 days, orphan media 24h, daily cleanup trigger, audit-log retention | P1-28 |
+| Retention | ~~Feed sessions 7 days, orphan media 24h~~ (APPROVED); daily cleanup trigger, audit-log retention | P1-28 |
 | Accessibility target | WCAG 2.2 AA | P1-31 |
 
 **C. Accounts and assets (PO)**
@@ -134,11 +134,11 @@ P1-19 seed content production runs in parallel from day one (PO)
 | P1-01 | Prisma schema for all Phase 1 models (DATABASE_SCHEMA §3–4.7) + raw SQL migration (`pg_trgm`, `search_vector`, trigram indexes, report partial unique index) | M | P0-03 | `prisma validate` passes; migration applies on empty DB; schema doc matches | ☑ |
 | P1-02 | Skills reference seed: `skills.json` (names, slugs, accents, descriptions, pitch, hint, related pairs) + seed script; admin user promotion via `SEED_ADMIN_EMAIL` | S | P1-01, OD-30 | Idempotent `pnpm db:seed`; `normalizedName` unique | ☐ |
 | P1-03 | Media integration: Cloudinary provider behind interface (sign with purpose/folder, verify metadata vs MEDIA-01…05, delete); orphan tracking | M | P0-05, Cloudinary account | Integration tests with fake provider: oversize/wrong type/>60 s rejected and deleted | ☐ |
-| P1-04 | Auth.js: Credentials + Google, Prisma adapter, JWT with `sessionVersion` + role, `signIn` callback linking rules (OD-09), `Actor` from session, middleware protection with return URL | M | P1-01, §0.2-B auth params, OD-29, Google OAuth | Sign in/out both providers; tampered/stale JWT rejected; unverified-account linking removes password | ☐ |
+| P1-04 | Auth.js: Credentials + Google, Prisma adapter, JWT with `sessionVersion` + role, `signIn` callback linking rules (OD-09), `Actor` from session, middleware protection with return URL | M | P1-01, Google OAuth client | Sign in/out both providers; tampered/stale JWT rejected; unverified-account linking removes password | ☐ |
 | P1-05 | Registration with DOB 18+ check (DOB discarded); `POST /api/account/age` + `AGE_CHECK_REQUIRED` gate for Google sign-ups; username auto-generation; email verification via Resend; unverified-user gating (`EMAIL_NOT_VERIFIED`) | L | P1-04, Resend | AUTH-01/04/11; no enumeration; tokens hashed & single-use; DOB never stored/logged | ☐ |
 | P1-06 | Password reset request/confirm; password change; `NO_PASSWORD_SET` | S | P1-05 | AUTH-05; other sessions invalidated after reset | ☐ |
-| P1-08 | Rate limiter (interface + PostgreSQL `RateLimitBucket`) on auth, skill creation, search, media signing, reports | S | P1-01 | `429` + `Retry-After` after threshold (integration tests) | ☐ |
-| P1-29 | Security headers + CSP; `Origin` check on mutations; open-redirect-safe return URLs | S | P0-05 | Header and origin tests pass | ☐ |
+| P1-08 | Rate limiter (`src/server/lib/rate-limit.ts`): fixed window, PostgreSQL `RateLimitBucket` store behind an interface, atomic increment, hashed keys, `enforceRateLimit` → 429 + Retry-After, purge helper for P1-33. Each endpoint applies its own rule when it is built (limits per SECURITY §6, still PROPOSED) | S | P1-01 | `429` + `Retry-After` after threshold (integration test); exactly `limit` of concurrent attempts allowed | ☑ |
+| P1-29 | Security headers (`src/lib/security-headers.ts` via `next.config.ts`: X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS in production, noindex outside production, no X-Powered-By); cross-site mutation rejection in `withRouteHandler` (`src/server/lib/origin.ts`, 403 `CROSS_ORIGIN_REQUEST`); `toSafeReturnPath()` for return URLs. static Content-Security-Policy (OD-35 option A) | S | P0-05 | Header, CSP, origin and return-path tests pass (unit + E2E); no CSP violations on rendered pages | ☑ |
 
 **Exit (M1):** integration tests for every auth rule pass (TESTING_STRATEGY §4).
 
@@ -148,7 +148,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 | ID | Task | Size | Depends on | Acceptance criteria | Status |
 |---|---|---|---|---|---|
-| P1-26b | App shell: mobile header + bottom tab bar (Create/Community coming soon), tablet icon rail, desktop sidebar + right-rail slot; coming-soon nav treatment (DC-21); "Ask dodoi" pill as coming soon; `error.tsx` / `not-found.tsx` / loading boundaries | M | P0-10 | Matches `1c`/`2b`/`3c`; coming-soon items make no network calls; keyboard + screen-reader names | ☐ |
+| P1-26b | App shell (`src/components/layout/`): mobile header + bottom tab bar, tablet 76px icon rail, desktop 232px sidebar, `PageWithRail` (300px right rail ≥ 1280px), coming-soon nav (pill or dot, tooltip, no navigation/requests), Ask dodoi pill/card (coming soon), skip link; root `not-found`, `error` (Next 16 `retry()`), `global-error`, `(app)/loading`; `Toaster` mounted in root layout; `/shell-preview` (local only) | M | P0-10 | Matches `1c`/`2b`/`3c`; coming-soon items make no network requests; axe clean on mobile, tablet and desktop | ☑ |
 | P1-07 | Auth UI: Welcome (`1a`), sign up (with DOB), sign in, check email, verify, forgot/reset password, DOB step after Google, verify-email banner | M | P1-04–06, P1-26b | E2E-01/02/03/14; axe clean; built-from-system screens flagged for PO review | ☐ |
 | P1-09 | Skills module: list/search, custom skill create-or-resolve (normalization, OD-13 rules, blocklist, verified email) | S | P1-02, P1-08 | " Crochet " → Crochet; blocked words rejected; unverified → 403 | ☐ |
 | P1-10 | `/api/me/skills` (replace-set) + onboarding complete (min 3 interests) | S | P1-09 | Ownership enforced; < 3 interests → rejected | ☐ |

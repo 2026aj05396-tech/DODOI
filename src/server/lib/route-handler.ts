@@ -4,12 +4,19 @@ import type { NextRequest } from "next/server";
 import type { z } from "zod";
 
 import type { ApiErrorBody } from "@/lib/types/api";
-import { AppError, RateLimitError, ValidationError, type FieldErrors } from "@/server/lib/errors";
+import {
+  AppError,
+  ForbiddenError,
+  RateLimitError,
+  ValidationError,
+  type FieldErrors,
+} from "@/server/lib/errors";
 import { logger } from "@/server/lib/logger";
+import { isSameOriginRequest } from "@/server/lib/origin";
 
 // Every API route handler is wrapped with `withRouteHandler` (CODE_QUALITY §9.1). It owns:
-// request ids, input parsing, AppError → HTTP mapping and error logging.
-// Session lookup and `auth` options are added in P1-04; route-level Origin checks in P1-29.
+// request ids, cross-site request rejection, input parsing, AppError → HTTP mapping and error
+// logging. Session lookup and `auth` options are added in P1-04.
 
 type RouteSchemas = {
   body?: z.ZodType;
@@ -103,6 +110,11 @@ export function withRouteHandler<TSchemas extends RouteSchemas>(
   return async (request, context) => {
     const requestId = createRequestId();
     try {
+      if (!isSameOriginRequest(request)) {
+        throw new ForbiddenError("This request didn't come from dodoi.", {
+          code: "CROSS_ORIGIN_REQUEST",
+        });
+      }
       const params = parseInput<TSchemas["params"]>(schemas.params, await context.params);
       const query = parseInput<TSchemas["query"]>(
         schemas.query,

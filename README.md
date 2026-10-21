@@ -81,6 +81,11 @@ Read the documents in this order before writing any code.
 | Usernames | Auto-generated at sign-up, editable; 3–20 chars `[a-z][a-z0-9_-]`, reserved names blocked, one change per 30 days | CONFIRMED |
 | Seeded post creators | Invited creators = real accounts; team/stock/Creative Commons (CC BY, BY-SA only) = "via dodoi editors" + attribution | CONFIRMED |
 | Icons | Lucide (`lucide-react`) | CONFIRMED |
+| Content Security Policy | Static policy without nonces, keeps pages statically rendered (OD-35) | CONFIRMED |
+| Signed-out access | Landing page + published post detail (read-only); everything else requires sign-in (OD-29) | CONFIRMED |
+| Auth settings | JWT sessions (30 days rolling), Argon2id, passwords ≥ 10 chars, tokens 24h/1h, rate limits per SECURITY §6, `/admin` → 404 for non-admins | CONFIRMED |
+| Google profile data | Name pre-fills display name; photo not imported; users upload their own avatar | CONFIRMED |
+| Retention | Feed sessions 7 days after expiry; orphaned uploads 24h | CONFIRMED |
 | Coming-soon nav items | Muted + butter "Soon" pill, tooltip only | CONFIRMED |
 | Undesigned Phase 1 screens | Built from the design system (tokens + components); product owner reviews | CONFIRMED |
 | Profile default visibility | Public | CONFIRMED |
@@ -158,7 +163,7 @@ pnpm dev
 | `pnpm format` / `pnpm format:check` | Prettier write / check (Markdown excluded) |
 | `pnpm test` | Vitest unit + integration tests |
 | `pnpm test:e2e` | Playwright end-to-end + accessibility tests |
-| `pnpm db:migrate` | `prisma migrate dev` |
+| `pnpm db:migrate` | `prisma migrate dev` + `prisma generate` (Prisma 7 no longer regenerates the client after migrating) |
 | `pnpm db:seed` | Reference data + seed content import |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:reset` | Drop, re-migrate, re-seed (local only) |

@@ -1,0 +1,103 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { ComingSoonBadge } from "@/components/ui/coming-soon";
+import { Wordmark } from "@/components/ui/wordmark";
+import { cn } from "@/lib/utils/cn";
+
+import { AskDodoiCard } from "./ask-dodoi";
+import { ComingSoonTrigger } from "./coming-soon-trigger";
+import {
+  COMMUNITY,
+  CREATE,
+  EXPLORE,
+  HOME,
+  JOURNAL,
+  MESSAGES,
+  SAVED,
+  isActivePath,
+  profileNavItem,
+  type NavItem,
+} from "./nav-items";
+
+const ITEM_CLASSES = "flex h-11 w-full items-center gap-3 rounded-md px-3 text-control-lg";
+
+function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const Icon = item.icon;
+  const isActive = isActivePath(pathname, item.href);
+  return (
+    <Link
+      href={item.href ?? "/"}
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        ITEM_CLASSES,
+        isActive
+          ? "bg-blush font-bold text-foreground"
+          : "text-foreground-secondary hover:bg-muted",
+      )}
+    >
+      <Icon aria-hidden className="size-5" strokeWidth={isActive ? 1.9 : 1.7} />
+      {item.label}
+    </Link>
+  );
+}
+
+function SidebarComingSoon({ item }: { item: NavItem }) {
+  const Icon = item.icon;
+  return (
+    <ComingSoonTrigger
+      label={item.label}
+      hasVisibleLabel
+      className={cn(ITEM_CLASSES, "text-muted-foreground")}
+    >
+      <Icon aria-hidden className="size-5" strokeWidth={1.7} />
+      {item.label}
+      <ComingSoonBadge size="sm" decorative className="ml-auto" />
+    </ComingSoonTrigger>
+  );
+}
+
+/** Full desktop sidebar (`2b`), 232px. */
+export function Sidebar({ username, className }: { username: string | null; className?: string }) {
+  const pathname = usePathname();
+  const CreateIcon = CREATE.icon;
+
+  return (
+    <nav
+      aria-label="Main"
+      className={cn(
+        "sticky top-0 flex h-dvh w-58 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-background px-4 py-6 *:shrink-0",
+        className,
+      )}
+    >
+      <Link
+        href={HOME.href ?? "/"}
+
+        className="mb-5 self-start rounded-sm px-3"
+      >
+        <Wordmark />
+      </Link>
+      <SidebarLink item={HOME} pathname={pathname} />
+      <SidebarLink item={EXPLORE} pathname={pathname} />
+      <SidebarComingSoon item={COMMUNITY} />
+      <SidebarComingSoon item={MESSAGES} />
+      <SidebarLink item={SAVED} pathname={pathname} />
+      <SidebarComingSoon item={JOURNAL} />
+      <SidebarLink item={profileNavItem(username)} pathname={pathname} />
+      <ComingSoonTrigger
+        label={CREATE.label}
+        hasVisibleLabel
+        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary/60 text-control-lg font-bold text-primary-foreground"
+      >
+        <CreateIcon aria-hidden className="size-4.5" strokeWidth={2.2} />
+        {CREATE.label}
+        <ComingSoonBadge size="sm" decorative />
+      </ComingSoonTrigger>
+      <div className="mt-auto pt-6">
+        <AskDodoiCard />
+      </div>
+    </nav>
+  );
+}

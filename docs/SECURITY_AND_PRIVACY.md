@@ -20,22 +20,22 @@ Markers: **CONFIRMED** / **PROPOSED** / **OPEN**.
 ## 2. Authentication
 
 ### 2.1 Mechanism (CONFIRMED)
-Auth.js with Credentials (email/password) and Google. JWT session strategy (PROPOSED — required by Credentials provider).
+Auth.js with Credentials (email/password) and Google. JWT session strategy (CONFIRMED — required by the Credentials provider).
 
 ### 2.2 Passwords
-- Hash with Argon2id (PROPOSED; bcrypt cost ≥ 12 as fallback). Never store or log plaintext.
-- Policy (PROPOSED, NIST-aligned): minimum 8 characters (PROPOSED: 10), maximum 128, no composition rules, reject the user's email as password. Breached-password check: OPEN.
+- Hash with Argon2id (CONFIRMED; bcrypt cost ≥ 12 only if the native build fails). Never store or log plaintext.
+- Policy (CONFIRMED, NIST-aligned): **minimum 10 characters**, maximum 128, no composition rules, reject the user's email as password. Breached-password check: OPEN.
 - Password change and reset increment `sessionVersion` → other sessions invalidated.
 
 ### 2.3 Tokens (email verification, password reset)
 - 32+ bytes from a CSPRNG, URL-safe encoded; only the SHA-256 hash is stored.
-- Single-use (`usedAt`), short expiry (PROPOSED 24h verify / 1h reset).
+- Single-use (`usedAt`), short expiry (CONFIRMED: 24h verification / 1h password reset).
 - Issuing a new reset token invalidates previous unused ones.
 
 ### 2.4 Sessions
 - Cookies: `HttpOnly`, `Secure` (in production), `SameSite=Lax`.
-- JWT callback rejects tokens whose `sessionVersion` ≠ DB value and for deleted/disabled users. (DB check per request: PROPOSED; cache acceptable later.)
-- Session max age: PROPOSED 30 days rolling.
+- JWT callback rejects tokens whose `sessionVersion` ≠ DB value and for deleted/disabled users. (DB check per request: CONFIRMED; cache acceptable later.)
+- Session max age: CONFIRMED 30 days rolling.
 - Expired session → `401` from API; UI redirects to sign-in with return URL (validated as same-origin relative path to prevent open redirects).
 
 ### 2.5 Account enumeration
@@ -43,6 +43,7 @@ Register, password reset and sign-in responses must not reveal whether an email 
 
 ### 2.6 Google OAuth
 - Use `state`/PKCE as handled by Auth.js.
+- Google profile data (CONFIRMED): the Google **name** pre-fills `Profile.displayName`; the Google **photo is not imported** and `User` has no name/image columns, so P1-04 overrides the adapter's `createUser`. Users upload their own avatar in Edit profile.
 - Linking to existing password accounts (CONFIRMED, OD-09): automatic, because Google returns a verified email. Implemented in the Auth.js `signIn` callback (not via a blanket `allowDangerousEmailAccountLinking`): require Google `email_verified = true`; if the existing account's email was **unverified**, delete its `passwordHash`, mark the email verified and bump `sessionVersion` — this closes the account pre-hijacking attack.
 
 ### 2.7 Age
@@ -72,14 +73,14 @@ Register, password reset and sign-in responses must not reveal whether an email 
 | Media asset | Via parent resource | Admin (+ User for avatar, PROPOSED) | Owner/Admin | Owner/Admin |
 | Audit log | Admin | System | — | — |
 
-`User*` = becomes Public if unauthenticated browsing is approved (OPEN).
+`User*` = signed-in users only, **except** published post detail and related posts, which are Public read-only (OD-29).
 
 ## 4. Input Handling and Web Vulnerabilities
 
 | Vulnerability | Control |
 |---|---|
 | Injection (SQL) | Prisma parameterized queries; raw SQL only via tagged `$queryRaw` (never `$queryRawUnsafe` with user input) |
-| XSS | React escaping; no `dangerouslySetInnerHTML` with user content; user text rendered as plain text; strict Content Security Policy (PROPOSED baseline: self + Cloudinary + Google) |
+| XSS | React escaping; no `dangerouslySetInnerHTML` with user content; user text rendered as plain text; static Content Security Policy without nonces (CONFIRMED, OD-35 option A): `default-src 'self'`; scripts/styles `'self' 'unsafe-inline'` (required by Next.js without nonces); images/media from Cloudinary; uploads to `api.cloudinary.com`; `form-action` `'self'` + Google sign-in; `frame-ancestors 'none'`; `object-src 'none'`; `base-uri 'self'`; `upgrade-insecure-requests` on hosted environments. `next dev` additionally allows `'unsafe-eval'` and `ws:` for hot reload. Revisit with nonces if user-written HTML is ever rendered |
 | CSRF | Auth.js CSRF for its routes; `SameSite=Lax` cookies; mutation route handlers verify `Origin` header matches app origin |
 | Open redirect | Return URLs must be relative same-origin paths |
 | Mass assignment | Zod schemas whitelist writable fields; never spread request bodies into Prisma calls |
@@ -87,6 +88,8 @@ Register, password reset and sign-in responses must not reveal whether an email 
 | Clickjacking | `X-Frame-Options: DENY` / CSP `frame-ancestors 'none'` |
 | Security headers | HSTS (production), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` minimal |
 | Unbounded requests | Body size limits; pagination max 50; search query max length |
+
+**Implemented in P1-29:** headers in `src/lib/security-headers.ts` (applied in `next.config.ts`, resolved per `APP_ENV` at build time; `poweredByHeader: false`); `Permissions-Policy` disables accelerometer, autoplay, camera, display-capture, geolocation, gyroscope, magnetometer, microphone, payment and usb; every mutation through `withRouteHandler` is checked by `isSameOriginRequest()` (`Origin` vs public host, else `Sec-Fetch-Site`; non-browser clients allowed) and rejected with 403 `CROSS_ORIGIN_REQUEST`; return URLs pass through `toSafeReturnPath()`. CSP in `buildContentSecurityPolicy()` (same file as the headers).
 
 ## 5. Media Upload Security
 
@@ -99,7 +102,7 @@ Register, password reset and sign-in responses must not reveal whether an email 
 
 ## 6. Rate Limiting and Abuse
 
-| Action | PROPOSED limit |
+| Action | Limit (CONFIRMED) |
 |---|---|
 | Sign-in | 10 / 15 min / IP + 5 / 15 min / email |
 | Register | 5 / hour / IP |
@@ -109,7 +112,7 @@ Register, password reset and sign-in responses must not reveal whether an email 
 | Search | 60 / min / user |
 | Media signing | 30 / hour / user |
 
-Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed window), behind the limiter interface; expired rows purged daily. Custom-interest text rules and blocklist: PRODUCT_REQUIREMENTS §5.2 (OD-13). Additional limit: reports 10 / day / user.
+Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed window), behind the limiter interface; expired rows purged daily. Implemented in `src/server/lib/rate-limit.ts` (P1-08): atomic `INSERT … ON CONFLICT` increment, and bucket keys are `<rule>:<sha256(subject)>` so emails and IPs are never stored in plain text. Custom-interest text rules and blocklist: PRODUCT_REQUIREMENTS §5.2 (OD-13). Additional limit: reports 10 / day / user.
 
 ## 7. Privacy
 

@@ -198,6 +198,8 @@ Spacing: page gutter 20px mobile (24px onboarding/welcome), 28px web feed, 56px 
 - **Right rail in Phase 1 (DC-20/DC-22, CONFIRMED):** "New to you" card · **"Help other makers"** coming-soon card ("Answer questions in skills you know") that lists the user's *can help with* skills as chips when they chose any in onboarding step 3 · **"Live sessions"** coming-soon card ("Book a 30-min call with a maker · We'll let you know when this opens.").
 - **Post detail (`2c`):** two-column content (media | details). **Phase 1: full 232px sidebar** (DC-23). From Phase 4, when the AI companion (380px) docks, the sidebar collapses to the **76px icon rail** (monogram "d.", Home, Explore, Community, Saved, Profile, Create). Icon-only items need accessible names (`aria-label`).
 
+**Implemented in P1-26b:** `AppShell` (`src/components/layout/app-shell.tsx`) used by `src/app/(app)/layout.tsx`; pages that need the right rail wrap their content in `PageWithRail`. Coming-soon nav items use `ComingSoonTrigger`: accessible name = visible label + ", coming soon" (never a separate `aria-label`, so voice-control users can say what they see); visual badges are `decorative`. Tight spots (icon rail, mobile bell) use the butter **dot**; elsewhere the "Soon" pill. Preview at `/shell-preview` (local only).
+
 ### 3.3 Tablet (768–1279, design `3c`)
 - 76px icon rail (same as `2c`), no right rail, 2-column feed, search + avatar header, filter chips wrap, floating "Ask dodoi" pill bottom-right.
 - **Landing (`2a`):** top bar (Discover · Learn · Community · Companion; Log in / Join free), hero left, animated patterned mosaic right.

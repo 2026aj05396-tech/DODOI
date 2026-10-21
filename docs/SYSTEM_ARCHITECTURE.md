@@ -148,7 +148,7 @@ Each module folder: `index.ts` (public API), `service.ts`, `repository.ts` (Pris
 ## 6. Authentication Architecture
 
 - **Auth.js** with Prisma adapter; providers: **Credentials** (email/password) and **Google**.
-- **Session strategy: JWT** (PROPOSED, required): Auth.js Credentials provider does not support database sessions. Implication: immediate server-side session revocation needs a `sessionVersion` (or `tokenVersion`) field on User checked in the JWT callback, incremented on password reset / sign-out-everywhere / deletion.
+- **Session strategy: JWT** (CONFIRMED, required): Auth.js Credentials provider does not support database sessions. Implication: immediate server-side session revocation needs a `sessionVersion` (or `tokenVersion`) field on User checked in the JWT callback, incremented on password reset / sign-out-everywhere / deletion.
 - Registration, email verification and password reset are **custom route handlers** (Auth.js does not provide password registration/reset). Tokens: random, stored **hashed**, single-use, expiring.
 - Role on User: `USER` | `ADMIN` (MVP). `MODERATOR` added in P2.
 - Middleware protects `(app)` and `admin` route groups (redirect to sign-in); services re-check authorization.

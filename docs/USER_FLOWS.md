@@ -11,7 +11,7 @@ Notation: `→` next step · `[Screen]` · `{System}` · `⚠` edge case.
 ### F-01 First visit (unauthenticated)
 
 1. User opens `/` → `[Landing]` showing value proposition, sample of public seed content, "Get started" and "Sign in".
-2. Unauthenticated users may browse: **OPEN** — whether the feed/detail pages are publicly viewable without an account. Until decided, landing shows a static curated preview only.
+2. Signed-out visitors (CONFIRMED, OD-29) see the landing page and can open **published post detail pages** read-only (shared links work; Save/actions prompt sign-in). Feed, explore, search, skill/theme pages, profiles and saves redirect to sign-in with a safe return URL.
 3. "Get started" → F-02. "Sign in" → F-03.
 
 ⚠ PWA install prompt is **not** shown on first visit (see F-12).
@@ -35,7 +35,7 @@ Notation: `→` next step · `[Screen]` · `{System}` · `⚠` edge case.
    - Invalid credentials → "Email or password is incorrect." (same message for unknown email).
    - ⚠ Too many attempts → rate-limited message with retry time.
 3. Google:
-   - Success, new user → **date of birth step** (blocks under-18; on block the just-created account is deleted) → username auto-generated → F-05.
+   - Success, new user → display name pre-filled from the Google name (editable later); Google photo not imported → **date of birth step** (blocks under-18; on block the just-created account is deleted) → username auto-generated → F-05.
    - Success, existing Google-linked user → feed.
    - Email already exists as a password account → linked automatically; if that account was never verified its password is removed and other sessions signed out (OD-09).
    - ⚠ User cancels at Google → return to `[Sign in]` with neutral message "Google sign-in was cancelled."
@@ -107,7 +107,7 @@ Entry: `[Welcome]` (design `1a`) is the pre-auth screen with "Continue with Goog
 4. `[Saved]` page `/saved`: "All saved" grid + list of collections.
 5. Collection page: rename, change visibility, delete, remove item from collection.
 6. Delete collection → confirm dialog: "Delete 'X'? Saved posts will stay in All saved." → collection removed, saves retained.
-7. Unsave a post → removed from All saved and from every collection (PROPOSED, confirm) → toast with Undo.
+7. Unsave a post → removed from All saved and from every collection (CONFIRMED) → toast with Undo.
 
 ### F-10 Edit interests and profile (ONB-08, PRF-04)
 

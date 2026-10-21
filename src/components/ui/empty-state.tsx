@@ -6,6 +6,8 @@ export type EmptyStateProps = {
   /** Decorative icon or illustration; hidden from screen readers. */
   icon?: ReactNode;
   title: string;
+  /** Use "h1" when the empty state is the whole page (e.g. not found); defaults to a paragraph. */
+  titleAs?: "h1" | "h2" | "h3" | "p";
   description?: string;
   /** One primary action, e.g. a Button linking to Explore. */
   action?: ReactNode;
@@ -13,7 +15,14 @@ export type EmptyStateProps = {
 };
 
 /** "Nothing here yet" state: one message and at most one action (UI_UX_GUIDELINES §4). */
-export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  title,
+  titleAs: Title = "p",
+  description,
+  action,
+  className,
+}: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center gap-3 px-6 py-12 text-center", className)}>
       {icon ? (
@@ -21,7 +30,7 @@ export function EmptyState({ icon, title, description, action, className }: Empt
           {icon}
         </div>
       ) : null}
-      <p className="text-section text-foreground">{title}</p>
+      <Title className="text-section text-foreground">{title}</Title>
       {description ? (
         <p className="max-w-sm text-body text-foreground-secondary">{description}</p>
       ) : null}
