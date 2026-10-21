@@ -5,7 +5,7 @@ Phase-wise, dependency-ordered plan from an empty repository to a public MVP and
 **Rules**
 - A task whose dependencies include an OPEN decision or an unapproved PROPOSED item must not start until it is resolved (AI_DEVELOPMENT_RULES §2).
 - Every task follows the feature workflow (AI_DEVELOPMENT_RULES §3), the code standards ([CODE_QUALITY.md](../CODE_QUALITY.md)) and the Definition of Done (AI_DEVELOPMENT_RULES §10).
-- One task = one branch = one pull request, merged only with green CI (from P0-09).
+- One task = one branch = one pull request, merged only with green CI (from P0-09). **The product owner does all git operations** (AI_DEVELOPMENT_RULES §11): agents leave changes uncommitted and suggest a commit message.
 
 **Legend**
 - Status: ☐ not started · ◐ in progress · ☑ done

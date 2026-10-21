@@ -41,7 +41,7 @@ For each task:
 8. Write or update tests (TESTING_STRATEGY).
 9. Run `pnpm lint`, `pnpm typecheck`, `pnpm test` (and `pnpm test:e2e` when UI flows change).
 10. Update documentation affected by the change.
-11. Finish with a session summary (§9).
+11. Finish with a session summary (§9), including changed files and a suggested commit message. Do not stage, commit or push (§11).
 
 ## 4. Architecture Rules
 
@@ -103,6 +103,8 @@ Changes: <files/modules>
 Requirements covered: <IDs>
 Tests: <added/updated>; ran: lint ✓/✗, typecheck ✓/✗, test ✓/✗, e2e ✓/✗/not run (why)
 Docs updated: <files>
+Changed files (uncommitted): <list>
+Suggested commit message: <type(scope): summary [TASK-ID]>
 Decisions needed / questions: <list>
 Known limitations / follow-ups: <list>
 ```
@@ -121,11 +123,17 @@ A task is done only when:
 - [ ] Documentation updated.
 - [ ] Known limitations recorded.
 
-## 11. Git Conventions
+## 11. Git — the product owner does all git operations
 
-- Branch per task: `p1-21-feed-ranking`.
-- Conventional commits referencing task IDs: `feat(feed): rules-based ranking [P1-21]`.
-- One task per pull request where possible. Remote: GitHub; CI: GitHub Actions (OD-24).
+**Non-negotiable (product owner instruction, 2026-10-21):** AI agents have **no write access to git**. The product owner stages, commits, branches, merges and pushes.
+
+- **Never run** git commands that change the repository or the remote: `git add`, `git commit`, `git push`, `git pull`, `git merge`, `git rebase`, `git reset`, `git checkout` / `git switch`, `git branch` (create/delete), `git stash`, `git tag`, `git cherry-pick`, `git revert`, `git rm`, `git mv`, `git restore`, `git init`, `git remote` changes, or anything equivalent through other tools.
+- **Read-only** commands (`git status`, `git diff`, `git log`, `git show`) are allowed, only to report what changed.
+- Agents edit files in the working tree only and leave every change **uncommitted**.
+- At the end of each task, the session summary lists the changed files and a **suggested** commit message for the product owner, following these conventions:
+  - Branch per task: `p1-21-feed-ranking`.
+  - Conventional commits referencing task IDs: `feat(feed): rules-based ranking [P1-21]`.
+  - One task per pull request where possible. Remote: GitHub; CI: GitHub Actions (OD-24).
 
 ## 12. When Docs and Code Disagree
 
