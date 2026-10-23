@@ -4,10 +4,13 @@ import type { NextRequest } from "next/server";
 import type { z } from "zod";
 
 import type { ApiErrorBody } from "@/lib/types/api";
+import { getActor } from "@/server/auth";
+import type { Actor, AuthenticatedActor } from "@/server/lib/actor";
 import {
   AppError,
   ForbiddenError,
   RateLimitError,
+  UnauthenticatedError,
   ValidationError,
   type FieldErrors,
 } from "@/server/lib/errors";
@@ -15,10 +18,15 @@ import { logger } from "@/server/lib/logger";
 import { isSameOriginRequest } from "@/server/lib/origin";
 
 // Every API route handler is wrapped with `withRouteHandler` (CODE_QUALITY §9.1). It owns:
-// request ids, cross-site request rejection, input parsing, AppError → HTTP mapping and error
-// logging. Session lookup and `auth` options are added in P1-04.
+// request ids, cross-site request rejection, session lookup, input parsing, AppError → HTTP mapping
+// and error logging.
 
 type RouteSchemas = {
+  /**
+   * Who may call the route. Required, so every route states it: "user" answers 401 to signed-out
+   * callers and hands the handler a non-null actor; "public" passes the actor, which may be null.
+   */
+  auth: "public" | "user";
   body?: z.ZodType;
   query?: z.ZodType;
   params?: z.ZodType;
@@ -29,6 +37,7 @@ type Parsed<TSchema> = TSchema extends z.ZodType ? z.output<TSchema> : undefined
 export type RouteHandlerInput<TSchemas extends RouteSchemas> = {
   request: NextRequest;
   requestId: string;
+  actor: TSchemas["auth"] extends "user" ? AuthenticatedActor : Actor;
   body: Parsed<TSchemas["body"]>;
   query: Parsed<TSchemas["query"]>;
   params: Parsed<TSchemas["params"]>;
@@ -115,6 +124,9 @@ export function withRouteHandler<TSchemas extends RouteSchemas>(
           code: "CROSS_ORIGIN_REQUEST",
         });
       }
+      const actor = await getActor();
+      if (schemas.auth === "user" && actor === null) throw new UnauthenticatedError();
+
       const params = parseInput<TSchemas["params"]>(schemas.params, await context.params);
       const query = parseInput<TSchemas["query"]>(
         schemas.query,
@@ -125,7 +137,15 @@ export function withRouteHandler<TSchemas extends RouteSchemas>(
         schemas.body === undefined ? undefined : await readJsonBody(request),
       );
 
-      const response = await handler({ request, requestId, body, query, params });
+      const response = await handler({
+        request,
+        requestId,
+        // Narrowed by the 401 check above when `auth` is "user".
+        actor: actor as RouteHandlerInput<TSchemas>["actor"],
+        body,
+        query,
+        params,
+      });
       response.headers.set("x-request-id", requestId);
       if (!response.headers.has("cache-control")) {
         response.headers.set("cache-control", "private, no-store");

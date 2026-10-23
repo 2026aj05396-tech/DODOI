@@ -90,7 +90,7 @@ model User {
   auditLogs   AuditLog[]
 }
 
-// Required by Auth.js Prisma adapter (Google accounts)
+// Google account links (Auth.js account fields; OAuth tokens are not stored)
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -469,7 +469,7 @@ Differences between the listings above and `prisma/schema.prisma`, all following
 - **`Profile.isHidden`**, **`Post.seedKey`** and **`Collection.nameNormalized`** are in the model.
 - **Extra indexes** on foreign-key columns used for lookups and cascades (`save.post_id`, `post_media.media_id`, `feed_impression.post_id`, `feed_session.expires_at`, `report.reporter_id`, …).
 - **One open report per reporter and target** is enforced in the reports service; no partial unique index (still PROPOSED).
-- **Auth.js models:** `Session` and `VerificationToken` are not included (JWT sessions, custom verification). **Open for P1-04:** the Auth.js Prisma adapter's default `createUser` writes `name` and `image` from the Google profile, which `User` does not have. **Decided:** P1-04 overrides `createUser`; the Google name pre-fills `Profile.displayName` and the photo is not imported (no columns added).
+- **Auth.js models:** `Session` and `VerificationToken` are not included (JWT sessions, custom verification). **Done in P1-04:** no Prisma adapter is used; the users module creates Google users itself (User + Profile + Account in one transaction): the Google name pre-fills `Profile.displayName`, the photo is not imported (no columns added), and the token columns of `Account` stay empty (PROPOSED: tokens not stored).
 
 ## 5. Indexes Summary (Phase 1 query patterns)
 
@@ -520,9 +520,9 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 
 ## 8. Seed Data
 
-- `prisma/seed/skills.json` — predefined skills (at minimum those in the master doc: drawing, sketching, embroidery, crochet, pipe cleaner art, painting, coloring, pottery, journaling, DIY, photography; full list OPEN) with descriptions, accent tokens and related-skill pairs.
+- `prisma/seed/skills.json` — 51 approved predefined skills (OD-30) with description, pitch, hint, accent and 32 related pairs, loaded by `pnpm db:seed` → `seedPredefinedSkills()` (skills module). Idempotent: matches by `normalizedName`, keeps existing slugs and hidden status, stores related pairs in both directions, never deletes skills removed from the file. Validated by `src/server/modules/skills/seed-skills.test.ts`.
 - `seed-content/posts/*.json` + media files — posts with attribution (schema in API spec §8).
-- Admin user: promoted by email from `SEED_ADMIN_EMAIL` (account must already exist or is created without password, signing in via Google — PROPOSED).
+- Admin user: the account whose verified email equals `SEED_ADMIN_EMAIL` is promoted to ADMIN when it signs in (P1-04), recorded in `AuditLog` as `user.promote_admin`. No account is created by the seed.
 - Import is idempotent: posts keyed by a stable `seedKey` (CONFIRMED extra unique column `Post.seedKey String? @unique`).
 
 ## 9. Later-Phase Entities (to be specified before each phase)

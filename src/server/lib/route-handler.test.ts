@@ -3,8 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import type { ApiErrorBody } from "@/lib/types/api";
+import { getActor } from "@/server/auth";
+import type { AuthenticatedActor } from "@/server/lib/actor";
 import { NotFoundError, RateLimitError } from "@/server/lib/errors";
 import { noContent, ok, withRouteHandler } from "@/server/lib/route-handler";
+
+// The session is read through Auth.js, which needs a running Next.js request; tests set it directly.
+vi.mock("@/server/auth", () => ({ getActor: vi.fn() }));
+const mockedGetActor = vi.mocked(getActor);
 
 const noParams = { params: Promise.resolve({}) };
 
@@ -25,6 +31,7 @@ describe("withRouteHandler", () => {
   let stderrSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    mockedGetActor.mockResolvedValue(null);
     stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
   });
 
@@ -35,6 +42,7 @@ describe("withRouteHandler", () => {
   it("passes parsed input to the handler and adds request id and no-store headers", async () => {
     const handler = withRouteHandler(
       {
+        auth: "public",
         body: z.object({ name: z.string() }),
         query: z.object({ limit: z.coerce.number() }),
         params: z.object({ id: z.string() }),
@@ -56,8 +64,9 @@ describe("withRouteHandler", () => {
   });
 
   it("returns 400 VALIDATION_ERROR with field messages when the body is invalid", async () => {
-    const handler = withRouteHandler({ body: z.object({ name: z.string().min(2) }) }, async () =>
-      noContent(),
+    const handler = withRouteHandler(
+      { auth: "public", body: z.object({ name: z.string().min(2) }) },
+      async () => noContent(),
     );
 
     const response = await handler(jsonRequest('{"name":"a"}'), noParams);
@@ -70,7 +79,9 @@ describe("withRouteHandler", () => {
   });
 
   it("returns 400 when the body is not valid JSON", async () => {
-    const handler = withRouteHandler({ body: z.object({}) }, async () => noContent());
+    const handler = withRouteHandler({ auth: "public", body: z.object({}) }, async () =>
+      noContent(),
+    );
 
     const response = await handler(jsonRequest("{not json"), noParams);
 
@@ -79,7 +90,7 @@ describe("withRouteHandler", () => {
   });
 
   it("maps AppError subclasses to their status and code", async () => {
-    const handler = withRouteHandler({}, async () => {
+    const handler = withRouteHandler({ auth: "public" }, async () => {
       throw new NotFoundError();
     });
 
@@ -90,7 +101,7 @@ describe("withRouteHandler", () => {
   });
 
   it("uses a custom error code when one is given", async () => {
-    const handler = withRouteHandler({}, async () => {
+    const handler = withRouteHandler({ auth: "public" }, async () => {
       throw new NotFoundError(undefined, { code: "POST_NOT_FOUND" });
     });
 
@@ -100,7 +111,7 @@ describe("withRouteHandler", () => {
   });
 
   it("sets Retry-After for rate-limit errors", async () => {
-    const handler = withRouteHandler({}, async () => {
+    const handler = withRouteHandler({ auth: "public" }, async () => {
       throw new RateLimitError(30);
     });
 
@@ -112,7 +123,7 @@ describe("withRouteHandler", () => {
 
   it("rejects a mutation sent from another site before running the handler", async () => {
     let handlerRan = false;
-    const handler = withRouteHandler({}, async () => {
+    const handler = withRouteHandler({ auth: "public" }, async () => {
       handlerRan = true;
       return noContent();
     });
@@ -129,7 +140,7 @@ describe("withRouteHandler", () => {
   });
 
   it("returns a generic 500 for unexpected errors without leaking internals", async () => {
-    const handler = withRouteHandler({}, async () => {
+    const handler = withRouteHandler({ auth: "public" }, async () => {
       throw new Error("relation users does not exist");
     });
 
@@ -140,5 +151,43 @@ describe("withRouteHandler", () => {
     expect(error.code).toBe("INTERNAL_ERROR");
     expect(error.message).not.toContain("relation");
     expect(stderrSpy).toHaveBeenCalledOnce();
+  });
+  describe("auth option", () => {
+    const actor: AuthenticatedActor = { id: "user_1", role: "USER", isEmailVerified: true };
+
+    it('answers 401 UNAUTHENTICATED on a "user" route when signed out, without running the handler', async () => {
+      let handlerRan = false;
+      const handler = withRouteHandler({ auth: "user" }, async () => {
+        handlerRan = true;
+        return noContent();
+      });
+
+      const response = await handler(jsonRequest(""), noParams);
+
+      expect(response.status).toBe(401);
+      expect((await readError(response)).code).toBe("UNAUTHENTICATED");
+      expect(handlerRan).toBe(false);
+    });
+
+    it('passes the signed-in actor to a "user" route', async () => {
+      mockedGetActor.mockResolvedValue(actor);
+      const handler = withRouteHandler({ auth: "user" }, async ({ actor: current }) =>
+        ok({ id: current.id }),
+      );
+
+      const response = await handler(jsonRequest(""), noParams);
+
+      expect(await response.json()).toEqual({ id: "user_1" });
+    });
+
+    it('passes a null actor to a "public" route when signed out', async () => {
+      const handler = withRouteHandler({ auth: "public" }, async ({ actor: current }) =>
+        ok({ signedIn: current !== null }),
+      );
+
+      const response = await handler(jsonRequest(""), noParams);
+
+      expect(await response.json()).toEqual({ signedIn: false });
+    });
   });
 });

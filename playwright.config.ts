@@ -31,6 +31,15 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
-    env: { APP_ENV: "local", DATABASE_URL: TEST_DATABASE_URL },
+    // Overrides .env.local: the E2E server must use the test database, its own port and test-only
+    // auth values (Google is never contacted).
+    env: {
+      APP_ENV: "local",
+      DATABASE_URL: TEST_DATABASE_URL,
+      AUTH_SECRET: "e2e-only-auth-secret-at-least-32-characters",
+      AUTH_URL: BASE_URL,
+      AUTH_GOOGLE_ID: "e2e-google-client-id",
+      AUTH_GOOGLE_SECRET: "e2e-google-client-secret",
+    },
   },
 });

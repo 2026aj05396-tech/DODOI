@@ -361,7 +361,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-08 | ~~Unverified user permissions~~ — **RESOLVED: private features allowed; public actions need verification; delete after 30 days** | — | — |
 | OD-09 | ~~Google ↔ password linking~~ — **RESOLVED: auto-link; remove password if existing account was unverified** | — | — |
 | OD-10 | ~~Private profile~~ — **RESOLVED: only avatar, name, username visible; excluded from search** | — | — |
-| OD-11 | ~~Username rules~~ — **RESOLVED: 3–20 chars, lowercase a–z, 0–9, `_`, `-`; must start with a letter; reserved list (admin, dodoi, api, support, help, settings, explore, …); change at most once per 30 days** | — | — |
+| OD-11 | ~~Username rules~~ — **RESOLVED: 3–20 chars, lowercase a–z, 0–9, `_`, `-`; must start with a letter; reserved list (admin, dodoi, api, support, help, settings, explore, …); change at most once per 30 days**. Full list (OD-11 names + every top-level route) in `src/server/modules/users/username.ts` — PROPOSED in P1-04 | — | — |
 | OD-12 | ~~Minimal P1 reporting~~ — **RESOLVED: yes, for custom skills and profiles (§5.11)** | — | — |
 | OD-13 | ~~Custom interest limits~~ — **RESOLVED: 2–40 chars, Unicode letters, blocklist, verified email** | — | — |
 | OD-14 | ~~Minimum interests~~ — **RESOLVED: 3** | — | — |
@@ -380,9 +380,10 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-27 | ~~Rate-limit store~~ — **RESOLVED: PostgreSQL table behind interface** | — | — |
 | OD-28 | ~~Minimum age 13+ vs India's DPDP Act~~ — **RESOLVED: minimum age raised to 18+** (adults only) | — | — |
 | OD-29 | ~~Signed-out browsing~~ — **RESOLVED:** signed-out visitors can see the **landing page** and **published post detail pages** (with related posts) read-only, so shared links work; feed, explore, search, skill/theme pages, profiles, saves and everything else require sign-in | — | — |
-| OD-30 | Full predefined skill list (40+) with description, pitch and hint per skill — **APPROACH APPROVED:** agent drafts the list from the design and docs, PO edits and approves it before P1-02 | Skills seed | P1-02 |
+| OD-30 | ~~Predefined skill list~~ — **RESOLVED (2026-10-23):** the 51 skills in `prisma/seed/skills.json` are approved; the PO may edit the file later (the seed test validates every entry) | — | — |
 | OD-31 | Minimum seed content per skill / post type for launch | Seed production, launch gate | P1-19 |
 | OD-32 | ~~Text-search config~~ — **RESOLVED: `simple`** (language-neutral) | — | — |
 | OD-33 | ~~Icon set~~ — **RESOLVED: Lucide** (`lucide-react`) | — | — |
 | OD-34 | ~~Branch protection / secret scanning~~ — **RESOLVED: stay on free GitHub for now**; rely on agent rules and checking CI before merging; revisit before adding contributors | — | — |
 | OD-35 | ~~CSP approach~~ — **RESOLVED: static policy without nonces (option A)**; keeps static rendering; revisit if user HTML is rendered | — | — |
+| OD-36 | ~~Blocklist source~~ — **RESOLVED:** LDNOOBW English + romanised Hindi (CC BY 4.0, credited in THIRD_PARTY_NOTICES.md), minus 23 reviewed craft-safe exceptions (e.g. 'fingering' yarn, 'swastika' rangoli, 'butt' joint, 'patakha') | — | — |

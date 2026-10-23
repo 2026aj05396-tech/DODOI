@@ -40,6 +40,11 @@ jobs:
       APP_ENV: local
       DATABASE_URL: postgresql://dodoi:dodoi@localhost:5432/dodoi_test?schema=public
       TEST_DATABASE_URL: postgresql://dodoi:dodoi@localhost:5432/dodoi_test?schema=public
+      # Throwaway values for tests only: no real Google client is ever contacted in CI.
+      AUTH_SECRET: ci-only-auth-secret-not-used-anywhere-else
+      AUTH_URL: http://localhost:3100
+      AUTH_GOOGLE_ID: ci-google-client-id
+      AUTH_GOOGLE_SECRET: ci-google-client-secret
       NEXT_TELEMETRY_DISABLED: 1
 
     steps:

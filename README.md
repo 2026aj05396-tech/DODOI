@@ -72,6 +72,9 @@ Read the documents in this order before writing any code.
 | Layout | Sidebar everywhere on desktop (icon rail on detail pages with docked companion); tablet 768–1279 = icon rail + 2-col feed | CONFIRMED |
 | Unverified email | Private features allowed; public actions need verification; unverified accounts deleted after 30 days | CONFIRMED |
 | Google ↔ password accounts | Auto-link; password removed if existing account was unverified | CONFIRMED |
+| Auth.js version and adapter | `next-auth@5.0.0-beta.32` pinned exactly (v5 is still beta; upgrades are deliberate); own minimal adapter instead of `@auth/prisma-adapter` (P1-04) | CONFIRMED |
+| Google OAuth tokens | Not stored: dodoi does not call Google APIs, so only the account link (provider + Google id) is kept | PROPOSED (P1-04) |
+| Reserved usernames and fallback | Full list in `src/server/modules/users/username.ts` (OD-11 names + every top-level route); usernames fall back to `maker-NNNN` when neither name nor email gives 3 usable characters | PROPOSED (P1-04) |
 | Rate-limit store | PostgreSQL table | CONFIRMED |
 | Media limits | Images JPEG/PNG/WebP/HEIC ≤ 10 MB, ≥ 600 px, ≤ 10/post; video MP4/MOV/WebM ≤ 60 s, ≤ 50 MB, no feed autoplay | CONFIRMED |
 | Collections | ≤ 100 per user, ≤ 1,000 items, unique names | CONFIRMED |
@@ -86,6 +89,7 @@ Read the documents in this order before writing any code.
 | Auth settings | JWT sessions (30 days rolling), Argon2id, passwords ≥ 10 chars, tokens 24h/1h, rate limits per SECURITY §6, `/admin` → 404 for non-admins | CONFIRMED |
 | Google profile data | Name pre-fills display name; photo not imported; users upload their own avatar | CONFIRMED |
 | Retention | Feed sessions 7 days after expiry; orphaned uploads 24h | CONFIRMED |
+| Custom-interest blocklist | LDNOOBW English + Hinglish (CC BY 4.0) minus reviewed craft-safe exceptions | CONFIRMED |
 | Coming-soon nav items | Muted + butter "Soon" pill, tooltip only | CONFIRMED |
 | Undesigned Phase 1 screens | Built from the design system (tokens + components); product owner reviews | CONFIRMED |
 | Profile default visibility | Public | CONFIRMED |
@@ -164,7 +168,7 @@ pnpm dev
 | `pnpm test` | Vitest unit + integration tests |
 | `pnpm test:e2e` | Playwright end-to-end + accessibility tests |
 | `pnpm db:migrate` | `prisma migrate dev` + `prisma generate` (Prisma 7 no longer regenerates the client after migrating) |
-| `pnpm db:seed` | Reference data + seed content import |
+| `pnpm db:seed` | Load predefined skills (idempotent); refuses production without `--confirm-production` |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:reset` | Drop, re-migrate, re-seed (local only) |
 
@@ -180,7 +184,7 @@ Each environment (local, test, production) has its **own values for every variab
 |---|---|---|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `AUTH_SECRET` | Yes | Auth.js secret (`npx auth secret`) |
-| `AUTH_URL` | Yes | Base URL, e.g. `http://localhost:3000` |
+| `AUTH_URL` | Yes | Base URL, e.g. `http://localhost:3000`; Google redirect URI is `<AUTH_URL>/api/auth/callback/google` |
 | `AUTH_GOOGLE_ID` | Yes | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Yes | Google OAuth client secret |
 | `RESEND_API_KEY` | Yes | Resend API key |
@@ -190,7 +194,7 @@ Each environment (local, test, production) has its **own values for every variab
 | `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret (server only) |
 | `APP_ENV` | Yes | `local`, `test` or `production` (SYSTEM_ARCHITECTURE §13) |
 | `NEXT_PUBLIC_APP_URL` | Yes | Public base URL used in client code |
-| `SEED_ADMIN_EMAIL` | Seed only | Email of the account promoted to ADMIN by the seed script |
+| `SEED_ADMIN_EMAIL` | No | Email of the account promoted to ADMIN after it signs in with a verified email (P1-04) |
 
 Rule: only variables prefixed `NEXT_PUBLIC_` may be read in client code, and none of them may contain secrets.
 

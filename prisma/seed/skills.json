@@ -1,0 +1,446 @@
+{
+  "skills": [
+    {
+      "name": "Drawing",
+      "slug": "drawing",
+      "accent": "LAVENDER",
+      "description": "Making images with pencil, pen, charcoal or markers on paper.",
+      "pitch": "The simplest way to start: one pencil, any paper, five minutes.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Sketching",
+      "slug": "sketching",
+      "accent": "LAVENDER",
+      "description": "Quick, loose drawing to capture ideas, people and places.",
+      "pitch": "Like drawing, but faster and messier — on purpose.",
+      "hint": "Pairs with journaling"
+    },
+    {
+      "name": "Doodling",
+      "slug": "doodling",
+      "accent": "LAVENDER",
+      "description": "Playful, free-form drawing of patterns and little characters.",
+      "pitch": "Drawing without a plan. Perfect for the margins of your day.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Hand lettering",
+      "slug": "hand-lettering",
+      "accent": "LAVENDER",
+      "description": "Drawing decorative letters and words by hand.",
+      "pitch": "Turn a favorite quote into something you'd frame.",
+      "hint": "Pairs with journaling"
+    },
+    {
+      "name": "Calligraphy",
+      "slug": "calligraphy",
+      "accent": "LAVENDER",
+      "description": "The art of beautiful writing with a broad nib or brush pen.",
+      "pitch": "Slow, rhythmic strokes that make plain words look special.",
+      "hint": "Pairs with hand lettering"
+    },
+    {
+      "name": "Watercolor",
+      "slug": "watercolor",
+      "accent": "SKY",
+      "description": "Painting with transparent, water-based paint on paper.",
+      "pitch": "Let the water do half the work and enjoy the happy accidents.",
+      "hint": "Pairs with sketching"
+    },
+    {
+      "name": "Gouache",
+      "slug": "gouache",
+      "accent": "SKY",
+      "description": "Painting with opaque, matte water-based paint.",
+      "pitch": "Like watercolor, but you can paint light over dark.",
+      "hint": "Pairs with watercolor"
+    },
+    {
+      "name": "Acrylic painting",
+      "slug": "acrylic-painting",
+      "accent": "SKY",
+      "description": "Painting with fast-drying, water-based acrylic paint.",
+      "pitch": "Bold colors, quick layers and very forgiving mistakes.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Coloring",
+      "slug": "coloring",
+      "accent": "BUTTER",
+      "description": "Filling printed line art with color using pencils, pens or markers.",
+      "pitch": "A calm, no-pressure way to play with color combinations.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Mandala art",
+      "slug": "mandala-art",
+      "accent": "BUTTER",
+      "description": "Drawing or painting circular, symmetrical patterns.",
+      "pitch": "Repeat one shape around a centre and watch it bloom.",
+      "hint": "Pairs with doodling"
+    },
+    {
+      "name": "Crochet",
+      "slug": "crochet",
+      "accent": "BUTTER",
+      "description": "Making fabric from yarn with a single hook.",
+      "pitch": "One hook, one loop at a time — scarves, toys, coasters and more.",
+      "hint": "Uses leftover yarn"
+    },
+    {
+      "name": "Amigurumi",
+      "slug": "amigurumi",
+      "accent": "BUTTER",
+      "description": "Crocheting small stuffed toys and characters.",
+      "pitch": "Like crochet, but everything turns into tiny friends.",
+      "hint": "Pairs with crochet"
+    },
+    {
+      "name": "Knitting",
+      "slug": "knitting",
+      "accent": "BLUSH",
+      "description": "Making fabric from yarn with two needles.",
+      "pitch": "Steady, repeatable stitches that turn into cozy things to wear.",
+      "hint": "Pairs with crochet"
+    },
+    {
+      "name": "Embroidery",
+      "slug": "embroidery",
+      "accent": "BLUSH",
+      "description": "Decorating fabric with needle and thread stitches.",
+      "pitch": "Paint with thread — start with one flower in a hoop.",
+      "hint": "Pairs with drawing"
+    },
+    {
+      "name": "Cross-stitch",
+      "slug": "cross-stitch",
+      "accent": "BLUSH",
+      "description": "Embroidery that builds pictures from small X-shaped stitches.",
+      "pitch": "Count the squares, follow the chart, watch a picture appear.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Punch needle",
+      "slug": "punch-needle",
+      "accent": "BLUSH",
+      "description": "Making looped, textured designs by punching yarn through fabric.",
+      "pitch": "Like embroidery, but faster and fluffier.",
+      "hint": "Pairs with embroidery"
+    },
+    {
+      "name": "Sewing",
+      "slug": "sewing",
+      "accent": "BLUSH",
+      "description": "Joining fabric by hand or machine to make clothes, bags and decor.",
+      "pitch": "From a tote bag to your own clothes, one seam at a time.",
+      "hint": "Uses old clothes"
+    },
+    {
+      "name": "Quilting",
+      "slug": "quilting",
+      "accent": "BLUSH",
+      "description": "Stitching layers of fabric together, often from pieced patches.",
+      "pitch": "Turn fabric scraps into something warm and full of stories.",
+      "hint": "Uses fabric scraps"
+    },
+    {
+      "name": "Weaving",
+      "slug": "weaving",
+      "accent": "MINT",
+      "description": "Interlacing threads on a loom to make fabric or wall hangings.",
+      "pitch": "Over, under, repeat — a small frame loom is enough to start.",
+      "hint": "Pairs with macramé"
+    },
+    {
+      "name": "Macramé",
+      "slug": "macramé",
+      "accent": "MINT",
+      "description": "Knotting cord into decorative patterns and hangings.",
+      "pitch": "A handful of knots makes plant hangers and wall art.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Felting",
+      "slug": "felting",
+      "accent": "MINT",
+      "description": "Shaping wool fibres into solid forms or fabric.",
+      "pitch": "Poke soft wool into shapes — tiny animals are a classic start.",
+      "hint": "Pairs with crochet"
+    },
+    {
+      "name": "Pottery",
+      "slug": "pottery",
+      "accent": "MINT",
+      "description": "Shaping clay into vessels and objects, then firing it.",
+      "pitch": "Get your hands muddy and make something you can actually use.",
+      "hint": "Pairs with clay modeling"
+    },
+    {
+      "name": "Clay modeling",
+      "slug": "clay-modeling",
+      "accent": "MINT",
+      "description": "Sculpting small objects from air-dry or modeling clay.",
+      "pitch": "Pottery without a kiln — air-dry clay works at the kitchen table.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Polymer clay",
+      "slug": "polymer-clay",
+      "accent": "MINT",
+      "description": "Making jewelry and miniatures from oven-baked polymer clay.",
+      "pitch": "Bright, bendable clay that hardens in a home oven.",
+      "hint": "Pairs with jewelry making"
+    },
+    {
+      "name": "Pipe cleaner art",
+      "slug": "pipe-cleaner-art",
+      "accent": "LAVENDER",
+      "description": "Bending and twisting pipe cleaners into figures and decorations.",
+      "pitch": "Twist, bend, done — little creatures in minutes.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Paper craft",
+      "slug": "paper-craft",
+      "accent": "SKY",
+      "description": "Cutting, folding and gluing paper into decorations and models.",
+      "pitch": "Scissors, glue and paper you already have are enough.",
+      "hint": "Uses scrap paper"
+    },
+    {
+      "name": "Origami",
+      "slug": "origami",
+      "accent": "SKY",
+      "description": "Folding a single sheet of paper into shapes without cutting.",
+      "pitch": "One square of paper, a few folds, a crane that stands up.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Paper quilling",
+      "slug": "paper-quilling",
+      "accent": "SKY",
+      "description": "Rolling and shaping thin paper strips into designs.",
+      "pitch": "Curl paper strips into flowers, swirls and tiny art.",
+      "hint": "Pairs with paper craft"
+    },
+    {
+      "name": "Collage",
+      "slug": "collage",
+      "accent": "CORAL",
+      "description": "Creating images by arranging and gluing cut paper and found materials.",
+      "pitch": "Cut, arrange, glue — old magazines become new art.",
+      "hint": "Uses scrap paper"
+    },
+    {
+      "name": "Scrapbooking",
+      "slug": "scrapbooking",
+      "accent": "CORAL",
+      "description": "Arranging photos, notes and mementos into decorated pages.",
+      "pitch": "Keep your memories with paper, photos and a little glue.",
+      "hint": "Pairs with journaling"
+    },
+    {
+      "name": "Journaling",
+      "slug": "journaling",
+      "accent": "CORAL",
+      "description": "Keeping a handmade, decorated journal of thoughts and days.",
+      "pitch": "A notebook, a pen and ten minutes — no rules.",
+      "hint": "Pairs with sketching"
+    },
+    {
+      "name": "Bookbinding",
+      "slug": "bookbinding",
+      "accent": "CORAL",
+      "description": "Making and stitching your own books and notebooks by hand.",
+      "pitch": "Fold, stitch and bind a notebook that's entirely yours.",
+      "hint": "Pairs with journaling"
+    },
+    {
+      "name": "Linocut",
+      "slug": "linocut",
+      "accent": "CORAL",
+      "description": "Carving a design into linoleum and printing it with ink.",
+      "pitch": "Carve once, print again and again. Always cut away from your hand.",
+      "hint": "Pairs with drawing"
+    },
+    {
+      "name": "Block printing",
+      "slug": "block-printing",
+      "accent": "CORAL",
+      "description": "Printing patterns on fabric or paper with carved blocks.",
+      "pitch": "Stamp patterns the way Indian textile printers have for centuries.",
+      "hint": "Pairs with linocut"
+    },
+    {
+      "name": "Tie-dye",
+      "slug": "tie-dye",
+      "accent": "SKY",
+      "description": "Dyeing fabric in patterns by folding, twisting and binding it.",
+      "pitch": "Twist, tie, dye — every piece turns out different.",
+      "hint": "Uses old clothes"
+    },
+    {
+      "name": "Jewelry making",
+      "slug": "jewelry-making",
+      "accent": "BUTTER",
+      "description": "Making necklaces, earrings and bracelets from beads, wire and more.",
+      "pitch": "Make the earrings you couldn't find in shops.",
+      "hint": "Pairs with bead work"
+    },
+    {
+      "name": "Bead work",
+      "slug": "bead-work",
+      "accent": "BUTTER",
+      "description": "Stringing and stitching beads into jewelry and decorations.",
+      "pitch": "Tiny beads, endless patterns, very satisfying.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "String art",
+      "slug": "string-art",
+      "accent": "LAVENDER",
+      "description": "Making designs by wrapping thread around nails on a board.",
+      "pitch": "Nails, a board and thread make bold geometric art.",
+      "hint": "Pairs with mandala art"
+    },
+    {
+      "name": "Candle making",
+      "slug": "candle-making",
+      "accent": "BUTTER",
+      "description": "Pouring wax into molds or containers to make candles.",
+      "pitch": "Melt, pour, wait — and your room smells like your choice.",
+      "hint": "Handle hot wax with care"
+    },
+    {
+      "name": "Soap making",
+      "slug": "soap-making",
+      "accent": "MINT",
+      "description": "Making soap by hand, from melt-and-pour bases to cold process.",
+      "pitch": "Start with melt-and-pour; cold process uses lye and needs gloves.",
+      "hint": "Melt-and-pour to start"
+    },
+    {
+      "name": "Resin art",
+      "slug": "resin-art",
+      "accent": "SKY",
+      "description": "Casting or pouring epoxy resin into coasters, jewelry and art.",
+      "pitch": "Glossy, glassy pieces with flowers or pigments inside. Ventilate well.",
+      "hint": "Needs ventilation and gloves"
+    },
+    {
+      "name": "Woodworking",
+      "slug": "woodworking",
+      "accent": "MINT",
+      "description": "Building objects from wood with hand or power tools.",
+      "pitch": "Make a shelf, a box or a spoon — learn tool safety first.",
+      "hint": "Learn tool safety first"
+    },
+    {
+      "name": "Wood carving",
+      "slug": "wood-carving",
+      "accent": "MINT",
+      "description": "Shaping wood with knives and gouges, from spoons to figures.",
+      "pitch": "Whittle a spoon from a branch. Carve away from your body.",
+      "hint": "Pairs with woodworking"
+    },
+    {
+      "name": "Upcycling",
+      "slug": "upcycling",
+      "accent": "CORAL",
+      "description": "Turning old or discarded things into something new and useful.",
+      "pitch": "Jars, jeans and boxes get a second life.",
+      "hint": "Uses things you have"
+    },
+    {
+      "name": "Rangoli",
+      "slug": "rangoli",
+      "accent": "CORAL",
+      "description": "Indian floor art made with colored powder, rice or flowers.",
+      "pitch": "Bright patterns at the doorstep for festivals and everyday welcomes.",
+      "hint": "Pairs with mandala art"
+    },
+    {
+      "name": "Mehndi",
+      "slug": "mehndi",
+      "accent": "BLUSH",
+      "description": "Drawing intricate designs on skin with natural henna paste.",
+      "pitch": "Fine lines and flowing patterns. Practice on paper first.",
+      "hint": "Pairs with mandala art"
+    },
+    {
+      "name": "Madhubani painting",
+      "slug": "madhubani-painting",
+      "accent": "BUTTER",
+      "description": "Folk painting from Bihar with bold outlines and natural motifs.",
+      "pitch": "Fill every space with fish, peacocks and patterns.",
+      "hint": "Pairs with drawing"
+    },
+    {
+      "name": "Warli art",
+      "slug": "warli-art",
+      "accent": "CORAL",
+      "description": "Tribal painting from Maharashtra made of simple geometric figures.",
+      "pitch": "Circles, triangles and lines tell whole stories.",
+      "hint": "Beginner friendly"
+    },
+    {
+      "name": "Lippan art",
+      "slug": "lippan-art",
+      "accent": "LAVENDER",
+      "description": "Mud and mirror relief work from Kutch, Gujarat.",
+      "pitch": "Clay patterns studded with tiny mirrors that catch the light.",
+      "hint": "Pairs with clay modeling"
+    },
+    {
+      "name": "Photography",
+      "slug": "photography",
+      "accent": "SKY",
+      "description": "Making pictures with a camera or phone.",
+      "pitch": "The camera you already carry is enough to start.",
+      "hint": "Pairs with journaling"
+    },
+    {
+      "name": "DIY",
+      "slug": "diy",
+      "accent": "CORAL",
+      "description": "Making and fixing things around the home yourself.",
+      "pitch": "Small projects that make your space more yours.",
+      "hint": "Uses things you have"
+    }
+  ],
+  "relatedPairs": [
+    ["crochet", "knitting"],
+    ["crochet", "amigurumi"],
+    ["crochet", "felting"],
+    ["embroidery", "punch-needle"],
+    ["embroidery", "cross-stitch"],
+    ["drawing", "sketching"],
+    ["sketching", "watercolor"],
+    ["watercolor", "gouache"],
+    ["hand-lettering", "calligraphy"],
+    ["journaling", "scrapbooking"],
+    ["journaling", "bookbinding"],
+    ["pottery", "clay-modeling"],
+    ["clay-modeling", "polymer-clay"],
+    ["polymer-clay", "jewelry-making"],
+    ["jewelry-making", "bead-work"],
+    ["paper-craft", "origami"],
+    ["paper-craft", "paper-quilling"],
+    ["collage", "scrapbooking"],
+    ["linocut", "block-printing"],
+    ["sewing", "quilting"],
+    ["weaving", "macramé"],
+    ["woodworking", "wood-carving"],
+    ["mandala-art", "rangoli"],
+    ["mandala-art", "mehndi"],
+    ["madhubani-painting", "warli-art"],
+    ["lippan-art", "clay-modeling"],
+    ["upcycling", "diy"],
+    ["tie-dye", "sewing"],
+    ["doodling", "mandala-art"],
+    ["string-art", "mandala-art"],
+    ["coloring", "mandala-art"],
+    ["candle-making", "soap-making"]
+  ]
+}

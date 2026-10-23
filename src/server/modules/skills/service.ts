@@ -1,0 +1,185 @@
+import "server-only";
+
+import { z } from "zod";
+
+import { Prisma } from "@/generated/prisma/client";
+import type { CreateCustomSkillInput, ListSkillsQuery } from "@/lib/schemas/skills";
+import type { Paginated } from "@/lib/types/api";
+import type { SkillDetail, SkillSummary } from "@/lib/types/skills";
+import type { Actor, AuthenticatedActor } from "@/server/lib/actor";
+import {
+  ForbiddenError,
+  NotFoundError,
+  UnauthenticatedError,
+  ValidationError,
+} from "@/server/lib/errors";
+import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
+import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
+
+import { BLOCKED_SKILL_TERMS } from "./blocked-terms";
+import { createBlocklistMatcher } from "./blocklist";
+import {
+  isValidSkillNameShape,
+  pickSkillAccent,
+  SKILL_NAME_MAX_LENGTH,
+  SKILL_NAME_MIN_LENGTH,
+  toNormalizedSkillName,
+  toSkillDisplayName,
+  toSkillSlug,
+} from "./normalize";
+import { canCreateCustomSkill } from "./policies";
+import {
+  findActiveSkillDetailBySlug,
+  findSkillByNormalizedName,
+  findSlugsStartingWith,
+  insertCustomSkill,
+  listActiveSkills,
+  searchActiveSkills,
+  type SkillSummaryRow,
+} from "./repository";
+
+/** SECURITY_AND_PRIVACY §6: custom skill creation, 10 per day per user. */
+export const CUSTOM_SKILL_RATE_LIMIT: RateLimitRule = {
+  name: "custom-skill-create",
+  limit: 10,
+  windowSeconds: 24 * 60 * 60,
+};
+
+const isBlockedByDefault = createBlocklistMatcher(BLOCKED_SKILL_TERMS);
+
+const listCursorSchema = z.object({ name: z.string(), id: z.string() });
+const searchCursorSchema = z.object({ offset: z.number().int().min(0) });
+
+function requireActor(actor: Actor): AuthenticatedActor {
+  if (!actor) throw new UnauthenticatedError();
+  return actor;
+}
+
+function toSummary(row: SkillSummaryRow): SkillSummary {
+  return { id: row.id, name: row.name, slug: row.slug, accent: row.accent, origin: row.origin };
+}
+
+/** Active skills for the onboarding picker and search suggestions; signed-in users only (OD-29). */
+export async function listSkills(
+  actor: Actor,
+  query: ListSkillsQuery,
+): Promise<Paginated<SkillSummary>> {
+  requireActor(actor);
+  const take = query.limit + 1;
+
+  if (query.q) {
+    const offset = query.cursor ? decodeCursor(query.cursor, searchCursorSchema).offset : 0;
+    const rows = await searchActiveSkills({
+      term: toNormalizedSkillName(query.q),
+      origin: query.origin,
+      offset,
+      take,
+    });
+    const page = rows.slice(0, query.limit);
+    return {
+      items: page.map(toSummary),
+      nextCursor: rows.length > query.limit ? encodeCursor({ offset: offset + query.limit }) : null,
+    };
+  }
+
+  const after = query.cursor ? decodeCursor(query.cursor, listCursorSchema) : undefined;
+  const rows = await listActiveSkills({ origin: query.origin, after, take });
+  const page = rows.slice(0, query.limit);
+  const last = page.at(-1);
+  return {
+    items: page.map(toSummary),
+    nextCursor:
+      rows.length > query.limit && last ? encodeCursor({ name: last.name, id: last.id }) : null,
+  };
+}
+
+export async function getSkillBySlug(actor: Actor, slug: string): Promise<SkillDetail> {
+  requireActor(actor);
+  const skill = await findActiveSkillDetailBySlug(slug);
+  if (!skill) throw new NotFoundError("We couldn't find that skill.");
+
+  return {
+    ...toSummary(skill),
+    description: skill.description,
+    hint: skill.hint,
+    pitch: skill.pitch,
+    relatedSkills: skill.relatedFrom.map((relation) => toSummary(relation.to)),
+  };
+}
+
+async function chooseAvailableSlug(displayName: string): Promise<string> {
+  const base = toSkillSlug(displayName) || "skill";
+  const taken = new Set(await findSlugsStartingWith(base));
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) suffix += 1;
+  return `${base}-${suffix}`;
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+type ResolveOptions = {
+  /** Replaces the default blocklist (tests). */
+  isBlocked?: (name: string) => boolean;
+};
+
+/**
+ * "Add your own" interest (ONB-04, OD-13): returns the existing skill when the normalised name is
+ * already known, otherwise creates a public CUSTOM skill. `created` tells the caller which happened.
+ */
+export async function resolveCustomSkill(
+  actor: Actor,
+  input: CreateCustomSkillInput,
+  { isBlocked = isBlockedByDefault }: ResolveOptions = {},
+): Promise<{ skill: SkillSummary; created: boolean }> {
+  const user = requireActor(actor);
+  if (!canCreateCustomSkill(user)) {
+    throw new ForbiddenError("Verify your email to add new interests.", {
+      code: "EMAIL_NOT_VERIFIED",
+    });
+  }
+
+  const displayName = toSkillDisplayName(input.name);
+  if (!isValidSkillNameShape(displayName)) {
+    throw new ValidationError(undefined, {
+      fields: {
+        name: `Use ${SKILL_NAME_MIN_LENGTH}–${SKILL_NAME_MAX_LENGTH} letters, numbers, spaces, - ' or &.`,
+      },
+    });
+  }
+
+  const normalizedName = toNormalizedSkillName(displayName);
+  const existing = await findSkillByNormalizedName(normalizedName);
+  if (existing?.status === "ACTIVE") return { skill: toSummary(existing), created: false };
+
+  // Hidden skills were removed by an admin; they must not come back through "add your own".
+  if (existing || isBlocked(displayName)) {
+    throw new ValidationError("That name can't be used. Try describing the craft differently.", {
+      code: "SKILL_NAME_NOT_ALLOWED",
+      fields: { name: "That name can't be used." },
+    });
+  }
+
+  await enforceRateLimit(CUSTOM_SKILL_RATE_LIMIT, user.id);
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const skill = await insertCustomSkill({
+        name: displayName,
+        normalizedName,
+        slug: await chooseAvailableSlug(displayName),
+        accent: pickSkillAccent(normalizedName),
+        createdById: user.id,
+      });
+      return { skill: toSummary(skill), created: true };
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+      // Someone added the same name at the same moment: reuse theirs. Otherwise the slug collided.
+      const concurrent = await findSkillByNormalizedName(normalizedName);
+      if (concurrent?.status === "ACTIVE") return { skill: toSummary(concurrent), created: false };
+    }
+  }
+  throw new Error("Could not create a unique slug for a custom skill");
+}

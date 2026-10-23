@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { db } from "@/server/db/client";
 import {
@@ -11,6 +11,9 @@ import {
 import { noContent, withRouteHandler } from "@/server/lib/route-handler";
 
 import { resetDatabase } from "../helpers/database";
+
+// The session is read through Auth.js, which needs a running Next.js request.
+vi.mock("@/server/auth", () => ({ getActor: async () => null }));
 
 const rule: RateLimitRule = { name: "test-action", limit: 5, windowSeconds: 60 };
 
@@ -58,7 +61,7 @@ describe("rate limiting with PostgreSQL", () => {
 
   it("returns 429 with Retry-After through the route handler", async () => {
     const strictRule: RateLimitRule = { name: "test-route", limit: 1, windowSeconds: 60 };
-    const handler = withRouteHandler({}, async () => {
+    const handler = withRouteHandler({ auth: "public" }, async () => {
       await enforceRateLimit(strictRule, "203.0.113.9");
       return noContent();
     });

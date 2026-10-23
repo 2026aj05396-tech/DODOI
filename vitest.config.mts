@@ -7,9 +7,15 @@ const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   "postgresql://dodoi:dodoi@localhost:5433/dodoi_test?schema=public";
 
+// Auth values are throwaway test values; tests never contact Google.
 const testEnv = {
   APP_ENV: "local",
   DATABASE_URL: TEST_DATABASE_URL,
+  AUTH_SECRET: "test-only-auth-secret-at-least-32-characters",
+  AUTH_URL: "http://localhost:3000",
+  AUTH_GOOGLE_ID: "test-google-client-id",
+  AUTH_GOOGLE_SECRET: "test-google-client-secret",
+  SEED_ADMIN_EMAIL: "owner@example.test",
 };
 
 export default defineConfig({
@@ -21,6 +27,9 @@ export default defineConfig({
   },
   test: {
     env: testEnv,
+    // next-auth imports "next/server" without a file extension, which bundlers accept but Node's
+    // ESM loader rejects; let Vite resolve its imports instead.
+    server: { deps: { inline: ["next-auth"] } },
     projects: [
       {
         extends: true,

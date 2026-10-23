@@ -1,8 +1,11 @@
 # Dependencies allowed to run install scripts (pnpm blocks all others by default).
 onlyBuiltDependencies:
   - "@prisma/engines"
+  - argon2
   - prisma
 
+# Install scripts not needed: esbuild (used by tsx) only re-checks its prebuilt binary.
 ignoredBuiltDependencies:
+  - esbuild
   - sharp
   - unrs-resolver

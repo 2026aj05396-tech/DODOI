@@ -37,7 +37,7 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Backend | Route Handlers + service layer (same app) | CONFIRMED |
 | Database | PostgreSQL | CONFIRMED |
 | ORM | Prisma | CONFIRMED |
-| Auth | Auth.js (NextAuth) with Prisma adapter; Credentials + Google | CONFIRMED |
+| Auth | Auth.js v5 (`next-auth@5.0.0-beta.32`, pinned) with an own minimal adapter on the Prisma client; Credentials + Google | CONFIRMED |
 | Email | Resend | CONFIRMED |
 | Media | Cloudinary | CONFIRMED |
 | Search | PostgreSQL full-text + `pg_trgm` | CONFIRMED |
@@ -147,7 +147,8 @@ Each module folder: `index.ts` (public API), `service.ts`, `repository.ts` (Pris
 
 ## 6. Authentication Architecture
 
-- **Auth.js** with Prisma adapter; providers: **Credentials** (email/password) and **Google**.
+- **Auth.js** v5 with an own minimal adapter (`src/server/auth/adapter.ts`: `getUser`, `getUserByAccount`) — `@auth/prisma-adapter` only supports Prisma ≤ 6. The `signIn` callback creates or links Google users in the users module (OD-09) before Auth.js looks the account up, so Auth.js never creates users itself. Providers: **Credentials** (email/password) and **Google**.
+- **Route protection:** `src/proxy.ts` does an optimistic cookie-only check on signed-in areas and redirects to `/sign-in?returnTo=…`; every page and route handler validates the session against the database through `getActor()` (`src/server/auth/session.ts`). Route handlers declare `auth: "public" | "user"` in `withRouteHandler`.
 - **Session strategy: JWT** (CONFIRMED, required): Auth.js Credentials provider does not support database sessions. Implication: immediate server-side session revocation needs a `sessionVersion` (or `tokenVersion`) field on User checked in the JWT callback, incremented on password reset / sign-out-everywhere / deletion.
 - Registration, email verification and password reset are **custom route handlers** (Auth.js does not provide password registration/reset). Tokens: random, stored **hashed**, single-use, expiring.
 - Role on User: `USER` | `ADMIN` (MVP). `MODERATOR` added in P2.

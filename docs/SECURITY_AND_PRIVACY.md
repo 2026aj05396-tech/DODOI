@@ -43,7 +43,7 @@ Register, password reset and sign-in responses must not reveal whether an email 
 
 ### 2.6 Google OAuth
 - Use `state`/PKCE as handled by Auth.js.
-- Google profile data (CONFIRMED): the Google **name** pre-fills `Profile.displayName`; the Google **photo is not imported** and `User` has no name/image columns, so P1-04 overrides the adapter's `createUser`. Users upload their own avatar in Edit profile.
+- Google profile data (CONFIRMED): the Google **name** pre-fills `Profile.displayName`; the Google **photo is not imported** and `User` has no name/image columns, so the users module creates Google users itself (P1-04). Users upload their own avatar in Edit profile. OAuth access/refresh/id tokens are not stored, since dodoi calls no Google APIs (PROPOSED in P1-04).
 - Linking to existing password accounts (CONFIRMED, OD-09): automatic, because Google returns a verified email. Implemented in the Auth.js `signIn` callback (not via a blanket `allowDangerousEmailAccountLinking`): require Google `email_verified = true`; if the existing account's email was **unverified**, delete its `passwordHash`, mark the email verified and bump `sessionVersion` — this closes the account pre-hijacking attack.
 
 ### 2.7 Age
@@ -153,7 +153,7 @@ Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed wi
 
 | Phase | Controls |
 |---|---|
-| P1 | Admin can hide custom skills, hide profiles and unpublish posts; audit log. User reporting of custom skills and profiles (CONFIRMED, OD-12; PRODUCT_REQUIREMENTS §5.11) |
+| P1 | Custom-interest blocklist matcher (`src/server/modules/skills/blocklist.ts`: whole words and phrases with character-swap folding; list = LDNOOBW English + Hinglish minus reviewed craft-safe exceptions in `blocked-terms.ts`, OD-36). Admin can hide custom skills, hide profiles and unpublish posts; audit log. User reporting of custom skills and profiles (CONFIRMED, OD-12; PRODUCT_REQUIREMENTS §5.11) |
 | P2 | Report posts/comments/profiles; block users (blocked users cannot see/interact; content hidden both ways); moderation queue; `ModerationAction` audit trail; MODERATOR role |
 | P3 | Report messages; messaging rate limits and spam prevention; message access only for participants; community rules and moderation |
 | P4 | AI moderation and safety per AI_INTEGRATION.md |
