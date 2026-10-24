@@ -9,6 +9,7 @@ const validEnv = {
   AUTH_URL: "http://localhost:3000",
   AUTH_GOOGLE_ID: "google-client-id",
   AUTH_GOOGLE_SECRET: "google-client-secret",
+  EMAIL_FROM: "dodoi <onboarding@resend.dev>",
 };
 
 describe("parseServerEnv", () => {
@@ -32,6 +33,17 @@ describe("parseServerEnv", () => {
     expect(parseServerEnv({ ...validEnv, SEED_ADMIN_EMAIL: "Owner@Example.com" })).toMatchObject({
       SEED_ADMIN_EMAIL: "owner@example.com",
     });
+  });
+
+  it("requires RESEND_API_KEY outside local development", () => {
+    expect(() => parseServerEnv({ ...validEnv, APP_ENV: "production" })).toThrow(/RESEND_API_KEY/);
+    expect(
+      parseServerEnv({ ...validEnv, APP_ENV: "production", RESEND_API_KEY: "re_key" }),
+    ).toMatchObject({ RESEND_API_KEY: "re_key" });
+  });
+
+  it("treats an empty RESEND_API_KEY as unset", () => {
+    expect(parseServerEnv({ ...validEnv, RESEND_API_KEY: "" }).RESEND_API_KEY).toBeUndefined();
   });
 
   it("rejects a DATABASE_URL that is not a URL", () => {

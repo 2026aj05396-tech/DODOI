@@ -5,6 +5,8 @@ const GENERIC_MESSAGE = "Something went wrong signing you in. Please try again."
 
 const MESSAGES_BY_CODE: Record<string, string> = {
   rate_limited: "Too many attempts. Please wait a few minutes and try again.",
+  use_google:
+    "Looks like you signed up with Google, so there's no password for this account. Continue with Google instead.",
 };
 
 const MESSAGES_BY_ERROR: Record<string, string> = {

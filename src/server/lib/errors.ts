@@ -66,6 +66,16 @@ export class UnprocessableError extends AppError {
   }
 }
 
+/** An outside service we depend on (e.g. email) failed; the user can try again later. */
+export class ServiceUnavailableError extends AppError {
+  constructor(
+    message = "That didn't work on our side. Please try again in a few minutes.",
+    options: AppErrorOptions = {},
+  ) {
+    super(503, "SERVICE_UNAVAILABLE", message, options);
+  }
+}
+
 export class RateLimitError extends AppError {
   readonly retryAfterSeconds: number;
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Prisma } from "@/generated/prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 import type { SignInInput } from "@/lib/schemas/auth";
 import { verifyPassword } from "@/server/auth/password";
 import { db } from "@/server/db/client";
@@ -8,20 +8,19 @@ import { serverEnv } from "@/server/lib/env";
 import { logger } from "@/server/lib/logger";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 
+import { chooseAvailableUsername, isUniqueViolation, toDisplayName } from "./new-profile";
 import {
   claimUnverifiedAccount,
   findAuthUserByAccount,
   findAuthUserById,
   findPasswordCredentialsByEmail,
   findSessionUserById,
-  findTakenUsernames,
   findUserForLinking,
   findUserIdByAccount,
   insertOAuthAccount,
   insertUserWithProfile,
   promoteVerifiedUserToAdmin,
 } from "./repository";
-import { usernameCandidates } from "./username";
 
 /** SECURITY_AND_PRIVACY §6: sign-in, 10 per 15 minutes per IP. */
 export const SIGN_IN_IP_RATE_LIMIT: RateLimitRule = {
@@ -37,30 +36,32 @@ export const SIGN_IN_EMAIL_RATE_LIMIT: RateLimitRule = {
   windowSeconds: 15 * 60,
 };
 
-const DISPLAY_NAME_MAX_LENGTH = 50;
 const GOOGLE_PROVIDER = "google";
 /** Concurrent first sign-ins can collide on email, account or username; each retry re-reads. */
 const RESOLVE_ATTEMPTS = 3;
 
-function isUniqueViolation(error: unknown): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
-}
+export type PasswordSignInResult =
+  | { outcome: "signed-in"; userId: string }
+  /** Wrong password or unknown email: identical in result and timing (§2.5). */
+  | { outcome: "invalid" }
+  /** The account exists but signs in with Google only (PO decision: say so, §2.5). */
+  | { outcome: "no-password" };
 
 /**
- * Email/password sign-in. Returns the user id when the password matches, otherwise null; an
- * unknown email and a wrong password look identical, in result and timing (§2.5).
- * Throws `RateLimitError` when the IP or the email is over its limit.
+ * Email/password sign-in. Throws `RateLimitError` when the IP or the email is over its limit.
  */
 export async function authenticateWithPassword(
   input: SignInInput,
   clientIp: string,
-): Promise<{ userId: string } | null> {
+): Promise<PasswordSignInResult> {
   await enforceRateLimit(SIGN_IN_IP_RATE_LIMIT, clientIp);
   await enforceRateLimit(SIGN_IN_EMAIL_RATE_LIMIT, input.email);
 
   const user = await findPasswordCredentialsByEmail(input.email);
   const matches = await verifyPassword(user?.passwordHash ?? null, input.password);
-  return user && matches ? { userId: user.id } : null;
+  if (user && matches) return { outcome: "signed-in", userId: user.id };
+  if (user && user.passwordHash === null) return { outcome: "no-password" };
+  return { outcome: "invalid" };
 }
 
 export type GoogleIdentity = {
@@ -78,12 +79,6 @@ export type GoogleSignInResult = {
   /** existing: account already linked · linked: joined to a password account · created: new user. */
   outcome: "existing" | "linked" | "created";
 };
-
-function toDisplayName(name: string | null, email: string): string {
-  const cleaned = (name ?? "").trim().replace(/\s+/g, " ");
-  const fallback = email.split("@")[0] ?? email;
-  return (cleaned.length > 0 ? cleaned : fallback).slice(0, DISPLAY_NAME_MAX_LENGTH);
-}
 
 async function resolveInTransaction(
   tx: Prisma.TransactionClient,
@@ -110,10 +105,7 @@ async function resolveInTransaction(
   }
 
   const displayName = toDisplayName(identity.name, email);
-  const candidates = usernameCandidates([displayName, email.split("@")[0] ?? ""]);
-  const taken = await findTakenUsernames(candidates, tx);
-  const username = candidates.find((candidate) => !taken.has(candidate));
-  if (!username) throw new Error("No free username candidate for a new Google account");
+  const username = await chooseAvailableUsername(displayName, email, tx);
 
   const user = await insertUserWithProfile({ email, username, displayName }, tx);
   await insertOAuthAccount({ ...account, userId: user.id }, tx);
@@ -163,6 +155,7 @@ export type SessionUser = {
   role: "USER" | "ADMIN";
   sessionVersion: number;
   isEmailVerified: boolean;
+  isAgeConfirmed: boolean;
 };
 
 /** Current state of a signed-in user, read on every request; null if the user no longer exists. */
@@ -174,6 +167,7 @@ export async function getSessionUser(userId: string): Promise<SessionUser | null
     role: user.role,
     sessionVersion: user.sessionVersion,
     isEmailVerified: user.emailVerified !== null,
+    isAgeConfirmed: user.ageConfirmedAt !== null,
   };
 }
 

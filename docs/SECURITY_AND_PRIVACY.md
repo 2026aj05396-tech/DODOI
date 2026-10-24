@@ -31,6 +31,9 @@ Auth.js with Credentials (email/password) and Google. JWT session strategy (CONF
 - 32+ bytes from a CSPRNG, URL-safe encoded; only the SHA-256 hash is stored.
 - Single-use (`usedAt`), short expiry (CONFIRMED: 24h verification / 1h password reset).
 - Issuing a new reset token invalidates previous unused ones.
+- Reset requests do the account lookup, token and email after the response (Next.js `after()`), so the response time is the same for known and unknown emails (PROPOSED, P1-06).
+- Using a reset link marks an unverified email as verified, since it proves the person owns the inbox (PROPOSED, P1-06).
+- Password change keeps the device that made it signed in (fresh session cookie) and signs out all others; attempts limited to 5 / 15 min / user (PROPOSED, P1-06).
 
 ### 2.4 Sessions
 - Cookies: `HttpOnly`, `Secure` (in production), `SameSite=Lax`.
@@ -39,7 +42,9 @@ Auth.js with Credentials (email/password) and Google. JWT session strategy (CONF
 - Expired session → `401` from API; UI redirects to sign-in with return URL (validated as same-origin relative path to prevent open redirects).
 
 ### 2.5 Account enumeration
-Register, password reset and sign-in responses must not reveal whether an email exists (identical messages and comparable response times).
+Password reset and sign-in responses must not reveal whether an email exists (identical messages and comparable response times). Exception (CONFIRMED by PO): a password sign-in for an account that has no password (Google sign-up) answers "Looks like you signed up with Google, so there's no password for this account. Continue with Google instead." — this reveals that the email is registered and uses Google; accepted for UX, limited by the sign-in rate limits.
+
+**Registration exception (CONFIRMED by PO, P1-05):** registering with a taken email answers `409 EMAIL_ALREADY_REGISTERED` ("This email is already registered.", with a "Sign in instead" link) or `409 EMAIL_REGISTERED_WITH_GOOGLE` ("Looks like you signed up with Google.", with a "Continue with Google" button), and a new user is signed in straight away (F-02, OD-08). Both reveal whether an email has a dodoi account; accepted for a clearer sign-up, limited by the register rate limit (5/hour/IP).
 
 ### 2.6 Google OAuth
 - Use `state`/PKCE as handled by Auth.js.

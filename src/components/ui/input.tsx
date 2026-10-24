@@ -1,9 +1,10 @@
 import { Label as LabelPrimitive } from "radix-ui";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentProps, ComponentPropsWithoutRef } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
-export type InputProps = ComponentPropsWithoutRef<"input">;
+/** Includes `ref` (a plain prop in React 19), e.g. to pre-fill or focus the field. */
+export type InputProps = ComponentProps<"input">;
 
 /** Text input. Uses 16px text so iOS does not zoom on focus; `aria-invalid` shows the error border. */
 export function Input({ className, type, ...props }: InputProps) {

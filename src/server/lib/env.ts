@@ -19,13 +19,31 @@ const serverEnvSchema = z.object({
     .email()
     .transform((email) => email.toLowerCase())
     .optional(),
+  // Resend (P1-05). The key may be left empty only when APP_ENV is local (automated tests):
+  // emails are then skipped, never sent.
+  RESEND_API_KEY: z
+    .string()
+    .optional()
+    .transform((key) => key || undefined),
+  /** Sender, e.g. `dodoi <onboarding@resend.dev>`. */
+  EMAIL_FROM: z.string().min(3),
+});
+
+const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
+  if (env.APP_ENV !== "local" && !env.RESEND_API_KEY) {
+    context.addIssue({
+      code: "custom",
+      path: ["RESEND_API_KEY"],
+      message: "RESEND_API_KEY is required outside local development",
+    });
+  }
 });
 
 export type ServerEnv = z.output<typeof serverEnvSchema>;
 
 /** Validates environment variables and throws a readable error listing every problem. */
 export function parseServerEnv(source: Record<string, string | undefined>): ServerEnv {
-  const result = serverEnvSchema.safeParse(source);
+  const result = serverEnvWithRulesSchema.safeParse(source);
   if (!result.success) {
     throw new Error(
       `Invalid environment variables:\n${z.prettifyError(result.error)}\n` +

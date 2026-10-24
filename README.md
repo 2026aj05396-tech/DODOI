@@ -74,6 +74,12 @@ Read the documents in this order before writing any code.
 | Google ↔ password accounts | Auto-link; password removed if existing account was unverified | CONFIRMED |
 | Auth.js version and adapter | `next-auth@5.0.0-beta.32` pinned exactly (v5 is still beta; upgrades are deliberate); own minimal adapter instead of `@auth/prisma-adapter` (P1-04) | CONFIRMED |
 | Google OAuth tokens | Not stored: dodoi does not call Google APIs, so only the account link (provider + Google id) is kept | PROPOSED (P1-04) |
+| Sign-in for Google-only accounts | Password attempt shows "Looks like you signed up with Google … Continue with Google instead." (accepted enumeration risk, SECURITY §2.5) | CONFIRMED |
+| Registration follow-up | New users are signed in right after registering; a taken email shows "This email is already registered." + "Sign in instead", or "Looks like you signed up with Google." + "Continue with Google" (accepted enumeration risk, SECURITY §2.5) | CONFIRMED |
+| Display name for email sign-ups | Email local-part (e.g. `aanya.k`), editable in Edit profile | CONFIRMED |
+| Under-18 and sign-up copy | "dodoi is for adults 18 and over, so we can't create an account for you." · "This email is already registered." · "Check your email — we've sent you a link." | CONFIRMED |
+| Password reset details | Email sent after the response (timing-safe); reset link verifies an unverified email; password change keeps the current device signed in, 5 attempts / 15 min | PROPOSED (P1-06) |
+| Age check date | Age computed on today's date in India (IST) | PROPOSED (P1-05) |
 | Reserved usernames and fallback | Full list in `src/server/modules/users/username.ts` (OD-11 names + every top-level route); usernames fall back to `maker-NNNN` when neither name nor email gives 3 usable characters | PROPOSED (P1-04) |
 | Rate-limit store | PostgreSQL table | CONFIRMED |
 | Media limits | Images JPEG/PNG/WebP/HEIC ≤ 10 MB, ≥ 600 px, ≤ 10/post; video MP4/MOV/WebM ≤ 60 s, ≤ 50 MB, no feed autoplay | CONFIRMED |
@@ -187,7 +193,7 @@ Each environment (local, test, production) has its **own values for every variab
 | `AUTH_URL` | Yes | Base URL, e.g. `http://localhost:3000`; Google redirect URI is `<AUTH_URL>/api/auth/callback/google` |
 | `AUTH_GOOGLE_ID` | Yes | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Yes | Google OAuth client secret |
-| `RESEND_API_KEY` | Yes | Resend API key |
+| `RESEND_API_KEY` | Yes (may be empty only with `APP_ENV=local`, for automated tests: emails are then skipped) | Resend API key |
 | `EMAIL_FROM` | Yes | Sender address (must be verified in Resend for non-test sending) |
 | `CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Yes | Cloudinary API key (server only) |

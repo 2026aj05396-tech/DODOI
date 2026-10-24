@@ -8,7 +8,12 @@ let sequence = 0;
 const next = () => ++sequence;
 
 export async function createUser(
-  overrides: { email?: string; emailVerified?: Date | null; passwordHash?: string | null } = {},
+  overrides: {
+    email?: string;
+    emailVerified?: Date | null;
+    passwordHash?: string | null;
+    ageConfirmedAt?: Date | null;
+  } = {},
 ) {
   const n = next();
   return db.user.create({
@@ -16,15 +21,22 @@ export async function createUser(
       email: overrides.email ?? `user${n}@example.test`,
       emailVerified: overrides.emailVerified === undefined ? new Date() : overrides.emailVerified,
       passwordHash: overrides.passwordHash ?? null,
+      ageConfirmedAt:
+        overrides.ageConfirmedAt === undefined ? new Date() : overrides.ageConfirmedAt,
     },
   });
 }
 
 export function actorFor(
-  user: { id: string; emailVerified: Date | null },
+  user: { id: string; emailVerified: Date | null; ageConfirmedAt?: Date | null },
   role: AuthenticatedActor["role"] = "USER",
 ): AuthenticatedActor {
-  return { id: user.id, role, isEmailVerified: user.emailVerified !== null };
+  return {
+    id: user.id,
+    role,
+    isEmailVerified: user.emailVerified !== null,
+    isAgeConfirmed: user.ageConfirmedAt !== null,
+  };
 }
 
 export async function createSkill(

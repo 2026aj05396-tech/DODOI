@@ -9,12 +9,11 @@ import { logger } from "@/server/lib/logger";
 
 import { authAdapter } from "./adapter";
 import { allowSignIn, authorizeCredentials, refreshSessionToken, toSession } from "./callbacks";
-import { usesSecureCookies } from "./cookies";
+import { SESSION_MAX_AGE_SECONDS, usesSecureCookies } from "./cookies";
 
 // Auth.js setup (ADR 0003, SECURITY_AND_PRIVACY §2): Google + email/password, JWT sessions
 // (30 days, refreshed daily while in use), sign-in and error pages at /sign-in.
 
-const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 const SESSION_UPDATE_AGE_SECONDS = 24 * 60 * 60;
 
 /** Failures caused by the user (wrong password, refused Google account), not by the system. */

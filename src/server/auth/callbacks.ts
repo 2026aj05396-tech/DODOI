@@ -24,6 +24,11 @@ export class RateLimitedSignIn extends CredentialsSignin {
   override code = "rate_limited";
 }
 
+/** Shown as `?code=use_google`: the account has no password and signs in with Google. */
+export class GoogleOnlySignIn extends CredentialsSignin {
+  override code = "use_google";
+}
+
 /** Credentials provider `authorize`: returns `{ id }` on success, null for a wrong email/password. */
 export async function authorizeCredentials(
   credentials: Partial<Record<string, unknown>>,
@@ -33,7 +38,8 @@ export async function authorizeCredentials(
   if (!input.success) return null;
   try {
     const result = await authenticateWithPassword(input.data, getClientIp(request.headers));
-    return result ? { id: result.userId } : null;
+    if (result.outcome === "no-password") throw new GoogleOnlySignIn();
+    return result.outcome === "signed-in" ? { id: result.userId } : null;
   } catch (error) {
     if (error instanceof RateLimitError) throw new RateLimitedSignIn();
     throw error;
@@ -66,17 +72,26 @@ export async function allowSignIn({
   return result !== null;
 }
 
-// What the encrypted session cookie holds: user id, session version, role and email-verified flag.
-// Role and flag are refreshed from the database on every request; the cookie is only a carrier.
+// What the encrypted session cookie holds: user id, session version, role, email-verified and
+// age-confirmed flags. Role and flags are refreshed from the database on every request; the
+// cookie is only a carrier (the proxy reads `ac` to send unconfirmed users to /confirm-age).
 const sessionClaimsSchema = z.object({
   sub: z.string().min(1),
   sv: z.number().int(),
   role: z.enum(["USER", "ADMIN"]),
   ev: z.boolean(),
+  ac: z.boolean(),
 });
 
-function toClaims(user: SessionUser) {
-  return { sub: user.id, sv: user.sessionVersion, role: user.role, ev: user.isEmailVerified };
+/** Session cookie claims for a user (also used to re-issue the cookie after a password change). */
+export function toClaims(user: SessionUser) {
+  return {
+    sub: user.id,
+    sv: user.sessionVersion,
+    role: user.role,
+    ev: user.isEmailVerified,
+    ac: user.isAgeConfirmed,
+  };
 }
 
 /**
@@ -112,6 +127,7 @@ export function toSession({ session, token }: { session: Session; token: JWT }):
     id: claims.data.sub,
     role: claims.data.role,
     isEmailVerified: claims.data.ev,
+    isAgeConfirmed: claims.data.ac,
   };
   return { expires: session.expires, actor };
 }

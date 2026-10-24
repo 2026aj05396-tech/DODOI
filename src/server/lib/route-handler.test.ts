@@ -153,7 +153,12 @@ describe("withRouteHandler", () => {
     expect(stderrSpy).toHaveBeenCalledOnce();
   });
   describe("auth option", () => {
-    const actor: AuthenticatedActor = { id: "user_1", role: "USER", isEmailVerified: true };
+    const actor: AuthenticatedActor = {
+      id: "user_1",
+      role: "USER",
+      isEmailVerified: true,
+      isAgeConfirmed: true,
+    };
 
     it('answers 401 UNAUTHENTICATED on a "user" route when signed out, without running the handler', async () => {
       let handlerRan = false;
@@ -178,6 +183,21 @@ describe("withRouteHandler", () => {
       const response = await handler(jsonRequest(""), noParams);
 
       expect(await response.json()).toEqual({ id: "user_1" });
+    });
+
+    it("answers 403 AGE_CHECK_REQUIRED until a Google sign-up confirms their age", async () => {
+      mockedGetActor.mockResolvedValue({ ...actor, isAgeConfirmed: false });
+      const blocked = withRouteHandler({ auth: "public" }, async () => noContent());
+      const ageCheck = withRouteHandler({ auth: "user", allowBeforeAgeCheck: true }, async () =>
+        noContent(),
+      );
+
+      const blockedResponse = await blocked(jsonRequest(""), noParams);
+      const ageCheckResponse = await ageCheck(jsonRequest(""), noParams);
+
+      expect(blockedResponse.status).toBe(403);
+      expect((await readError(blockedResponse)).code).toBe("AGE_CHECK_REQUIRED");
+      expect(ageCheckResponse.status).toBe(204);
     });
 
     it('passes a null actor to a "public" route when signed out', async () => {

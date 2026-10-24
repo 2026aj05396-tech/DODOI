@@ -4,6 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import {
   allowSignIn,
   authorizeCredentials,
+  GoogleOnlySignIn,
   RateLimitedSignIn,
   refreshSessionToken,
   toSession,
@@ -72,18 +73,28 @@ describe("auth", () => {
       expect(result).toEqual({ id: user.id });
     });
 
-    it("refuses a wrong password, an unknown email and a Google-only account the same way", async () => {
+    it("refuses a wrong password and an unknown email the same way", async () => {
       await createUser({ email: "maker@example.test", passwordHash });
-      await createUser({ email: "google-only@example.test", passwordHash: null });
       const ip = "198.51.100.2";
 
       const attempts = await Promise.all([
         authenticateWithPassword({ email: "maker@example.test", password: "wrong password" }, ip),
         authenticateWithPassword({ email: "nobody@example.test", password: PASSWORD }, ip),
-        authenticateWithPassword({ email: "google-only@example.test", password: PASSWORD }, ip),
       ]);
 
-      expect(attempts).toEqual([null, null, null]);
+      expect(attempts).toEqual([{ outcome: "invalid" }, { outcome: "invalid" }]);
+    });
+
+    it("tells a Google-only account to continue with Google", async () => {
+      await createUser({ email: "google-only@example.test", passwordHash: null });
+
+      const attempt = authorizeCredentials(
+        { email: "google-only@example.test", password: PASSWORD },
+        requestFrom("198.51.100.4"),
+      );
+
+      await expect(attempt).rejects.toBeInstanceOf(GoogleOnlySignIn);
+      await expect(attempt).rejects.toMatchObject({ code: "use_google" });
     });
 
     it("rejects malformed input without touching the database", async () => {
@@ -237,14 +248,14 @@ describe("auth", () => {
 
       const token = await refreshSessionToken({ token: {}, user: { id: user.id } });
 
-      expect(token).toEqual({ sub: user.id, sv: 0, role: "USER", ev: true });
+      expect(token).toEqual({ sub: user.id, sv: 0, role: "USER", ev: true, ac: true });
       const session = toSession({
         session: { expires: "2026-11-22T00:00:00.000Z" },
         token: token ?? {},
       });
       expect(session).toEqual({
         expires: "2026-11-22T00:00:00.000Z",
-        actor: { id: user.id, role: "USER", isEmailVerified: true },
+        actor: { id: user.id, role: "USER", isEmailVerified: true, isAgeConfirmed: true },
       });
     });
 

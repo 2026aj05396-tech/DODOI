@@ -43,6 +43,19 @@ test("a wrong password shows one message that does not reveal whether the email 
   ).toBeVisible();
 });
 
+test("an account without a password is told to continue with Google", async ({ page }) => {
+  const { email } = createPasswordAccount({ noPassword: true });
+  await page.goto("/sign-in");
+
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("any password at all");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Looks like you signed up with Google" }),
+  ).toBeVisible();
+});
+
 test("signing in returns to the requested page, and signing out ends the session", async ({
   page,
 }) => {

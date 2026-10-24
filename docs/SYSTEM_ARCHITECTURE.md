@@ -85,7 +85,7 @@ Libraries are installed in the task that first uses them, so the project never c
 src/
 ├── app/
 │   ├── (marketing)/page.tsx            # Landing
-│   ├── (auth)/sign-in, sign-up, forgot-password, reset-password, verify-email
+│   ├── (auth)/sign-in, sign-up, forgot-password, reset-password, verify-email, confirm-age
 │   ├── (app)/                          # Authenticated shell (nav)
 │   │   ├── feed/
 │   │   ├── explore/

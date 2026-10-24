@@ -8,9 +8,9 @@ import { config, proxy } from "./proxy";
 const COOKIE_NAME = "authjs.session-token";
 const SECRET = process.env.AUTH_SECRET ?? "";
 
-async function sessionCookie(secret = SECRET): Promise<string> {
+async function sessionCookie(secret = SECRET, ageConfirmed = true): Promise<string> {
   const token = await encode({
-    token: { sub: "user_1", sv: 0, role: "USER", ev: true },
+    token: { sub: "user_1", sv: 0, role: "USER", ev: true, ac: ageConfirmed },
     secret,
     salt: COOKIE_NAME,
   });
@@ -38,6 +38,14 @@ describe("proxy", () => {
 
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("sends a signed-in user without a confirmed age to /confirm-age", async () => {
+    const response = await proxy(requestTo("/feed", await sessionCookie(SECRET, false)));
+
+    const location = new URL(response.headers.get("location") ?? "");
+    expect(location.pathname).toBe("/confirm-age");
+    expect(location.searchParams.get("returnTo")).toBe("/feed");
   });
 
   it("treats a tampered session cookie as signed out", async () => {

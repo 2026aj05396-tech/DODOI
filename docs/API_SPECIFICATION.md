@@ -113,8 +113,8 @@ Rate limit: 5 / hour / IP (PROPOSED).
 // request
 { "email": "a@b.com", "password": "…", "dateOfBirth": "1998-04-17" }   // used for the 18+ check only, never stored
 ```
-- `201` `{ "status": "verification_sent" }` — **also returned when email already exists** (sends an "account exists" email instead) to prevent enumeration.
-- `400` invalid input · `422 UNDER_MINIMUM_AGE` · `429`.
+- `201` `{ "status": "verification_sent" }` — account created and verification email sent.
+- `400` invalid input · `409 EMAIL_ALREADY_REGISTERED` (has a password) or `409 EMAIL_REGISTERED_WITH_GOOGLE` (no password), message on field `email` (PO decision, SECURITY §2.5) · `422 UNDER_MINIMUM_AGE` · `429`.
 
 ### POST /api/account/age — User
 For Google sign-ups that have not passed the age check: `{ "dateOfBirth": "YYYY-MM-DD" }` → `204` (sets `ageConfirmedAt`) · `422 UNDER_MINIMUM_AGE` (account and session deleted). Until this succeeds, all other `/api/*` calls return `403 AGE_CHECK_REQUIRED`.
@@ -123,7 +123,7 @@ For Google sign-ups that have not passed the age check: `{ "dateOfBirth": "YYYY-
 `{ "token": "…" }` → `204` · `400 TOKEN_INVALID_OR_EXPIRED`.
 
 ### POST /api/account/verify-email/resend — User
-Rate limit: 3 / hour / user. → `204` (also when already verified).
+Rate limit: 3 / hour / user. → `204` (also when already verified) · `503 EMAIL_NOT_SENT` when the email provider refuses the message.
 
 ### POST /api/account/password-reset/request — Public
 `{ "email": "…" }` → always `204`. Rate limit: 5 / hour / IP and 3 / hour / email.
@@ -132,7 +132,7 @@ Rate limit: 3 / hour / user. → `204` (also when already verified).
 `{ "token": "…", "newPassword": "…" }` → `204`; increments `sessionVersion` (signs out other sessions) · `400 TOKEN_INVALID_OR_EXPIRED`.
 
 ### POST /api/account/password — User
-`{ "currentPassword": "…", "newPassword": "…" }` → `204` · `400` wrong current password. Google-only accounts (no password): `400 NO_PASSWORD_SET` — they sign in with Google; setting a password is via the reset flow.
+`{ "currentPassword": "…", "newPassword": "…" }` → `204` (other sessions signed out; this one receives a fresh session cookie) · `400 INVALID_CURRENT_PASSWORD` (field `currentPassword`) · `429` (5 / 15 min / user, PROPOSED). Google-only accounts (no password): `400 NO_PASSWORD_SET` — they sign in with Google; setting a password is via the reset flow.
 
 ### GET /api/account — User
 `{ "email", "emailVerified": bool, "hasPassword": bool, "providers": ["google"], "role", "onboardingCompleted": bool }`

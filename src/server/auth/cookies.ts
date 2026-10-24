@@ -10,3 +10,10 @@ import type { ServerEnv } from "@/server/lib/env";
 export function usesSecureCookies(appEnv: ServerEnv["APP_ENV"]): boolean {
   return appEnv !== "local";
 }
+
+/** Auth.js's session cookie name (its default naming, which the config keeps). */
+export function sessionCookieName(appEnv: ServerEnv["APP_ENV"]): string {
+  return `${usesSecureCookies(appEnv) ? "__Secure-" : ""}authjs.session-token`;
+}
+
+export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;

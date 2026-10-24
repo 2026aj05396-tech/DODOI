@@ -40,6 +40,9 @@ export default defineConfig({
       AUTH_URL: BASE_URL,
       AUTH_GOOGLE_ID: "e2e-google-client-id",
       AUTH_GOOGLE_SECRET: "e2e-google-client-secret",
+      // Empty key: no real email is sent during E2E runs.
+      RESEND_API_KEY: "",
+      EMAIL_FROM: "dodoi <e2e@example.test>",
     },
   },
 });

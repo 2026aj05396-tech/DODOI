@@ -16,6 +16,9 @@ const testEnv = {
   AUTH_GOOGLE_ID: "test-google-client-id",
   AUTH_GOOGLE_SECRET: "test-google-client-secret",
   SEED_ADMIN_EMAIL: "owner@example.test",
+  // No key: emails are skipped; tests pass a fake sender to check them.
+  RESEND_API_KEY: "",
+  EMAIL_FROM: "dodoi <test@example.test>",
 };
 
 export default defineConfig({

@@ -27,6 +27,11 @@ type RouteSchemas = {
    * callers and hands the handler a non-null actor; "public" passes the actor, which may be null.
    */
   auth: "public" | "user";
+  /**
+   * Signed-in users who have not passed the 18+ check get 403 AGE_CHECK_REQUIRED on every route
+   * (API_SPECIFICATION §3). Only the age check itself sets this.
+   */
+  allowBeforeAgeCheck?: true;
   body?: z.ZodType;
   query?: z.ZodType;
   params?: z.ZodType;
@@ -126,6 +131,11 @@ export function withRouteHandler<TSchemas extends RouteSchemas>(
       }
       const actor = await getActor();
       if (schemas.auth === "user" && actor === null) throw new UnauthenticatedError();
+      if (actor && !actor.isAgeConfirmed && !schemas.allowBeforeAgeCheck) {
+        throw new ForbiddenError("Please confirm your date of birth to continue.", {
+          code: "AGE_CHECK_REQUIRED",
+        });
+      }
 
       const params = parseInput<TSchemas["params"]>(schemas.params, await context.params);
       const query = parseInput<TSchemas["query"]>(

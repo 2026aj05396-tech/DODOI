@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { Prisma } from "@/generated/prisma/client";
+import type { AuthTokenType, Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db/client";
 
 type Client = Prisma.TransactionClient | typeof db;
@@ -9,7 +9,13 @@ type Client = Prisma.TransactionClient | typeof db;
 export async function findSessionUserById(id: string) {
   return db.user.findUnique({
     where: { id },
-    select: { id: true, role: true, sessionVersion: true, emailVerified: true },
+    select: {
+      id: true,
+      role: true,
+      sessionVersion: true,
+      emailVerified: true,
+      ageConfirmedAt: true,
+    },
   });
 }
 
@@ -116,4 +122,128 @@ export async function promoteVerifiedUserToAdmin(userId: string, email: string):
     });
     return true;
   });
+}
+
+/** Whether an account uses this email, and whether it can sign in with a password. */
+export async function findExistingAccountByEmail(email: string, client: Client) {
+  const user = await client.user.findUnique({
+    where: { email },
+    select: { passwordHash: true },
+  });
+  return user ? { hasPassword: user.passwordHash !== null } : null;
+}
+
+/** New email/password account: unverified email, age already confirmed at registration. */
+export async function insertPasswordUserWithProfile(
+  data: { email: string; passwordHash: string; username: string; displayName: string },
+  client: Client,
+) {
+  return client.user.create({
+    data: {
+      email: data.email,
+      passwordHash: data.passwordHash,
+      ageConfirmedAt: new Date(),
+      profile: { create: { username: data.username, displayName: data.displayName } },
+    },
+    select: { id: true },
+  });
+}
+
+/** Replaces any unused token of this type for the user, so only the newest link works. */
+export async function replaceAuthToken(
+  data: { userId: string; type: AuthTokenType; tokenHash: string; expiresAt: Date },
+  client: Client = db,
+) {
+  await client.authToken.deleteMany({
+    where: { userId: data.userId, type: data.type, usedAt: null },
+  });
+  await client.authToken.create({ data });
+}
+
+/**
+ * Marks a valid token used and returns its user id; null if the token is unknown, expired or
+ * already used. The conditional update makes two simultaneous uses impossible.
+ */
+export async function consumeAuthToken(
+  type: AuthTokenType,
+  tokenHash: string,
+  now: Date,
+  client: Client,
+): Promise<string | null> {
+  const { count } = await client.authToken.updateMany({
+    where: { tokenHash, type, usedAt: null, expiresAt: { gt: now } },
+    data: { usedAt: now },
+  });
+  if (count === 0) return null;
+  const token = await client.authToken.findUnique({
+    where: { tokenHash },
+    select: { userId: true },
+  });
+  return token?.userId ?? null;
+}
+
+export async function markEmailVerified(userId: string, client: Client) {
+  await client.user.updateMany({
+    where: { id: userId, emailVerified: null },
+    data: { emailVerified: new Date() },
+  });
+}
+
+export async function findAccountState(userId: string) {
+  return db.user.findUnique({
+    where: { id: userId },
+    select: { email: true, emailVerified: true, ageConfirmedAt: true },
+  });
+}
+
+export async function setAgeConfirmed(userId: string) {
+  await db.user.updateMany({
+    where: { id: userId, ageConfirmedAt: null },
+    data: { ageConfirmedAt: new Date() },
+  });
+}
+
+/** Removes the account and, by cascade, its profile, Google link and tokens. */
+export async function deleteUserById(userId: string) {
+  await db.user.deleteMany({ where: { id: userId } });
+}
+
+export async function findPasswordStateByEmail(email: string) {
+  const user = await db.user.findUnique({
+    where: { email },
+    select: { id: true, passwordHash: true },
+  });
+  return user ? { id: user.id, hasPassword: user.passwordHash !== null } : null;
+}
+
+export async function findPasswordHashById(userId: string) {
+  return db.user.findUnique({
+    where: { id: userId },
+    select: { email: true, passwordHash: true },
+  });
+}
+
+export async function findEmailById(userId: string, client: Client) {
+  const user = await client.user.findUnique({ where: { id: userId }, select: { email: true } });
+  return user?.email ?? null;
+}
+
+/**
+ * Sets a new password and signs out every session (`sessionVersion` + 1). With `verifyEmail`
+ * (reset link: the person proved they own the inbox) an unverified email becomes verified.
+ */
+export async function replacePassword(
+  userId: string,
+  passwordHash: string,
+  { verifyEmail }: { verifyEmail: boolean },
+  client: Client = db,
+) {
+  const user = await client.user.update({
+    where: { id: userId },
+    data: { passwordHash, sessionVersion: { increment: 1 } },
+    select: { emailVerified: true },
+  });
+  if (verifyEmail && user.emailVerified === null) {
+    await client.user.update({ where: { id: userId }, data: { emailVerified: new Date() } });
+  }
 }

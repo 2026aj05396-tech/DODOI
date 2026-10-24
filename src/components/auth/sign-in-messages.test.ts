@@ -14,6 +14,12 @@ describe("toSignInErrorMessage", () => {
     );
   });
 
+  it("points Google-only accounts to Google sign-in", () => {
+    expect(toSignInErrorMessage("CredentialsSignin", "use_google")).toBe(
+      "Looks like you signed up with Google, so there's no password for this account. Continue with Google instead.",
+    );
+  });
+
   it("prefers the specific code over the error type", () => {
     expect(toSignInErrorMessage("CredentialsSignin", "rate_limited")).toMatch(/Too many attempts/);
   });

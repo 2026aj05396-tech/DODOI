@@ -22,9 +22,11 @@ Notation: `→` next step · `[Screen]` · `{System}` · `⚠` edge case.
 2. Client validation: email format; password policy (see SECURITY §2.2).
 3. Submit → `{POST /api/auth/register}`.
    - Success → `{Send verification email via Resend}` → `[Check your email]` screen with "Resend email" (rate-limited) → user continues to onboarding (unverified users can use private features; public actions show "Verify your email to share with the community" — OD-08).
-   - Email already registered → generic message: "If this email can be used, we've sent instructions." (no account enumeration) — exact UX copy to be confirmed.
-   - Under 18 → registration blocked with a friendly message ("dodoi is for adults 18 and over" — exact copy to be confirmed); no data stored.
-4. User clicks link in email → `{GET /verify-email?token=…}` → token valid → email marked verified → `[Verified]` → onboarding or feed.
+   - New email → "Check your email" screen ("We've sent you a link."); the form signs the user in straight away. Display name = email local-part.
+   - Email already registered with a password → "This email is already registered." on the email field + **Sign in instead** link (opens sign-in with the email filled in, carried in session storage, not the URL).
+   - Email registered through Google (no password) → "Looks like you signed up with Google." + inline **Continue with Google** button. (PO decisions; accepted risk, SECURITY §2.5.)
+   - Under 18 → "dodoi is for adults 18 and over, so we can't create an account for you."; no data stored.
+4. User clicks link in email → `[/verify-email?token=…]` → presses "Confirm my email" (the token is only used on that press, so email link scanners can't use it up) → `{POST /api/account/verify-email}` → `[Verified]` → onboarding or feed.
    - ⚠ Expired/used token → `[Link expired]` with "Send a new link".
 
 ### F-03 Sign in (AUTH-02, AUTH-03)
@@ -32,7 +34,8 @@ Notation: `→` next step · `[Screen]` · `{System}` · `⚠` edge case.
 1. `[Sign in]`: email + password, or "Continue with Google".
 2. Email/password:
    - Success → if onboarding incomplete → F-05, else → `[Home feed]` (or the originally requested URL).
-   - Invalid credentials → "Email or password is incorrect." (same message for unknown email).
+   - Invalid credentials → "That email and password don't match. Check them and try again." (same message for unknown email).
+   - Account without a password (Google sign-up) → "Looks like you signed up with Google, so there's no password for this account. Continue with Google instead." (PO decision, SECURITY §2.5).
    - ⚠ Too many attempts → rate-limited message with retry time.
 3. Google:
    - Success, new user → display name pre-filled from the Google name (editable later); Google photo not imported → **date of birth step** (blocks under-18; on block the just-created account is deleted) → username auto-generated → F-05.
@@ -44,8 +47,8 @@ Notation: `→` next step · `[Screen]` · `{System}` · `⚠` edge case.
 ### F-04 Password recovery (AUTH-05)
 
 1. `[Forgot password]` → enter email → submit.
-2. Always show: "If an account exists for this email, we've sent a reset link." (rate-limited)
-3. Email link → `[Reset password]` → new password + confirm → success → all other sessions invalidated (PROPOSED) → `[Sign in]`.
+2. Always show: "If an account exists for this email, we've sent a reset link. It works once and expires in 1 hour." (rate-limited). "Forgot password?" on sign-in carries the typed email over.
+3. Email link → `[Reset password]` → new password + confirm → success → every session signed out (CONFIRMED, SECURITY §2.2) → "Your password is set…" → `[Sign in]`.
 4. ⚠ Expired/used token → `[Link expired]` → restart.
 5. Google-only accounts requesting reset: same neutral response; the email lets them set a password (adds password sign-in to the account).
 
