@@ -20,6 +20,10 @@ describe("toSignInErrorMessage", () => {
     );
   });
 
+  it("says when Google sign-in was cancelled", () => {
+    expect(toSignInErrorMessage("OAuthCallbackError")).toBe("Google sign-in was cancelled.");
+  });
+
   it("prefers the specific code over the error type", () => {
     expect(toSignInErrorMessage("CredentialsSignin", "rate_limited")).toMatch(/Too many attempts/);
   });

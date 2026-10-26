@@ -74,7 +74,8 @@ Phase 1 (required before MVP exit):
 | # | Scenario |
 |---|---|
 | E2E-01 | New user registers with email, verifies, completes onboarding, lands on personalized feed |
-| E2E-02 | Google sign-in (mocked provider in test env) success and cancel paths |
+| E2E-12 note | Admin uploads: the browser upload to `api.cloudinary.com` is answered by the test; the server's Admin API checks go to a local mock (`CLOUDINARY_API_BASE`, APP_ENV=local only) |
+| E2E-02 | Google sign-in (mocked provider in test env) success and cancel paths — local `oauth2-mock-server` started by Playwright; the app points Google at it via `AUTH_GOOGLE_ISSUER` (APP_ENV=local only) |
 | E2E-03 | Password reset end-to-end |
 | E2E-04 | User selects interests, then updates interests in settings; feed changes |
 | E2E-05 | User adds a custom interest; another user can find it in search |

@@ -18,7 +18,13 @@ export function uniqueEmail(): string {
 
 /** Creates an email/password user and returns the credentials. */
 export function createPasswordAccount(
-  options: { unverified?: boolean; ageUnconfirmed?: boolean; noPassword?: boolean } = {},
+  options: {
+    unverified?: boolean;
+    ageUnconfirmed?: boolean;
+    noPassword?: boolean;
+    onboardingIncomplete?: boolean;
+    admin?: boolean;
+  } = {},
 ): { email: string; password: string } {
   const email = uniqueEmail();
   run([
@@ -28,6 +34,8 @@ export function createPasswordAccount(
     ...(options.unverified ? ["--unverified"] : []),
     ...(options.ageUnconfirmed ? ["--age-unconfirmed"] : []),
     ...(options.noPassword ? ["--no-password"] : []),
+    ...(options.onboardingIncomplete ? ["--onboarding-incomplete"] : []),
+    ...(options.admin ? ["--admin"] : []),
   ]);
   return { email, password: PASSWORD };
 }
@@ -45,4 +53,17 @@ export function createResetToken(email: string): string {
 /** Clears rate-limit counters, since every E2E request comes from the same IP. */
 export function resetRateLimits(): void {
   run(["reset-rate-limits"]);
+}
+
+/** A published (or draft) Creative Commons tutorial with every section, plus one related post. */
+export function createPost(options: { status?: "PUBLISHED" | "DRAFT" } = {}): {
+  id: string;
+  relatedId: string;
+} {
+  const output = execFileSync(
+    "pnpm",
+    ["exec", "tsx", join(__dirname, "create-post.ts"), JSON.stringify(options)],
+    { encoding: "utf8" },
+  );
+  return JSON.parse(output) as { id: string; relatedId: string };
 }

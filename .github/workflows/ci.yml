@@ -47,6 +47,10 @@ jobs:
       AUTH_GOOGLE_SECRET: ci-google-client-secret
       # No Resend key in CI: emails are skipped (allowed only with APP_ENV=local).
       EMAIL_FROM: dodoi <ci@example.test>
+      # Fake Cloudinary values: tests never contact Cloudinary.
+      CLOUDINARY_CLOUD_NAME: ci-cloud
+      CLOUDINARY_API_KEY: ci-key
+      CLOUDINARY_API_SECRET: ci-secret
       NEXT_TELEMETRY_DISABLED: 1
 
     steps:

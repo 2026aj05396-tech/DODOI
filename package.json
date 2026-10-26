@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "seed:content": "tsx --conditions=react-server --env-file-if-exists=.env.local prisma/seed/import-content.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
@@ -53,6 +54,7 @@
     "eslint-config-next": "16.4.2",
     "eslint-plugin-import": "^2.32.0",
     "jsdom": "^30.1.3",
+    "oauth2-mock-server": "9.3.0",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "7.10.1",

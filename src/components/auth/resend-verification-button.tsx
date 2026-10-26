@@ -9,8 +9,10 @@ import { ApiRequestError } from "@/lib/api-client/request";
 
 type State = { status: "idle" | "sending" | "sent" } | { status: "failed"; message: string };
 
-/** "Resend email" for a signed-in, unverified user (3 per hour; P1-07 reuses it in the banner). */
-export function ResendVerificationButton() {
+type ResendVerificationButtonProps = { size?: "md" | "lg" };
+
+/** "Resend email" for a signed-in, unverified user (3 per hour); also used in the banner. */
+export function ResendVerificationButton({ size = "lg" }: ResendVerificationButtonProps) {
   const [state, setState] = useState<State>({ status: "idle" });
 
   async function handleClick() {
@@ -39,7 +41,7 @@ export function ResendVerificationButton() {
       ) : null}
       <Button
         variant="outline"
-        size="lg"
+        size={size}
         onClick={handleClick}
         disabled={state.status === "sending"}
       >

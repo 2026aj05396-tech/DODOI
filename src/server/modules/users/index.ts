@@ -1,6 +1,14 @@
 // Public API of the users module (CODE_QUALITY §3.2): accounts and profiles.
 export { confirmAge } from "./age-check";
 export {
+  getCreatorProfiles,
+  getUserIdByUsername,
+  getUsernames,
+  type CreatorProfile,
+} from "./creators";
+export { completeOnboarding, getOnboardingState, setOnboardingStep } from "./onboarding";
+export { getMySkills, replaceMySkills } from "./user-skills";
+export {
   changePassword,
   PASSWORD_CHANGE_RATE_LIMIT,
   PASSWORD_RESET_EMAIL_RATE_LIMIT,

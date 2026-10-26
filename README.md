@@ -79,6 +79,17 @@ Read the documents in this order before writing any code.
 | Display name for email sign-ups | Email local-part (e.g. `aanya.k`), editable in Edit profile | CONFIRMED |
 | Under-18 and sign-up copy | "dodoi is for adults 18 and over, so we can't create an account for you." · "This email is already registered." · "Check your email — we've sent you a link." | CONFIRMED |
 | Password reset details | Email sent after the response (timing-safe); reset link verifies an unverified email; password change keeps the current device signed in, 5 attempts / 15 min | PROPOSED (P1-06) |
+| Welcome and Google button | `/` shows Welcome `1a` below 1024px and Landing `2a` from 1024px; designed three-button entry kept (no email-first); official Google "G" logo | CONFIRMED |
+| Responsive delivery | Every screen is built for mobile, tablet and desktop in the same task (never mobile-only) | CONFIRMED |
+| Admin content rules | Up to 10 media per post, images and videos mixed; any skill (predefined too) can be hidden; published posts editable if they still meet the publish rules; attribution rules incl. stock source link | CONFIRMED |
+| Seed importer | File is the source of truth (re-run updates the post); per-file `publish` flag; skills by slug; seed content kept outside git (`pnpm seed:content <folder>`) | CONFIRMED (P1-18) |
+| Post detail (P1-20) | Save "coming soon" until P1-25; signed-out visitors get a slim bar (Log in / Sign up) instead of the app shell; Share is an icon (Web Share API, copy-link fallback); several media: swipe + dots on mobile, arrows + thumbnails from 768px | CONFIRMED |
+| Admin skill create/rename/delete | Requested by PO (2026-10-26), **on hold**: needs delete rule for skills in use, editable fields (name/slug/accent) and type of new skills. Today admin can edit editorial fields, hide/show and set related skills | OPEN |
+| Admin onboarding | Admins skip onboarding: `/` and `/onboarding` redirect them to `/admin` (age check still applies) | CONFIRMED |
+| Post lists | Related posts: 12, most shared skills → same primary → newest; skill pages newest first; hidden/deactivated creators: post stays, creator row not shown | CONFIRMED |
+| Media integration | Cloudinary REST APIs called directly (no `cloudinary` SDK, like Resend); uploads in `dodoi/<APP_ENV>/…`; deletes limited to `dodoi/` | PROPOSED (P1-03) |
+| Google sign-in tests | Dev-only `oauth2-mock-server` 9.3.0 as a local stand-in for Google in E2E | CONFIRMED |
+| Onboarding data | Up to 50 skills per user; resume step stored per user; skipped familiarity stores no level | CONFIRMED |
 | Age check date | Age computed on today's date in India (IST) | PROPOSED (P1-05) |
 | Reserved usernames and fallback | Full list in `src/server/modules/users/username.ts` (OD-11 names + every top-level route); usernames fall back to `maker-NNNN` when neither name nor email gives 3 usable characters | PROPOSED (P1-04) |
 | Rate-limit store | PostgreSQL table | CONFIRMED |
@@ -175,6 +186,7 @@ pnpm dev
 | `pnpm test:e2e` | Playwright end-to-end + accessibility tests |
 | `pnpm db:migrate` | `prisma migrate dev` + `prisma generate` (Prisma 7 no longer regenerates the client after migrating) |
 | `pnpm db:seed` | Load predefined skills (idempotent); refuses production without `--confirm-production` |
+| `pnpm seed:content [folder]` | Import seed posts from `<folder>/posts/*.json` (default `./seed-content`, outside git); `--check` validates only; refuses production without `--confirm-production` |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:reset` | Drop, re-migrate, re-seed (local only) |
 
@@ -200,6 +212,8 @@ Each environment (local, test, production) has its **own values for every variab
 | `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret (server only) |
 | `APP_ENV` | Yes | `local`, `test` or `production` (SYSTEM_ARCHITECTURE §13) |
 | `NEXT_PUBLIC_APP_URL` | Yes | Public base URL used in client code |
+| `CLOUDINARY_API_BASE` | No — automated tests only | Points the Cloudinary Admin API at the local mock in E2E runs; refused unless `APP_ENV=local` |
+| `AUTH_GOOGLE_ISSUER` | No — automated tests only | Points Google sign-in at the local mock provider in E2E runs; refused unless `APP_ENV=local` |
 | `SEED_ADMIN_EMAIL` | No | Email of the account promoted to ADMIN after it signs in with a verified email (P1-04) |
 
 Rule: only variables prefixed `NEXT_PUBLIC_` may be read in client code, and none of them may contain secrets.
@@ -216,7 +230,7 @@ See [docs/SYSTEM_ARCHITECTURE.md §5](docs/SYSTEM_ARCHITECTURE.md#5-folder-struc
 ├── docs/                  # This documentation set
 │   └── design/            # Exported Claude Design files (visual source of truth)
 ├── prisma/                # schema.prisma, migrations, seed
-├── seed-content/          # Seed JSON + local media for import
+├── seed-content/          # Seed JSON + local media for import (git-ignored)
 ├── public/                # Static assets, PWA icons
 ├── src/
 │   ├── app/               # Next.js routes (UI + /api route handlers)

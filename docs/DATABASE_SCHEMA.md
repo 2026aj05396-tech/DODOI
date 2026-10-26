@@ -73,6 +73,7 @@ model User {
   role           Role      @default(USER)
   sessionVersion Int       @default(0)           // bump to invalidate JWTs
   onboardingCompletedAt DateTime?
+  onboardingStep        Int       @default(1) // 1–3, step to resume at (P1-10, PO decision)
   ageConfirmedAt DateTime?                       // set when DOB check passes (18+); DOB itself is never stored (OD-07)
   deletionRequestedAt DateTime?                  // deactivated now; hard delete 14 days later (OD-22)
   createdAt      DateTime  @default(now())
@@ -521,7 +522,7 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 ## 8. Seed Data
 
 - `prisma/seed/skills.json` — 51 approved predefined skills (OD-30) with description, pitch, hint, accent and 32 related pairs, loaded by `pnpm db:seed` → `seedPredefinedSkills()` (skills module). Idempotent: matches by `normalizedName`, keeps existing slugs and hidden status, stores related pairs in both directions, never deletes skills removed from the file. Validated by `src/server/modules/skills/seed-skills.test.ts`.
-- `seed-content/posts/*.json` + media files — posts with attribution (schema in API spec §8).
+- `seed-content/posts/*.json` + media files — posts with attribution (schema and import rules in API spec §8). **Kept outside git** (PO decision, P1-18: licensed media must not go into the repository); `seed-content/` is git-ignored and the content lives in a shared drive. Imported with `pnpm seed:content [folder]` (default `./seed-content`; `--check` validates only; refuses production without `--confirm-production`). Seeded media have no owner (`ownerId` null).
 - Admin user: the account whose verified email equals `SEED_ADMIN_EMAIL` is promoted to ADMIN when it signs in (P1-04), recorded in `AuditLog` as `user.promote_admin`. No account is created by the seed.
 - Import is idempotent: posts keyed by a stable `seedKey` (CONFIRMED extra unique column `Post.seedKey String? @unique`).
 

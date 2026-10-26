@@ -17,7 +17,7 @@ import { SESSION_MAX_AGE_SECONDS, usesSecureCookies } from "./cookies";
 const SESSION_UPDATE_AGE_SECONDS = 24 * 60 * 60;
 
 /** Failures caused by the user (wrong password, refused Google account), not by the system. */
-const EXPECTED_AUTH_ERRORS = new Set(["CredentialsSignin", "AccessDenied"]);
+const EXPECTED_AUTH_ERRORS = new Set(["CredentialsSignin", "AccessDenied", "OAuthCallbackError"]);
 
 export const { handlers, auth } = NextAuth({
   secret: serverEnv.AUTH_SECRET,
@@ -30,7 +30,12 @@ export const { handlers, auth } = NextAuth({
   useSecureCookies: usesSecureCookies(serverEnv.APP_ENV),
   pages: { signIn: "/sign-in", error: "/sign-in" },
   providers: [
-    Google({ clientId: serverEnv.AUTH_GOOGLE_ID, clientSecret: serverEnv.AUTH_GOOGLE_SECRET }),
+    Google({
+      clientId: serverEnv.AUTH_GOOGLE_ID,
+      clientSecret: serverEnv.AUTH_GOOGLE_SECRET,
+      // E2E runs point Google at a local mock provider (env.ts only allows it with APP_ENV=local).
+      ...(serverEnv.AUTH_GOOGLE_ISSUER ? { issuer: serverEnv.AUTH_GOOGLE_ISSUER } : {}),
+    }),
     Credentials({
       credentials: { email: {}, password: {} },
       authorize: authorizeCredentials,

@@ -62,12 +62,14 @@ Entry: `[Welcome]` (design `1a`) is the pre-auth screen with "Continue with Goog
    - Multi-select chips; selected count visible.
    - "Add your own" → text input → `{normalize}` → if matches existing skill, that skill is selected; otherwise a new public custom skill is created (ONB-04).
    - Minimum **3** selections; button reads "Pick {n} more to continue" (disabled) until then. No "Skip" on this step.
-3. `[Step 2 of 3 · Familiarity]` (optional, skippable) — for each selected interest choose Curious / Beginner / Intermediate / Experienced. Default when skipped: **OPEN** (PROPOSED: no level stored, treated as unknown).
+3. `[Step 2 of 3 · Familiarity]` (optional, skippable) — for each selected interest choose Curious / Beginner / Intermediate / Experienced. Default when skipped: no level stored, treated as unknown (CONFIRMED, P1-10).
 4. `[Step 3 of 3 · Skills you can help with]` (optional, skippable) — pick from selected/other skills; sets `canHelp`.
    - Username is auto-generated at sign-up (e.g. `aanya-4821`); user can change it in Edit profile; prompt "Pick your username" on first visit to own profile.
-5. `{Mark onboarding complete}` → `[Home feed]` with interest-weighted content.
+5. `{Mark onboarding complete}` → `[Home feed]` with interest-weighted content (until the feed exists, P1-22, finishing returns to `/`).
 
-⚠ User closes app mid-onboarding → on next sign-in, resume at first incomplete step.
+Routing (P1-11): after sign-in or sign-up, `/` and every signed-in page send a user who hasn't finished onboarding to `/onboarding` (order: date-of-birth step first for Google sign-ups, then onboarding). **Admins skip onboarding** (PO decision, P1-17): `/` and `/onboarding` send them to `/admin`; the age check still applies.
+
+⚠ User closes app mid-onboarding → on next sign-in, resume at the saved step (`User.onboardingStep`, saved on every Continue/Skip — CONFIRMED, P1-10).
 ⚠ Network failure on submit → inline error, selections retained, retry.
 
 ### F-06 Browse the home feed (FEED-01…12)

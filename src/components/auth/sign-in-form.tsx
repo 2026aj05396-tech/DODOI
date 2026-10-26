@@ -15,6 +15,7 @@ import {
   readRememberedEmail,
   rememberEmailForSignIn,
 } from "./email-handoff";
+import { GoogleSignInButton } from "./google-sign-in-button";
 import { toSignInErrorMessage } from "./sign-in-messages";
 
 type SignInFormProps = {
@@ -26,8 +27,7 @@ type SignInFormProps = {
 
 type FieldErrors = { email?: string; password?: string };
 
-// Minimal sign-in for P1-04 so both providers can be tested end to end. P1-07 restyles this
-// screen to the design (Welcome `1a`, sign-in) and adds the sign-up and password-reset links.
+// Sign-in (F-03). Not designed: built from the design system following Welcome 1a (P1-07).
 export function SignInForm({ returnTo, initialError }: SignInFormProps) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(initialError);
@@ -82,21 +82,17 @@ export function SignInForm({ returnTo, initialError }: SignInFormProps) {
     window.location.assign(returnTo);
   }
 
-  async function handleGoogle() {
-    setPending(true);
-    // Through the date-of-birth step, which passes straight on once the age is confirmed (AUTH-11).
-    await signIn("google", { redirectTo: `/confirm-age?returnTo=${encodeURIComponent(returnTo)}` });
-  }
-
   return (
     <div className="flex flex-col gap-5">
       {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
 
-      <Button size="lg" onClick={handleGoogle} disabled={pending}>
-        Continue with Google
-      </Button>
+      <GoogleSignInButton returnTo={returnTo} />
 
-      <p className="text-center text-meta text-foreground-secondary">or use your email</p>
+      <div className="flex items-center gap-3 text-meta text-foreground-secondary">
+        <span aria-hidden className="h-px flex-1 bg-border" />
+        or use your email
+        <span aria-hidden className="h-px flex-1 bg-border" />
+      </div>
 
       <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">

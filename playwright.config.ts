@@ -5,12 +5,15 @@ import { defineConfig, devices } from "@playwright/test";
 // because Next.js allows only one `next dev` per project and matches what CI runs.
 const PORT = 3100;
 const BASE_URL = `http://localhost:${PORT}`;
+const MOCK_GOOGLE_ISSUER = "http://localhost:3199";
+const MOCK_CLOUDINARY_API = "http://localhost:3198/v1_1";
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   "postgresql://dodoi:dodoi@localhost:5433/dodoi_test?schema=public";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
@@ -26,23 +29,45 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 860 } },
     },
   ],
-  webServer: {
-    command: `pnpm exec next build && pnpm exec next start --port ${PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 240_000,
-    // Overrides .env.local: the E2E server must use the test database, its own port and test-only
-    // auth values (Google is never contacted).
-    env: {
-      APP_ENV: "local",
-      DATABASE_URL: TEST_DATABASE_URL,
-      AUTH_SECRET: "e2e-only-auth-secret-at-least-32-characters",
-      AUTH_URL: BASE_URL,
-      AUTH_GOOGLE_ID: "e2e-google-client-id",
-      AUTH_GOOGLE_SECRET: "e2e-google-client-secret",
-      // Empty key: no real email is sent during E2E runs.
-      RESEND_API_KEY: "",
-      EMAIL_FROM: "dodoi <e2e@example.test>",
+  webServer: [
+    {
+      // Stand-in for Google sign-in (E2E-02); see tests/e2e/helpers/mock-google.ts.
+      command: "pnpm exec tsx tests/e2e/helpers/mock-google.ts",
+      url: `${MOCK_GOOGLE_ISSUER}/.well-known/openid-configuration`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
     },
-  },
+    {
+      // Stand-in for Cloudinary's Admin API (E2E-12); see tests/e2e/helpers/mock-cloudinary.ts.
+      command: "pnpm exec tsx tests/e2e/helpers/mock-cloudinary.ts",
+      url: `${MOCK_CLOUDINARY_API}/e2e-cloud/resources/image/upload/ready`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      command: `pnpm exec next build && pnpm exec next start --port ${PORT}`,
+      url: BASE_URL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 240_000,
+      // Overrides .env.local: the E2E server must use the test database, its own port, test-only
+      // auth values and the mock Google provider.
+      env: {
+        APP_ENV: "local",
+        DATABASE_URL: TEST_DATABASE_URL,
+        AUTH_SECRET: "e2e-only-auth-secret-at-least-32-characters",
+        AUTH_URL: BASE_URL,
+        AUTH_GOOGLE_ID: "e2e-google-client-id",
+        AUTH_GOOGLE_SECRET: "e2e-google-client-secret",
+        AUTH_GOOGLE_ISSUER: MOCK_GOOGLE_ISSUER,
+        // Empty key: no real email is sent during E2E runs.
+        RESEND_API_KEY: "",
+        EMAIL_FROM: "dodoi <e2e@example.test>",
+        // Fake values: uploads are answered by the tests, the Admin API by the mock above.
+        CLOUDINARY_CLOUD_NAME: "e2e-cloud",
+        CLOUDINARY_API_KEY: "e2e-key",
+        CLOUDINARY_API_SECRET: "e2e-secret",
+        CLOUDINARY_API_BASE: MOCK_CLOUDINARY_API,
+      },
+    },
+  ],
 });

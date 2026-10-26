@@ -23,15 +23,18 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
-/** POSTs JSON and returns the parsed response body (undefined for 204). */
-export async function postJson<TResponse = undefined>(
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+/** Sends JSON and returns the parsed response body (undefined for 204). */
+export async function requestJson<TResponse = undefined>(
+  method: Method,
   path: string,
   body?: unknown,
 ): Promise<TResponse> {
   let response: Response;
   try {
     response = await fetch(path, {
-      method: "POST",
+      method,
       headers: body === undefined ? {} : { "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
@@ -47,4 +50,9 @@ export async function postJson<TResponse = undefined>(
     throw new ApiRequestError(response.status, code, message, fields);
   }
   throw new ApiRequestError(response.status, "INTERNAL_ERROR", NETWORK_ERROR_MESSAGE);
+}
+
+/** POSTs JSON and returns the parsed response body (undefined for 204). */
+export function postJson<TResponse = undefined>(path: string, body?: unknown): Promise<TResponse> {
+  return requestJson<TResponse>("POST", path, body);
 }

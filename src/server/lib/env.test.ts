@@ -10,6 +10,9 @@ const validEnv = {
   AUTH_GOOGLE_ID: "google-client-id",
   AUTH_GOOGLE_SECRET: "google-client-secret",
   EMAIL_FROM: "dodoi <onboarding@resend.dev>",
+  CLOUDINARY_CLOUD_NAME: "demo-cloud",
+  CLOUDINARY_API_KEY: "123",
+  CLOUDINARY_API_SECRET: "test-secret",
 };
 
 describe("parseServerEnv", () => {
@@ -40,6 +43,27 @@ describe("parseServerEnv", () => {
     expect(
       parseServerEnv({ ...validEnv, APP_ENV: "production", RESEND_API_KEY: "re_key" }),
     ).toMatchObject({ RESEND_API_KEY: "re_key" });
+  });
+
+  it("allows the mock Cloudinary API only for local test runs", () => {
+    expect(() =>
+      parseServerEnv({
+        ...validEnv,
+        CLOUDINARY_API_BASE: "http://localhost:3198/v1_1",
+        APP_ENV: "production",
+        RESEND_API_KEY: "re_key",
+      }),
+    ).toThrow(/CLOUDINARY_API_BASE/);
+  });
+
+  it("allows the mock Google issuer only for local test runs", () => {
+    const issuer = { AUTH_GOOGLE_ISSUER: "http://localhost:3199" };
+    expect(parseServerEnv({ ...validEnv, ...issuer }).AUTH_GOOGLE_ISSUER).toBe(
+      "http://localhost:3199",
+    );
+    expect(() =>
+      parseServerEnv({ ...validEnv, ...issuer, APP_ENV: "production", RESEND_API_KEY: "re_key" }),
+    ).toThrow(/AUTH_GOOGLE_ISSUER/);
   });
 
   it("treats an empty RESEND_API_KEY as unset", () => {

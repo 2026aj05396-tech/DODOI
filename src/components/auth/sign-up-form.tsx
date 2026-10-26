@@ -14,6 +14,7 @@ import { PASSWORD_MIN_LENGTH, registerSchema } from "@/lib/schemas/auth";
 
 import { rememberEmailForSignIn } from "./email-handoff";
 import { firstIssuePerField } from "./form-errors";
+import { GoogleSignInButton } from "./google-sign-in-button";
 import { ResendVerificationButton } from "./resend-verification-button";
 
 const FIELDS = ["email", "password", "dateOfBirth"] as const;
@@ -31,7 +32,7 @@ const EXISTING_ACCOUNT_BY_CODE: Record<string, ExistingAccount> = {
   EMAIL_REGISTERED_WITH_GOOGLE: "google",
 };
 
-// Minimal sign-up for P1-05 (F-02); P1-07 builds the designed screens. After registering, the
+// Sign-up with email (F-02). Not designed: built from the design system (P1-07). After registering, the
 // form signs in with the same details (PO decision: new users go straight on, unverified). A taken
 // email is reported on the email field with the way forward: "Sign in instead" (email carried
 // over) or "Continue with Google" for accounts created with Google.
@@ -45,12 +46,6 @@ export function SignUpForm({ returnTo }: SignUpFormProps) {
 
   function handleSignInInstead() {
     rememberEmailForSignIn(emailRef.current?.value.trim() ?? "");
-  }
-
-  async function handleGoogle() {
-    setPending(true);
-    // Through the date-of-birth step, which passes straight on once the age is confirmed (AUTH-11).
-    await signIn("google", { redirectTo: `/confirm-age?returnTo=${encodeURIComponent(returnTo)}` });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -94,7 +89,7 @@ export function SignUpForm({ returnTo }: SignUpFormProps) {
   if (done) {
     return (
       <div className="flex flex-col gap-4">
-        <h2 className="text-title text-foreground">Check your email</h2>
+        <h1 className="text-title text-balance text-foreground">Check your email</h1>
         <p className="text-body text-foreground-secondary">
           We&apos;ve sent you a link. Open it to confirm your email so you can share with the
           community.
@@ -116,74 +111,78 @@ export function SignUpForm({ returnTo }: SignUpFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="sign-up-email">Email</Label>
-        <Input
-          ref={emailRef}
-          id="sign-up-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          aria-invalid={fieldErrors.email ? true : undefined}
-          aria-describedby={fieldErrors.email ? "sign-up-email-error" : undefined}
-        />
-        <FieldError id="sign-up-email-error">{fieldErrors.email}</FieldError>
-        {existingAccount === "password" ? (
-          <Link
-            href={`/sign-in?returnTo=${encodeURIComponent(returnTo)}`}
-            onClick={handleSignInInstead}
-            className="self-start text-body font-bold text-link hover:underline"
-          >
-            Sign in instead
-          </Link>
-        ) : null}
-        {existingAccount === "google" ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="self-start"
-            onClick={handleGoogle}
-            disabled={pending}
-          >
-            Continue with Google
-          </Button>
-        ) : null}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="sign-up-password">Password</Label>
-        <Input
-          id="sign-up-password"
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          aria-invalid={fieldErrors.password ? true : undefined}
-          aria-describedby="sign-up-password-hint sign-up-password-error"
-        />
-        <p id="sign-up-password-hint" className="text-meta text-foreground-secondary">
-          At least {PASSWORD_MIN_LENGTH} characters.
-        </p>
-        <FieldError id="sign-up-password-error">{fieldErrors.password}</FieldError>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="sign-up-dob">Date of birth</Label>
-        <Input
-          id="sign-up-dob"
-          name="dateOfBirth"
-          type="date"
-          autoComplete="bday"
-          aria-invalid={fieldErrors.dateOfBirth ? true : undefined}
-          aria-describedby="sign-up-dob-hint sign-up-dob-error"
-        />
-        <p id="sign-up-dob-hint" className="text-meta text-foreground-secondary">
-          dodoi is for adults. We only use this to check you&apos;re 18 or over, then discard it.
-        </p>
-        <FieldError id="sign-up-dob-error">{fieldErrors.dateOfBirth}</FieldError>
-      </div>
-      <Button type="submit" size="lg" disabled={pending}>
-        Create account
-      </Button>
-    </form>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-title text-balance text-foreground">Create your account</h1>
+      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="sign-up-email">Email</Label>
+          <Input
+            ref={emailRef}
+            id="sign-up-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            aria-invalid={fieldErrors.email ? true : undefined}
+            aria-describedby={fieldErrors.email ? "sign-up-email-error" : undefined}
+          />
+          <FieldError id="sign-up-email-error">{fieldErrors.email}</FieldError>
+          {existingAccount === "password" ? (
+            <Link
+              href={`/sign-in?returnTo=${encodeURIComponent(returnTo)}`}
+              onClick={handleSignInInstead}
+              className="self-start text-body font-bold text-link hover:underline"
+            >
+              Sign in instead
+            </Link>
+          ) : null}
+          {existingAccount === "google" ? (
+            <GoogleSignInButton returnTo={returnTo} variant="outline" />
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="sign-up-password">Password</Label>
+          <Input
+            id="sign-up-password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            aria-invalid={fieldErrors.password ? true : undefined}
+            aria-describedby="sign-up-password-hint sign-up-password-error"
+          />
+          <p id="sign-up-password-hint" className="text-meta text-foreground-secondary">
+            At least {PASSWORD_MIN_LENGTH} characters.
+          </p>
+          <FieldError id="sign-up-password-error">{fieldErrors.password}</FieldError>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="sign-up-dob">Date of birth</Label>
+          <Input
+            id="sign-up-dob"
+            name="dateOfBirth"
+            type="date"
+            autoComplete="bday"
+            aria-invalid={fieldErrors.dateOfBirth ? true : undefined}
+            aria-describedby="sign-up-dob-hint sign-up-dob-error"
+          />
+          <p id="sign-up-dob-hint" className="text-meta text-foreground-secondary">
+            dodoi is for adults. We only use this to check you&apos;re 18 or over, then discard it.
+          </p>
+          <FieldError id="sign-up-dob-error">{fieldErrors.dateOfBirth}</FieldError>
+        </div>
+        <Button type="submit" size="lg" disabled={pending}>
+          Create account
+        </Button>
+      </form>
+      <p className="text-center text-body text-foreground-secondary">
+        Already have an account?{" "}
+        <Link
+          href={`/sign-in?returnTo=${encodeURIComponent(returnTo)}`}
+          className="font-bold text-link hover:underline"
+        >
+          Sign in
+        </Link>
+      </p>
+    </div>
   );
 }

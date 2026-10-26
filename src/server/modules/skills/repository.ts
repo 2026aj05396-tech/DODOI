@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { SkillAccent, SkillOrigin } from "@/generated/prisma/client";
+import type { Prisma, SkillAccent, SkillOrigin } from "@/generated/prisma/client";
 import { db } from "@/server/db/client";
 
 const summarySelect = {
@@ -107,4 +107,75 @@ export async function searchActiveSkills(options: {
     OFFSET ${offset}
     LIMIT ${take}
   `;
+}
+
+export async function findActiveSkillsByIds(ids: string[]): Promise<SkillSummaryRow[]> {
+  return db.skill.findMany({
+    where: { id: { in: ids }, status: "ACTIVE" },
+    select: summarySelect,
+  });
+}
+
+export async function findSkillStatuses(ids: string[]) {
+  return db.skill.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } });
+}
+
+export async function findSkillsBySlugs(slugs: string[]) {
+  return db.skill.findMany({
+    where: { slug: { in: slugs } },
+    select: { id: true, slug: true, status: true },
+  });
+}
+
+const adminSkillSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  origin: true,
+  status: true,
+  description: true,
+  hint: true,
+  pitch: true,
+  coverMediaId: true,
+  relatedFrom: { select: { toSkillId: true }, orderBy: { to: { name: "asc" } } },
+} satisfies Prisma.SkillSelect;
+
+export type AdminSkillRow = Prisma.SkillGetPayload<{ select: typeof adminSkillSelect }>;
+
+export async function findAdminSkill(id: string): Promise<AdminSkillRow | null> {
+  return db.skill.findUnique({ where: { id }, select: adminSkillSelect });
+}
+
+export async function updateSkillFields(
+  id: string,
+  data: Prisma.SkillUncheckedUpdateInput,
+  tx: Prisma.TransactionClient,
+) {
+  await tx.skill.update({ where: { id }, data });
+}
+
+/** Related skills are symmetric: both directions are replaced. */
+export async function replaceRelatedSkills(
+  skillId: string,
+  relatedIds: string[],
+  tx: Prisma.TransactionClient,
+) {
+  await tx.skillRelation.deleteMany({
+    where: { OR: [{ fromSkillId: skillId }, { toSkillId: skillId }] },
+  });
+  await tx.skillRelation.createMany({
+    data: relatedIds.flatMap((relatedId) => [
+      { fromSkillId: skillId, toSkillId: relatedId },
+      { fromSkillId: relatedId, toSkillId: skillId },
+    ]),
+    skipDuplicates: true,
+  });
+}
+
+/** Every skill, hidden ones included, alphabetically (admin list; a few hundred at most in P1). */
+export async function findAllSkillsForAdmin() {
+  return db.skill.findMany({
+    orderBy: [{ name: "asc" }, { id: "asc" }],
+    select: { id: true, name: true, slug: true, origin: true, status: true },
+  });
 }

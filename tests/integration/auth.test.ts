@@ -248,7 +248,7 @@ describe("auth", () => {
 
       const token = await refreshSessionToken({ token: {}, user: { id: user.id } });
 
-      expect(token).toEqual({ sub: user.id, sv: 0, role: "USER", ev: true, ac: true });
+      expect(token).toEqual({ sub: user.id, sv: 0, role: "USER", ev: true, ac: true, oc: false });
       const session = toSession({
         session: { expires: "2026-11-22T00:00:00.000Z" },
         token: token ?? {},

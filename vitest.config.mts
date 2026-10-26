@@ -19,6 +19,10 @@ const testEnv = {
   // No key: emails are skipped; tests pass a fake sender to check them.
   RESEND_API_KEY: "",
   EMAIL_FROM: "dodoi <test@example.test>",
+  // Fake values: tests pass a fake media provider and never contact Cloudinary.
+  CLOUDINARY_CLOUD_NAME: "test-cloud",
+  CLOUDINARY_API_KEY: "test-key",
+  CLOUDINARY_API_SECRET: "test-secret",
 };
 
 export default defineConfig({

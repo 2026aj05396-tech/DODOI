@@ -156,6 +156,7 @@ export type SessionUser = {
   sessionVersion: number;
   isEmailVerified: boolean;
   isAgeConfirmed: boolean;
+  hasCompletedOnboarding: boolean;
 };
 
 /** Current state of a signed-in user, read on every request; null if the user no longer exists. */
@@ -168,6 +169,7 @@ export async function getSessionUser(userId: string): Promise<SessionUser | null
     sessionVersion: user.sessionVersion,
     isEmailVerified: user.emailVerified !== null,
     isAgeConfirmed: user.ageConfirmedAt !== null,
+    hasCompletedOnboarding: user.onboardingCompletedAt !== null,
   };
 }
 

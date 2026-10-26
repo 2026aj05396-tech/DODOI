@@ -128,6 +128,8 @@ model User {
   /// Incremented to invalidate every JWT session of the user.
   sessionVersion        Int       @default(0) @map("session_version")
   onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+  /// Onboarding step to resume at (1 interests, 2 familiarity, 3 can-help-with); P1-10.
+  onboardingStep        Int       @default(1) @map("onboarding_step") @db.SmallInt
   /// Set when the date-of-birth check passes (18+). The date of birth itself is never stored.
   ageConfirmedAt        DateTime? @map("age_confirmed_at")
   /// Account deactivated at this time; hard-deleted 14 days later.

@@ -196,7 +196,7 @@ Spacing: page gutter 20px mobile (24px onboarding/welcome), 28px web feed, 56px 
 - **Sidebar everywhere (DC-12, CONFIRMED).**
 - **Home (`2b`):** full left sidebar 232px (Home, Explore, Community, Messages + badge, Saved, Journal, Profile, Create button, "Ask dodoi" card at bottom) · centre feed with search bar, bell, avatar · right rail 300px.
 - **Right rail in Phase 1 (DC-20/DC-22, CONFIRMED):** "New to you" card · **"Help other makers"** coming-soon card ("Answer questions in skills you know") that lists the user's *can help with* skills as chips when they chose any in onboarding step 3 · **"Live sessions"** coming-soon card ("Book a 30-min call with a maker · We'll let you know when this opens.").
-- **Post detail (`2c`):** two-column content (media | details). **Phase 1: full 232px sidebar** (DC-23). From Phase 4, when the AI companion (380px) docks, the sidebar collapses to the **76px icon rail** (monogram "d.", Home, Explore, Community, Saved, Profile, Create). Icon-only items need accessible names (`aria-label`).
+- **Post detail (`2c`):** two-column content (media | details). **Built (P1-20, PO decisions 2026-10-26):** mobile `1e` full screen (no header/tab bar; Back + Share over the media; sticky bar "Ask about this" + "Save to collection", both coming soon); tablet (built from system, PO review) media above details in a centred column; from 1024px side by side with sticky media. Gallery: swipe with dots and "n / total" on mobile, arrows + thumbnails from 768px; frame takes the first item's shape (4:5–4:3, mobile capped at 56svh) so nothing shifts; videos play inline after a tap. Save is coming soon until P1-25; Share uses the Web Share API, else copies the link with a toast. Signed-out visitors (OD-29) see a slim bar (wordmark, Log in with return, Sign up) instead of the app shell. Skill chips and the creator row link out once skill pages (P1-26) and profiles (P1-14) exist. **Phase 1: full 232px sidebar** (DC-23). From Phase 4, when the AI companion (380px) docks, the sidebar collapses to the **76px icon rail** (monogram "d.", Home, Explore, Community, Saved, Profile, Create). Icon-only items need accessible names (`aria-label`).
 
 **Implemented in P1-26b:** `AppShell` (`src/components/layout/app-shell.tsx`) used by `src/app/(app)/layout.tsx`; pages that need the right rail wrap their content in `PageWithRail`. Coming-soon nav items use `ComingSoonTrigger`: accessible name = visible label + ", coming soon" (never a separate `aria-label`, so voice-control users can say what they see); visual badges are `decorative`. Tight spots (icon rail, mobile bell) use the butter **dot**; elsewhere the "Soon" pill. Preview at `/shell-preview` (local only).
 
@@ -279,11 +279,11 @@ Error messages: what happened + what to do next. No blame, jargon or codes in th
 
 | Screen (Phase 1) | Design | Notes |
 |---|---|---|
-| Landing (web) | `2a` | |
-| Welcome + auth entry (mobile) | `1a` | Google / email / Log in on the welcome screen |
-| Sign up (email form), Sign in, Check email, Verify, Forgot/Reset password | — | Not designed |
+| Landing (web) | `2a` | Built in P1-07 at `/` from 1024px. Tile radius 20px → `rounded-lg` (18px) and "Punch needle" 24px → `text-greeting` (22px), the nearest tokens |
+| Welcome + auth entry (mobile) | `1a` | Google / email / Log in on the welcome screen. Built in P1-07 at `/` (below 1024px; `2a` above); the Google button uses Google's official "G" logo (PO decision, branding guidelines) |
+| Sign up (email form), Sign in, Check email, Verify, Forgot/Reset password, Date of birth, Verify-email banner | — | Not designed — built from system in P1-07 following `1a` (wordmark top-left, 448px column); PO review pending |
 | Onboarding: interests | `1b` | |
-| Onboarding steps 2 (familiarity) and 3 (skills you can help with) | — | Defined in DC-18, not drawn — build from system |
+| Onboarding steps 2 (familiarity) and 3 (skills you can help with) | — | Defined in DC-18, not drawn — built from system in P1-11 (level chips per interest; can-help picker). Step headings: design 32px → `text-title` (28px) mobile, `text-title-web` (40px) from 768px; PO review pending |
 | Home feed | `1c`, `2b` | |
 | Explore | `1d` | Web not designed |
 | Search results, Skill page, Theme page | — | Not designed |
@@ -293,9 +293,9 @@ Error messages: what happened + what to do next. No blame, jargon or codes in th
 | Saved / collections | `1i` (profile tab) | Collection detail, picker not designed |
 | Public profile | `1i` | |
 | Edit profile, Settings, Account deletion | — | Not designed |
-| Admin posts/themes | — | Not designed |
+| Admin posts/themes/skills | — | Not designed — built from system in P1-17 (`/admin`, top bar + sections in cards, sticky action bar); PO review pending |
 
-**Rule for undesigned screens (CONFIRMED):** build them only from the tokens (§2), components (§4), layout (§3) and voice (§6) in this document — no new colors, fonts, radii or component styles. Each such screen is a review item: the agent reports it as "built from system, needs product-owner review" with a screenshot (mobile + desktop), and the screen is not done until reviewed.
+**Rule for undesigned screens (CONFIRMED):** build them only from the tokens (§2), components (§4), layout (§3) and voice (§6) in this document — no new colors, fonts, radii or component styles. Each such screen is a review item: the agent reports it as "built from system, needs product-owner review" with screenshots at mobile, tablet and desktop (390 / 834 / 1280px), and the screen is not done until reviewed. **Every screen is built for all three widths in the same task** (PO instruction, 2026-10-24) — never mobile-only.
 | Empty, error, offline, not found, skeletons | — | Not designed (design's own "Try next" lists these) |
 
 | Later-phase screens already designed | Phase |

@@ -1,0 +1,214 @@
+import "server-only";
+
+import type {
+  MediaPurpose,
+  RegisterMediaInput,
+  SignMediaInput,
+  UpdateMediaInput,
+} from "@/lib/schemas/media";
+import type { Media, SignedUpload } from "@/lib/types/media";
+import {
+  mediaProvider as defaultProvider,
+  type MediaProvider,
+  type ResourceType,
+} from "@/server/integrations/media";
+import type { Actor, AuthenticatedActor } from "@/server/lib/actor";
+import { serverEnv } from "@/server/lib/env";
+import {
+  ConflictError,
+  NotFoundError,
+  PayloadTooLargeError,
+  ValidationError,
+  type AppError,
+} from "@/server/lib/errors";
+import { logger } from "@/server/lib/logger";
+import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
+
+import {
+  deleteMediaRow,
+  findMediaById,
+  findOrphanedMedia,
+  insertMedia,
+  mediaExistsForPublicId,
+  updateMediaAltText,
+  type MediaRow,
+} from "./media-repository";
+import {
+  checkDeclaredUpload,
+  checkUploadedAsset,
+  limitsFor,
+  type MediaProblem,
+} from "./media-rules";
+import { canManageMedia } from "./policies";
+
+// Media pipeline (SYSTEM_ARCHITECTURE §8, SECURITY_AND_PRIVACY §5): sign → the browser uploads
+// straight to Cloudinary → register, which re-checks Cloudinary's metadata and deletes files that
+// break the rules (MEDIA-05).
+
+/** SECURITY_AND_PRIVACY §6: media signing, 30 per hour per user. */
+export const MEDIA_SIGN_RATE_LIMIT: RateLimitRule = {
+  name: "media-sign-user",
+  limit: 30,
+  windowSeconds: 60 * 60,
+};
+
+/** Media never attached to anything is deleted after 24 hours (CONFIRMED retention). */
+export const ORPHAN_MEDIA_AGE_MS = 24 * 60 * 60 * 1000;
+
+type ProviderOption = { provider?: MediaProvider };
+
+const FOLDER_BY_PURPOSE: Record<MediaPurpose, string> = {
+  post: "posts",
+  cover: "covers",
+  avatar: "avatars",
+};
+
+/** Everything dodoi stores lives under `dodoi/<APP_ENV>/`, so environments never mix. */
+export function mediaFolder(purpose: MediaPurpose): string {
+  return `dodoi/${serverEnv.APP_ENV}/${FOLDER_BY_PURPOSE[purpose]}`;
+}
+
+function resourceTypeOf(type: "IMAGE" | "VIDEO"): ResourceType {
+  return type === "VIDEO" ? "video" : "image";
+}
+
+/** Admin-only in Phase 1; everyone else gets 404, like other admin features (§3). */
+function requireMediaManager(actor: Actor): AuthenticatedActor {
+  if (!actor || !canManageMedia(actor)) throw new NotFoundError();
+  return actor;
+}
+
+function toError(problem: MediaProblem): AppError {
+  if (problem.kind === "size") return new PayloadTooLargeError(problem.message);
+  if (problem.kind === "type") {
+    return new ValidationError(problem.message, { code: "UNSUPPORTED_MEDIA_TYPE" });
+  }
+  return new ValidationError(problem.message, { code: "MEDIA_REJECTED" });
+}
+
+export function toMedia(row: MediaRow, provider: MediaProvider = defaultProvider): Media {
+  const resourceType = resourceTypeOf(row.type);
+  const media: Media = {
+    id: row.id,
+    type: row.type,
+    url: provider.deliveryUrl(row.publicId, resourceType),
+    width: row.width,
+    height: row.height,
+    altText: row.altText,
+  };
+  if (row.type === "VIDEO") {
+    media.posterUrl = provider.posterUrl(row.publicId);
+    if (row.durationSec !== null) media.durationSec = row.durationSec;
+  }
+  return media;
+}
+
+/** POST /api/media/sign: checks the declared file, then signs a direct upload to its folder. */
+export async function signMediaUpload(
+  actor: Actor,
+  input: SignMediaInput,
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<SignedUpload> {
+  const manager = requireMediaManager(actor);
+  await enforceRateLimit(MEDIA_SIGN_RATE_LIMIT, manager.id);
+
+  const problem = checkDeclaredUpload(input.purpose, input.type, input);
+  const limits = limitsFor(input.purpose, input.type);
+  if (problem || !limits) throw toError(problem ?? { kind: "type", message: "Not allowed." });
+
+  return provider.signUpload({
+    folder: mediaFolder(input.purpose),
+    resourceType: resourceTypeOf(input.type),
+    allowedFormats: limits.formats.join(","),
+  });
+}
+
+/**
+ * POST /api/media: registers an uploaded file after checking Cloudinary's own metadata. A file
+ * that breaks the rules is deleted from Cloudinary.
+ */
+export async function registerMedia(
+  actor: Actor,
+  input: RegisterMediaInput,
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<Media> {
+  const manager = requireMediaManager(actor);
+  const resourceType = resourceTypeOf(input.type);
+
+  // Only files in the folder we signed for can be registered (not other uploads in the account).
+  if (!input.publicId.startsWith(`${mediaFolder(input.purpose)}/`)) {
+    throw new ValidationError("That upload doesn't belong here.", { code: "MEDIA_NOT_FOUND" });
+  }
+  // Alt text can be added after uploading; publishing a post requires it (publish rules).
+  const altText = input.altText || null;
+  if (await mediaExistsForPublicId(input.publicId)) {
+    throw new ConflictError("That upload is already saved.", { code: "MEDIA_ALREADY_REGISTERED" });
+  }
+
+  const asset = await provider.getAsset(input.publicId, resourceType);
+  if (!asset) {
+    throw new ValidationError("We couldn't find that upload. Please upload it again.", {
+      code: "MEDIA_NOT_FOUND",
+    });
+  }
+  const problem = checkUploadedAsset(input.purpose, input.type, asset);
+  if (problem) {
+    await provider.deleteAsset(asset.publicId, resourceType);
+    logger.info("Deleted an upload that broke the media rules", {
+      publicId: asset.publicId,
+      problem: problem.kind,
+    });
+    throw toError(problem);
+  }
+
+  const row = await insertMedia({
+    ownerId: manager.id,
+    type: input.type,
+    publicId: asset.publicId,
+    format: asset.format,
+    width: asset.width,
+    height: asset.height,
+    bytes: asset.bytes,
+    durationSec: asset.durationSec,
+    altText,
+  });
+  return toMedia(row, provider);
+}
+
+/** PATCH /api/media/{id}: alt text (MediaAsset updates are admin-only in Phase 1). */
+export async function updateMedia(
+  actor: Actor,
+  id: string,
+  input: UpdateMediaInput,
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<Media> {
+  requireMediaManager(actor);
+  if (!(await findMediaById(id))) throw new NotFoundError();
+  return toMedia(await updateMediaAltText(id, input.altText), provider);
+}
+
+/**
+ * Deletes media that was uploaded but never attached to a post, step, avatar or cover within 24
+ * hours (orphan tracking; run by the daily jobs, P1-33). Returns how many were removed.
+ */
+export async function deleteOrphanedMedia({
+  provider = defaultProvider,
+  now = new Date(),
+}: ProviderOption & { now?: Date } = {}): Promise<number> {
+  const orphans = await findOrphanedMedia(new Date(now.getTime() - ORPHAN_MEDIA_AGE_MS));
+  for (const orphan of orphans) {
+    await provider.deleteAsset(orphan.publicId, resourceTypeOf(orphan.type));
+    await deleteMediaRow(orphan.id);
+  }
+  if (orphans.length > 0) logger.info("Deleted orphaned media", { count: orphans.length });
+  return orphans.length;
+}
+
+/** One media item as the API shows it, or null (e.g. a skill's cover for the admin editor). */
+export async function getMedia(
+  id: string,
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<Media | null> {
+  const row = await findMediaById(id);
+  return row ? toMedia(row, provider) : null;
+}

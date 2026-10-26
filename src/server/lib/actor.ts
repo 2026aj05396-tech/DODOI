@@ -1,3 +1,5 @@
+import { NotFoundError } from "./errors";
+
 // The authenticated user performing an action, passed explicitly to every service function
 // (CODE_QUALITY §4.3). `null` means signed out. Built from the Auth.js session (src/server/auth).
 
@@ -16,3 +18,12 @@ export type AuthenticatedActor = {
 };
 
 export type Actor = AuthenticatedActor | null;
+
+/**
+ * Admin-only features answer 404 to everyone else, signed in or not, so they never reveal that
+ * they exist (SECURITY_AND_PRIVACY §3).
+ */
+export function requireAdmin(actor: Actor): AuthenticatedActor {
+  if (actor?.role !== "ADMIN") throw new NotFoundError();
+  return actor;
+}

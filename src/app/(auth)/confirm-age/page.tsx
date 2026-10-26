@@ -35,7 +35,7 @@ async function ConfirmAgeContent({
   return (
     <div className="flex flex-col gap-4">
       <p className="text-body text-foreground-secondary">
-        What&apos;s your date of birth? dodoi is for adults 18 and over.
+        Before you start, we need your date of birth. We ask once.
       </p>
       <ConfirmAgeForm returnTo={returnTo} />
     </div>

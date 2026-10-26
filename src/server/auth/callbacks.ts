@@ -74,13 +74,16 @@ export async function allowSignIn({
 
 // What the encrypted session cookie holds: user id, session version, role, email-verified and
 // age-confirmed flags. Role and flags are refreshed from the database on every request; the
-// cookie is only a carrier (the proxy reads `ac` to send unconfirmed users to /confirm-age).
+// cookie is only a carrier (the proxy reads `ac` to send unconfirmed users to /confirm-age and
+// `oc` to send users who have not finished onboarding to /onboarding).
 const sessionClaimsSchema = z.object({
   sub: z.string().min(1),
   sv: z.number().int(),
   role: z.enum(["USER", "ADMIN"]),
   ev: z.boolean(),
   ac: z.boolean(),
+  // Optional: cookies issued before P1-11 lack it; they refresh on the next session read.
+  oc: z.boolean().optional(),
 });
 
 /** Session cookie claims for a user (also used to re-issue the cookie after a password change). */
@@ -91,6 +94,7 @@ export function toClaims(user: SessionUser) {
     role: user.role,
     ev: user.isEmailVerified,
     ac: user.isAgeConfirmed,
+    oc: user.hasCompletedOnboarding,
   };
 }
 

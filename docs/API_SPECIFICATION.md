@@ -83,6 +83,7 @@ type CreatorSummary = { username: string; displayName: string; avatarUrl: string
 
 type PostCard = {
   id: string; type: string; title: string;
+  estimatedMinutes: number | null; // card label "Tutorial · 20 min" (P1-20)
   coverMedia: Media; mediaCount: number;
   skills: SkillSummary[]; primarySkillId: string;
   creator: CreatorSummary | null; attribution: Attribution | null;
@@ -92,8 +93,8 @@ type PostCard = {
 type PostDetail = PostCard & {
   description: string | null;
   media: Media[];
-  difficulty: ExperienceLevel | null; estimatedMinutes: number | null;
-  materials: { name: string; note: string | null }[];
+  difficulty: ExperienceLevel | null;
+  materials: { id: string; name: string; note: string | null }[]; // id: for tutorial progress (P1-20b)
   steps: { position: number; text: string; media: Media | null }[];
   publishedAt: string;
 };
@@ -162,7 +163,7 @@ Create or resolve a custom interest. Rate limit: 10 / day / user (PROPOSED).
 Skill detail: `{ ...SkillSummary, description, coverMedia, relatedSkills: SkillSummary[] }`. Hidden skill → 404.
 
 ### GET /api/skills/{slug}/posts — User*
-Paginated `PostCard[]`.
+Paginated `PostCard[]`, published posts newest first (CONFIRMED, P1-15). Hidden skill → 404.
 
 ### GET /api/me/skills — User
 `{ items: [{ skill: SkillSummary, isInterest, canHelp, wantsToLearn, level }] }`
@@ -172,10 +173,16 @@ Replace the full set (used by onboarding and settings).
 ```json
 { "items": [{ "skillId": "…", "isInterest": true, "canHelp": false, "wantsToLearn": false, "level": "BEGINNER" }] }
 ```
-Rules: skill must exist and be ACTIVE; no duplicate skillIds; rows with all flags false are dropped; max items OPEN. → `200` new set.
+Rules: skill must exist and be ACTIVE (else `400 SKILL_NOT_AVAILABLE`, field `items.{n}.skillId`); no duplicate skillIds; rows with all flags false are dropped; at most **50** items (CONFIRMED, P1-10); `level` null = not specified. → `200` new set. Skills hidden later are left out of `GET`.
+
+### GET /api/me/onboarding — User
+`{ "step": 1, "completed": false, "interestCount": 0 }` — `step` is where to resume (1 interests, 2 familiarity, 3 can-help-with).
+
+### PUT /api/me/onboarding — User
+`{ "step": 2 }` → `200` new state · `422 NOT_ENOUGH_INTERESTS` for step 2 or 3 with fewer than 3 interests.
 
 ### POST /api/me/onboarding/complete — User
-Marks onboarding complete. Precondition: minimum interests per OD-14. → `204`.
+Marks onboarding complete. Precondition: at least 3 active interests (OD-14), else `422 NOT_ENOUGH_INTERESTS`. → `204` (idempotent; the first completion time is kept).
 
 ### GET /api/me/profile — User
 Own full profile (incl. visibility).
@@ -226,12 +233,12 @@ Undo: same body → `204`.
 `{ "checkedMaterialIds"?: string[], "completedStepPositions"?: number[] }` — partial replace, idempotent. Ids must belong to the post; positions must exist in the post. → `200` new progress. (POST-11/12)
 
 ### GET /api/posts/{postId}/related — User*
-Up to 12 `PostCard` sharing skills (PROPOSED count). No pagination.
+`{ items: PostCard[] }` — up to 12 published posts sharing skills, ordered by most shared skills, then same primary skill, then newest (CONFIRMED, P1-15). No pagination.
 
 ### GET /api/themes — User*
-Published themes: `{ id, slug, title, description, coverMedia }[]`.
+Published themes in curated order: `{ items: [{ id, slug, title, description, coverMedia }] }`.
 ### GET /api/themes/{slug} — User*
-Theme + paginated `PostCard[]` (`?cursor`).
+`{ theme, posts: { items: PostCard[], nextCursor } }` — published posts in the theme's curated order (`?cursor`, `?limit`). Unpublished theme → 404.
 
 ### GET /api/explore — User*
 ```json
@@ -289,12 +296,12 @@ IDs of actor's collections containing the post (for the picker).
 
 ### POST /api/media/sign — Admin (Phase 1); User from P2
 ```json
-{ "type": "IMAGE" | "VIDEO", "bytes": 123456, "mimeType": "image/jpeg" }
+{ "purpose": "post" | "cover" | "avatar", "type": "IMAGE" | "VIDEO", "bytes": 123456, "mimeType": "image/jpeg" }
 ```
-Validates against MEDIA-01…03 (`413 PAYLOAD_TOO_LARGE`, `400 UNSUPPORTED_MEDIA_TYPE`). Returns `{ "uploadUrl", "signature", "timestamp", "apiKey", "folder", "resourceType" }` for a direct Cloudinary upload. Rate limit: 30 / hour / user (PROPOSED).
+Validates against MEDIA-01…03 (`413 PAYLOAD_TOO_LARGE`, `400 UNSUPPORTED_MEDIA_TYPE`; videos only for `post`). Returns `{ "uploadUrl", "signature", "timestamp", "apiKey", "folder", "resourceType", "allowedFormats" }` for a direct Cloudinary upload; the browser sends `folder`, `allowed_formats`, `timestamp`, `api_key` and `signature` exactly as returned. Folder: `dodoi/<APP_ENV>/{posts|covers|avatars}`. Rate limit: 30 / hour / user. Non-admins (and signed-out callers) → `404`.
 
 ### POST /api/media — Admin (P1)
-`{ "publicId": "…", "altText": "…" }` → server fetches asset metadata from Cloudinary, re-validates type/size/dimensions/duration, creates `MediaAsset` → `201 Media`. Mismatch → deletes Cloudinary asset and returns `400`.
+`{ "purpose": "post", "type": "IMAGE", "publicId": "…", "altText": "…" }` → server fetches asset metadata from Cloudinary, re-validates type/size/dimensions/duration, creates `MediaAsset` → `201 Media`. Mismatch → deletes the Cloudinary asset and returns `400 UNSUPPORTED_MEDIA_TYPE` / `400 MEDIA_REJECTED` / `413`. `publicId` outside the purpose's folder or unknown → `400 MEDIA_NOT_FOUND`; already saved → `409 MEDIA_ALREADY_REGISTERED`. Alt text is optional here (it can be added after upload with `PATCH /api/media/{id}`); publishing a post requires it on every image.
 
 ### PATCH /api/media/{id} — Owner/Admin
 `{ "altText": "…" }`.
@@ -315,7 +322,9 @@ Avatar uploads for regular users in P1 (profile editing) **require user access t
 | `POST /api/admin/posts/{id}/unpublish` | Unpublish |
 | `DELETE /api/admin/posts/{id}` | Delete post (media assets deleted if unused) |
 | `GET/POST/PATCH/DELETE /api/admin/themes[/{id}]` | Manage themes and their posts |
-| `PATCH /api/admin/skills/{id}` | Edit description/cover/status (hide custom skills) |
+| `GET /api/admin/skills` | Every skill, hidden ones included: `{ items: [{ id, name, slug, origin, status }] }` |
+| `GET /api/admin/skills/{id}` | Skill with editorial fields and `relatedSkillIds` |
+| `PATCH /api/admin/skills/{id}` | Edit description/hint/pitch/cover/status (any skill can be hidden) |
 | `PUT /api/admin/skills/{id}/related` | Set related skills |
 | `GET /api/admin/reports?status=OPEN&cursor=` | List reports |
 | `POST /api/admin/reports/{id}/action` | `{ "action": "HIDE_TARGET" \| "DISMISS" }` — hides skill / profile or dismisses; audited |
@@ -338,9 +347,28 @@ Admin post create/update body:
   "authorUsername": null
 }
 ```
-Every mutation writes an `AuditLog` entry.
+Every mutation writes an `AuditLog` entry in the same transaction (`post.create`, `post.update`, `post.publish`, `post.unpublish`, `post.delete`, `theme.*`, `skill.update`, `skill.hide`, `skill.show`, `skill.set_related`). Seed imports write `post.seed_import` (no actor; metadata `seedKey`, `created`, `status`).
 
-**Seed file format** (`seed-content/posts/<seedKey>.json`) = the admin body above plus `seedKey` and local `mediaFiles: [{ "path": "…", "altText": "…" }]` instead of `mediaIds`.
+Rules (P1-16, PO decisions): a post holds up to **10** media, images and videos mixed (`mediaIds` order = gallery order). Lists in `PATCH` (skills, media, steps, materials) replace the whole list. **Publish** (`400 POST_NOT_PUBLISHABLE`, field errors) requires: at least one skill with an active primary skill, at least one photo or video, alt text on every image (post and steps), and attribution — Creative Commons only `CC BY`/`CC BY-SA` with original author and source link; stock with a source link; invited creator with `authorUsername` (a real account) and `permissionRef`; other source types have no author. A **published** post can be edited, but the change is rejected (nothing saved) if the post would no longer meet these rules. Re-publishing keeps the first `publishedAt`. `GET /api/admin/posts` is ordered by last change, newest first. Themes: `{ slug, title, description, coverMediaId, isPublished, position, postIds }` (`postIds` in display order; `409 SLUG_TAKEN`). Skills: `PATCH { description, hint, pitch, coverMediaId, status: "ACTIVE" | "HIDDEN" }` — any skill, predefined included, can be hidden; `PUT …/related { skillIds }` stores pairs in both directions.
+
+**Seed file format** (`<seed folder>/posts/<seedKey>.json`, P1-18, PO decisions 2026-10-26) = the admin body above with these differences: `seedKey` (lowercase letters, numbers and dashes; must equal the file name), `publish` (default `false`), skills by **slug** (`skills`, `primarySkill`) because ids differ per environment, local `mediaFiles: [{ "path", "altText" }]` (1–10, paths relative to the seed folder) instead of `mediaIds`, steps take an optional `mediaFile` instead of `mediaId`, and `attribution` is required. Unknown keys are rejected.
+```json
+{
+  "seedKey": "granny-square",
+  "publish": true,
+  "type": "TUTORIAL",
+  "title": "Your first granny square",
+  "description": "Four rounds, one colour.",
+  "skills": ["crochet"], "primarySkill": "crochet",
+  "mediaFiles": [{ "path": "media/granny-square.jpg", "altText": "A finished granny square" }],
+  "difficulty": "BEGINNER", "estimatedMinutes": 45,
+  "materials": [{ "name": "Cotton yarn", "note": "Worsted weight" }],
+  "steps": [{ "text": "Make a magic ring." }, { "text": "Work round 1.", "mediaFile": { "path": "media/round-1.jpg", "altText": "Round 1" } }],
+  "attribution": { "sourceType": "CREATIVE_COMMONS", "license": "CC BY 4.0", "attributionText": "Photo by Asha on Wikimedia Commons", "originalAuthor": "Asha", "originalUrl": "https://commons.wikimedia.org/wiki/File:Granny_square.jpg" },
+  "authorUsername": null
+}
+```
+Import rules: each file is fully checked (shape, skill slugs, creator account, attribution and licence rules — on every import, draft or not — and each file's type and size against MEDIA-01/03) before anything is uploaded or saved. The file is the source of truth: re-running updates the post to match it (edits made in `/admin` to seeded posts are overwritten). `publish: true` publishes (the publish rules must pass, else nothing is saved); `publish: false` keeps a draft, or unpublishes a published post. Media public ids are `dodoi/<APP_ENV>/posts/seed-<seedKey>-<sha256 prefix>`, so unchanged files are never uploaded twice; media the post no longer uses are deleted.
 
 ---
 

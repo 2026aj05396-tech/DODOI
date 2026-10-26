@@ -12,6 +12,8 @@ const MESSAGES_BY_CODE: Record<string, string> = {
 const MESSAGES_BY_ERROR: Record<string, string> = {
   CredentialsSignin: "That email and password don't match. Check them and try again.",
   AccessDenied: "We couldn't sign you in with Google. Try again, or use your email and password.",
+  // Google sends people back with an error when they cancel on its consent screen (F-03).
+  OAuthCallbackError: "Google sign-in was cancelled.",
   OAuthAccountNotLinked:
     "That Google account belongs to a different dodoi account. Sign out first, then try again.",
 };

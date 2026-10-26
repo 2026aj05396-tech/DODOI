@@ -196,7 +196,7 @@ Searching communities, collections and tags is P2/P3 (those entities are not pop
 
 | ID | Requirement |
 |---|---|
-| POST-01 | Show main media (image gallery or short video) |
+| POST-01 | Show main media: a gallery of up to 10 images and short videos, mixed (PO decision, P1-16) |
 | POST-02 | Show creator, or for seed content, attribution (source, license, original author) |
 | POST-03 | Description/story |
 | POST-04 | Associated skills (linked to skill pages) |

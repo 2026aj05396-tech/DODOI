@@ -102,7 +102,8 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 - Signature scoped to folder, resource type and short expiry.
 - Server re-validates asset metadata from Cloudinary after upload (type, bytes, dimensions, duration) and deletes non-compliant assets.
 - Allowed formats and limits: PRODUCT_REQUIREMENTS §5.8b (MEDIA-01…05).
-- Strip EXIF/location metadata on delivery (Cloudinary transformation) — PROPOSED; important for privacy of user photos from P2.
+- Strip EXIF/location metadata on delivery (Cloudinary transformation): every delivery URL uses `f_auto,q_auto`, which re-encodes the file without EXIF/location data (P1-03).
+- The Cloudinary API key has full account access (free plan keys cannot be folder-scoped), so the app only registers files under the purpose's `dodoi/<APP_ENV>/…` folder and the client refuses to delete anything outside `dodoi/` (P1-03).
 - Alt text required for content images.
 
 ## 6. Rate Limiting and Abuse

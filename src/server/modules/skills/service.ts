@@ -30,6 +30,9 @@ import {
 import { canCreateCustomSkill } from "./policies";
 import {
   findActiveSkillDetailBySlug,
+  findActiveSkillsByIds,
+  findSkillsBySlugs,
+  findSkillStatuses,
   findSkillByNormalizedName,
   findSlugsStartingWith,
   insertCustomSkill,
@@ -182,4 +185,30 @@ export async function resolveCustomSkill(
     }
   }
   throw new Error("Could not create a unique slug for a custom skill");
+}
+
+/**
+ * Active skills among `ids`, keyed by id (for other modules, e.g. a user's skill list). Hidden
+ * or unknown ids are simply absent.
+ */
+export async function getActiveSkillSummaries(ids: string[]): Promise<Map<string, SkillSummary>> {
+  if (ids.length === 0) return new Map();
+  const rows = await findActiveSkillsByIds(ids);
+  return new Map(rows.map((row) => [row.id, toSummary(row)]));
+}
+
+/** Status of each existing skill among `ids` (hidden ones included), keyed by id. */
+/** Skills by slug, hidden ones included (seed importer: slugs are the same in every environment). */
+export async function getSkillsBySlugs(
+  slugs: string[],
+): Promise<Map<string, { id: string; status: "ACTIVE" | "HIDDEN" }>> {
+  if (slugs.length === 0) return new Map();
+  const rows = await findSkillsBySlugs(slugs);
+  return new Map(rows.map((row) => [row.slug, { id: row.id, status: row.status }]));
+}
+
+export async function getSkillStatuses(ids: string[]): Promise<Map<string, "ACTIVE" | "HIDDEN">> {
+  if (ids.length === 0) return new Map();
+  const rows = await findSkillStatuses(ids);
+  return new Map(rows.map((row) => [row.id, row.status]));
 }

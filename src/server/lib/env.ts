@@ -14,6 +14,14 @@ const serverEnvSchema = z.object({
   AUTH_URL: z.url(),
   AUTH_GOOGLE_ID: z.string().min(1),
   AUTH_GOOGLE_SECRET: z.string().min(1),
+  /**
+   * Automated tests only (APP_ENV=local): a local mock OpenID provider used instead of Google
+   * (tests/e2e/helpers/mock-google.ts). Never set it anywhere else.
+   */
+  AUTH_GOOGLE_ISSUER: z
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   /** Optional: this account becomes ADMIN after its first sign-in with a verified email. */
   SEED_ADMIN_EMAIL: z
     .email()
@@ -27,9 +35,35 @@ const serverEnvSchema = z.object({
     .transform((key) => key || undefined),
   /** Sender, e.g. `dodoi <onboarding@resend.dev>`. */
   EMAIL_FROM: z.string().min(3),
+  // Cloudinary (P1-03): server only; uploads are signed, never unsigned presets.
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
+  /**
+   * Automated tests only (APP_ENV=local): a local stand-in for Cloudinary's Admin API
+   * (tests/e2e/helpers/mock-cloudinary.ts). Never set it anywhere else.
+   */
+  CLOUDINARY_API_BASE: z
+    .url()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
 });
 
 const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
+  if (env.APP_ENV !== "local" && env.CLOUDINARY_API_BASE) {
+    context.addIssue({
+      code: "custom",
+      path: ["CLOUDINARY_API_BASE"],
+      message: "CLOUDINARY_API_BASE is for automated local tests only",
+    });
+  }
+  if (env.APP_ENV !== "local" && env.AUTH_GOOGLE_ISSUER) {
+    context.addIssue({
+      code: "custom",
+      path: ["AUTH_GOOGLE_ISSUER"],
+      message: "AUTH_GOOGLE_ISSUER is for automated local tests only",
+    });
+  }
   if (env.APP_ENV !== "local" && !env.RESEND_API_KEY) {
     context.addIssue({
       code: "custom",

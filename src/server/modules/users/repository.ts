@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AuthTokenType, Prisma } from "@/generated/prisma/client";
+import type { AuthTokenType, ExperienceLevel, Prisma } from "@/generated/prisma/client";
 import { db } from "@/server/db/client";
 
 type Client = Prisma.TransactionClient | typeof db;
@@ -15,6 +15,7 @@ export async function findSessionUserById(id: string) {
       sessionVersion: true,
       emailVerified: true,
       ageConfirmedAt: true,
+      onboardingCompletedAt: true,
     },
   });
 }
@@ -246,4 +247,88 @@ export async function replacePassword(
   if (verifyEmail && user.emailVerified === null) {
     await client.user.update({ where: { id: userId }, data: { emailVerified: new Date() } });
   }
+}
+
+export type UserSkillRow = {
+  skillId: string;
+  isInterest: boolean;
+  canHelp: boolean;
+  wantsToLearn: boolean;
+  level: ExperienceLevel | null;
+};
+
+const userSkillSelect = {
+  skillId: true,
+  isInterest: true,
+  canHelp: true,
+  wantsToLearn: true,
+  level: true,
+} as const;
+
+export async function findUserSkillRows(userId: string): Promise<UserSkillRow[]> {
+  return db.userSkill.findMany({
+    where: { userId },
+    select: userSkillSelect,
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+/** Replaces the user's whole skill set in one transaction. */
+export async function replaceUserSkillRows(userId: string, rows: UserSkillRow[]): Promise<void> {
+  await db.$transaction([
+    db.userSkill.deleteMany({ where: { userId } }),
+    db.userSkill.createMany({ data: rows.map((row) => ({ ...row, userId })) }),
+  ]);
+}
+
+export async function findOnboardingRow(userId: string) {
+  return db.user.findUnique({
+    where: { id: userId },
+    select: { onboardingStep: true, onboardingCompletedAt: true },
+  });
+}
+
+export async function updateOnboardingStep(userId: string, step: number) {
+  await db.user.update({ where: { id: userId }, data: { onboardingStep: step } });
+}
+
+/** Sets the completion time once; later calls keep the first one. */
+export async function markOnboardingComplete(userId: string, lastStep: number) {
+  await db.user.updateMany({
+    where: { id: userId, onboardingCompletedAt: null },
+    data: { onboardingCompletedAt: new Date(), onboardingStep: lastStep },
+  });
+}
+
+/** Profile data for creator rows, with what decides whether it may be shown. */
+export async function findCreatorRows(userIds: string[]) {
+  return db.user.findMany({
+    where: { id: { in: userIds } },
+    select: {
+      id: true,
+      deletionRequestedAt: true,
+      profile: {
+        select: {
+          username: true,
+          displayName: true,
+          isHidden: true,
+          avatar: { select: { publicId: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function findUsersByUsernames(usernames: string[]) {
+  return db.profile.findMany({
+    where: { username: { in: usernames } },
+    select: { userId: true, username: true },
+  });
+}
+
+export async function findUsernamesByIds(userIds: string[]) {
+  return db.profile.findMany({
+    where: { userId: { in: userIds } },
+    select: { userId: true, username: true },
+  });
 }

@@ -7,7 +7,8 @@ import { PrismaClient } from "@/generated/prisma/client";
 
 // Run with tsx by accounts.ts (Playwright loads test files as CommonJS, but the generated Prisma
 // client is ESM-only). Usage:
-//   tsx create-account.ts account <email> <password> [--unverified] [--age-unconfirmed] [--no-password]
+//   tsx create-account.ts account <email> <password> [--unverified] [--age-unconfirmed]
+//       [--no-password] [--onboarding-incomplete] [--admin]   (onboarding finished by default)
 //   tsx create-account.ts verification-token <email>   (prints a fresh raw token)
 //   tsx create-account.ts reset-token <email>          (prints a fresh raw token)
 //   tsx create-account.ts reset-rate-limits
@@ -34,6 +35,8 @@ async function main(): Promise<void> {
           email,
           emailVerified: flags.includes("--unverified") ? null : new Date(),
           ageConfirmedAt: flags.includes("--age-unconfirmed") ? null : new Date(),
+          onboardingCompletedAt: flags.includes("--onboarding-incomplete") ? null : new Date(),
+          role: flags.includes("--admin") ? "ADMIN" : "USER",
           // --no-password: like an account created with Google sign-in.
           passwordHash: flags.includes("--no-password")
             ? null

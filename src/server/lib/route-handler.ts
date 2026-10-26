@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_rethrow } from "next/navigation";
 import type { NextRequest } from "next/server";
 import type { z } from "zod";
 
@@ -162,6 +163,9 @@ export function withRouteHandler<TSchemas extends RouteSchemas>(
       }
       return response;
     } catch (error) {
+      // Next.js signals (e.g. "this route reads the request, so it can't be prerendered") are
+      // control flow, not failures: let Next handle them instead of answering 500.
+      unstable_rethrow(error);
       return errorResponse(error, requestId, request);
     }
   };

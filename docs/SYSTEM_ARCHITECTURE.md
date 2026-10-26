@@ -64,7 +64,7 @@ Libraries are installed in the task that first uses them, so the project never c
 | Client data fetching/cache | TanStack Query | Infinite feed pagination, optimistic save, retries | P1-07 / first data-driven client UI |
 | PWA / service worker | Serwist | Maintained Next.js service-worker tooling (verify Turbopack support at P1-27) | P1-27 |
 | Password hashing | `argon2` (or `bcryptjs` if native build is problematic) | Secure password storage | P1-04 |
-| Cloudinary SDK | `cloudinary` (server) | Signed uploads, verification, deletion | P1-03 |
+| Cloudinary SDK | Not used — Cloudinary's REST APIs are called directly (`src/server/integrations/media/cloudinary.ts`): signing, Admin API lookup/delete (P1-03) | Signed uploads, verification, deletion | P1-03 |
 | Email | `resend` SDK | Transactional email | P1-05 |
 | Test a11y | `@axe-core/playwright` | Automated accessibility checks | P0-06 |
 
@@ -95,7 +95,7 @@ src/
 │   │   ├── p/[postId]/                 # Post detail
 │   │   ├── saved/ , saved/[collectionId]/
 │   │   ├── u/[username]/               # Public profile
-│   │   ├── onboarding/
+│   │   ├── (onboarding lives at app/onboarding/ — full screen, outside this shell; P1-11)
 │   │   └── settings/
 │   ├── admin/                          # ADMIN-only
 │   ├── api/                            # Route handlers (see API_SPECIFICATION.md)
@@ -137,7 +137,7 @@ prisma/
 ├── schema.prisma
 ├── migrations/
 └── seed/                               # reference data + content import
-seed-content/                           # JSON + media files for import
+seed-content/                           # JSON + media files for import (git-ignored, P1-18)
 tests/
 ├── integration/
 └── e2e/

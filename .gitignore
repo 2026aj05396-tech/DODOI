@@ -34,6 +34,9 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+# Seed content (P1-18): JSON and licensed media live outside git (PO decision)
+/seed-content/
+
 # Local tooling
 .vercel/
 

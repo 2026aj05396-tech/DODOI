@@ -19,12 +19,13 @@ async function expectNoSeriousA11yViolations(page: Page) {
   expect(blocking).toEqual([]);
 }
 
-async function signIn(page: Page, email: string, password: string) {
+/** Signs in; `/` then sends an account without a confirmed age straight to the age step. */
+async function signIn(page: Page, email: string, password: string, landing = /\/$/) {
   await page.goto("/sign-in");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(landing);
 }
 
 test.beforeEach(() => {
@@ -82,6 +83,33 @@ test("signing up with an email that uses Google offers Continue with Google", as
   await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
 });
 
+test("E2E-01 (until the feed exists): sign up, verify, onboard", async ({ page }) => {
+  const email = uniqueEmail();
+  await page.goto("/");
+  await page.getByRole("link", { name: "Sign up with email" }).click();
+
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("a long enough password");
+  await page.getByLabel("Date of birth").fill("1998-04-17");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+
+  await page.goto(`/verify-email?token=${createVerificationToken(email)}`);
+  await page.getByRole("button", { name: "Confirm my email" }).click();
+  await expect(page.getByText("Your email is confirmed.")).toBeVisible();
+  await page.getByRole("link", { name: "Continue" }).click();
+
+  await expect(page).toHaveURL(/\/onboarding$/);
+  for (const skill of ["Crochet", "Embroidery", "Knitting"]) {
+    await page.getByRole("button", { name: skill, exact: true }).click();
+  }
+  await page.getByRole("button", { name: "Continue with 3 interests" }).click();
+  await page.getByRole("button", { name: "Skip" }).click();
+  await page.getByRole("button", { name: "Skip" }).click();
+  // The personalised feed (P1-22) will be the destination; until then onboarding returns to /.
+  await expect(page).toHaveURL(/\/$/);
+});
+
 test("sign-up refuses under-18s with the agreed message", async ({ page }) => {
   await page.goto("/sign-up");
 
@@ -117,7 +145,7 @@ test("a signed-in user without a confirmed age is sent to the date-of-birth step
   page,
 }) => {
   const { email, password } = createPasswordAccount({ ageUnconfirmed: true });
-  await signIn(page, email, password);
+  await signIn(page, email, password, /\/confirm-age$/);
 
   await page.goto("/saved");
   await expect(page).toHaveURL(/\/confirm-age\?returnTo=%2Fsaved$/);
@@ -134,7 +162,7 @@ test("an under-18 at the date-of-birth step is signed out and the account remove
   page,
 }) => {
   const { email, password } = createPasswordAccount({ ageUnconfirmed: true });
-  await signIn(page, email, password);
+  await signIn(page, email, password, /\/confirm-age$/);
 
   await page.goto("/confirm-age");
   await page.getByLabel("Date of birth").fill("2012-03-03");

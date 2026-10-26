@@ -119,7 +119,7 @@ A task is done only when:
 - [ ] Authorization is enforced server-side and tested.
 - [ ] Errors are handled with the standard format and friendly UI messages.
 - [ ] Relevant tests are written and pass.
-- [ ] Accessibility and responsive behavior checked (mobile + desktop).
+- [ ] Every screen is built for **mobile, tablet and desktop in the same task** — never mobile-only with desktop "later" (PO instruction, 2026-10-24). Designed web layouts (`2a`–`2c`) are used where they exist; otherwise the desktop layout is built from the system. Accessibility and layout checked at 390, 834 and 1280px, with screenshots of all three for PO review.
 - [ ] Documentation updated.
 - [ ] Known limitations recorded.
 
