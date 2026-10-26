@@ -144,20 +144,40 @@ export async function replacePostMedia(postId: string, mediaIds: string[], tx: T
 }
 
 /** Replacing materials gives them new ids, which resets anyone's ticked materials (P1-20b). */
+/**
+ * Replaces the materials. A material whose name is unchanged keeps its id, so users' ticks
+ * (`PostProgress.checkedMaterialIds`, P1-20b) survive admin edits and seed re-imports.
+ */
 export async function replacePostMaterials(
   postId: string,
   materials: { name: string; note?: string | null }[],
   tx: Tx,
 ) {
-  await tx.postMaterial.deleteMany({ where: { postId } });
-  await tx.postMaterial.createMany({
-    data: materials.map((material, position) => ({
-      postId,
-      position,
-      name: material.name,
-      note: material.note ?? null,
-    })),
+  const existing = await tx.postMaterial.findMany({
+    where: { postId },
+    orderBy: { position: "asc" },
+    select: { id: true, name: true },
   });
+  const unused = [...existing];
+  const keptIds = materials.map((material) => {
+    const index = unused.findIndex((row) => row.name === material.name);
+    return index === -1 ? null : (unused.splice(index, 1)[0]?.id ?? null);
+  });
+
+  await tx.postMaterial.deleteMany({
+    where: { postId, id: { notIn: keptIds.filter((id) => id !== null) } },
+  });
+  // Positions are unique per post: move kept rows out of the way before renumbering.
+  await tx.postMaterial.updateMany({
+    where: { postId },
+    data: { position: { increment: 10_000 } },
+  });
+  for (const [position, material] of materials.entries()) {
+    const id = keptIds[position];
+    const data = { position, name: material.name, note: material.note ?? null };
+    if (id) await tx.postMaterial.update({ where: { id }, data });
+    else await tx.postMaterial.create({ data: { postId, ...data } });
+  }
 }
 
 export async function replacePostSteps(

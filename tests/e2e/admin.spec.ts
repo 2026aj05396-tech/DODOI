@@ -14,7 +14,9 @@ async function signIn(page: Page, options: { admin?: boolean } = {}) {
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   // Admins skip onboarding and land on /admin; other users stay on the welcome page.
-  await expect(page).toHaveURL(options.admin ? /\/admin(\/posts)?$/ : /\/$/);
+  // Wait for the last redirect (/ → /admin → /admin/posts), or the next goto can interrupt it.
+  await expect(page).toHaveURL(options.admin ? /\/admin\/posts$/ : /\/$/);
+  await page.waitForLoadState();
 }
 
 /** Answers browser uploads like Cloudinary would, with an id in the signed folder. */

@@ -50,3 +50,11 @@ export type ThemeSummary = {
   description: string | null;
   coverMedia: Media | null;
 };
+
+/** A signed-in user's ticks on a post (POST-11/12); private to them. */
+export type PostProgress = {
+  checkedMaterialIds: string[];
+  completedStepPositions: number[];
+  /** Null until the user ticks something. */
+  updatedAt: string | null;
+};

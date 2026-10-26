@@ -408,7 +408,7 @@ model PostProgress {                       // shape and behaviour CONFIRMED (DC-
   @@id([userId, postId])
 }
 ```
-Rules: private to the user; positions outside the post's step range are rejected; stale material ids (material removed by admin) are ignored on read and dropped on next write.
+Rules: private to the user; positions outside the post's step range are rejected; stale material ids (material removed by admin) are ignored on read and dropped on next write. Replacing a post's materials (admin edit, seed import) keeps the id of every material whose name is unchanged, so ticks survive edits (P1-20b). Steps are matched by position, so reordering steps moves "done" marks with the position.
 
 ### 4.6 Admin
 

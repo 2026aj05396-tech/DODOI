@@ -34,4 +34,5 @@ export {
   updateAdminPost,
   updateAdminTheme,
 } from "./admin-service";
+export { getPostProgress, updatePostProgress } from "./progress-service";
 export { importSeedContent, type SeedImportOutcome } from "./seed-import";

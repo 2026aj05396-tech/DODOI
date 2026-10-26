@@ -22,6 +22,14 @@ async function expectNoSeriousViolations(page: Page) {
   expect(blocking).toEqual([]);
 }
 
+async function signIn(page: Page, email: string, password: string) {
+  await page.goto("/sign-in");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/$/);
+}
+
 test("a signed-out visitor can read a shared post and open a related one", async ({ page }) => {
   const { id, relatedId } = createPost();
 
@@ -98,11 +106,7 @@ test("signed-in users get the app shell; on mobile the post is full screen", asy
   isMobile,
 }) => {
   const { email, password } = createPasswordAccount();
-  await page.goto("/sign-in");
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await signIn(page, email, password);
   const { id } = createPost();
 
   await page.goto(`/p/${id}`);
@@ -126,4 +130,75 @@ test("drafts are not found for visitors", async ({ page }) => {
   // search engines are told not to index it.
   await expect(page.getByRole("heading", { name: "We couldn't find that page" })).toBeVisible();
   expect(await page.locator('meta[name="robots"][content="noindex"]').count()).toBeGreaterThan(0);
+});
+
+test("E2E-17: ticks and done steps are saved and come back on reload and another device", async ({
+  page,
+  browser,
+}) => {
+  const { email, password } = createPasswordAccount();
+  await signIn(page, email, password);
+  const { id } = createPost();
+  await page.goto(`/p/${id}`);
+
+  const material = page.getByRole("checkbox", { name: /Cotton yarn/ });
+  await material.check();
+  await expect(page.getByText("1 of 1 · saved to your account")).toBeVisible();
+  const firstStep = page.getByRole("button", { name: "Step 1 done" });
+  const saved = page.waitForResponse(
+    (response) => response.url().endsWith(`/api/posts/${id}/progress`) && response.ok(),
+  );
+  await firstStep.click();
+  await saved;
+  await expect(firstStep).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("heading", { name: "Step 1 of 2 · progress saved" })).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: /Cotton yarn/ })).toBeChecked();
+  await expect(page.getByRole("button", { name: "Step 1 done" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  // Undo on a second device, then the first device sees it after a reload.
+  const otherDevice = await browser.newContext();
+  const otherPage = await otherDevice.newPage();
+  await signIn(otherPage, email, password);
+  await otherPage.goto(`/p/${id}`);
+  const otherStep = otherPage.getByRole("button", { name: "Step 1 done" });
+  await expect(otherStep).toHaveAttribute("aria-pressed", "true");
+  const undone = otherPage.waitForResponse(
+    (response) => response.url().endsWith(`/api/posts/${id}/progress`) && response.ok(),
+  );
+  await otherStep.click();
+  await undone;
+  await otherDevice.close();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Step 1 done" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect(page.getByRole("checkbox", { name: /Cotton yarn/ })).toBeChecked();
+});
+
+test("Next step scrolls to the first unfinished step", async ({ page }) => {
+  const { email, password } = createPasswordAccount();
+  await signIn(page, email, password);
+  const { id } = createPost();
+  await page.goto(`/p/${id}`);
+
+  await page.getByRole("button", { name: "Step 1 done" }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await expect(page.getByRole("button", { name: "Step 2 done" })).toBeFocused();
+});
+
+test("signed-out visitors are sent to sign-in when they tick something", async ({ page }) => {
+  const { id } = createPost();
+  await page.goto(`/p/${id}`);
+
+  await page.getByRole("button", { name: "Step 1 done" }).click();
+
+  await expect(page).toHaveURL(`/sign-in?returnTo=${encodeURIComponent(`/p/${id}`)}`);
 });

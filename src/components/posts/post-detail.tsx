@@ -1,8 +1,11 @@
 import { Sparkles } from "lucide-react";
 
 import { Tag } from "@/components/ui/chip";
-import type { Media } from "@/lib/types/media";
-import type { PostCard as PostCardData, PostDetail as PostDetailData } from "@/lib/types/posts";
+import type {
+  PostCard as PostCardData,
+  PostDetail as PostDetailData,
+  PostProgress,
+} from "@/lib/types/posts";
 import { formatMinutes, levelLabel } from "@/lib/utils/post-labels";
 
 import { AttributionBlock } from "./attribution-block";
@@ -12,39 +15,27 @@ import { CreatorRow } from "./creator-row";
 import { PostCard } from "./post-card";
 import { PostGallery } from "./post-gallery";
 import { ShareButton } from "./share-button";
+import { TutorialSections } from "./tutorial-sections";
 
 // Post detail (P1-20, POST-01…10, POST-13; designs `1e` mobile and `2c` web, tablet built from the
 // system). Mobile: full-width media with Back and Share on top, details below, a sticky action bar.
-// Tablet: media above details in a centred column. From 1024px: side by side, media sticky. Optional fields render nothing
-// (POST-10). Materials and steps are read-only until progress arrives (P1-20b). Skill chips link to
-// skill pages once those exist (P1-26).
+// Tablet: media above details in a centred column. From 1024px: side by side, media sticky.
+// Optional fields render nothing (POST-10). Materials and steps carry the user's progress
+// (P1-20b, `TutorialSections`). Skill chips link to skill pages once those exist (P1-26).
 
 /** Two equal buttons side by side, their text wrapping like the design (`2c`). */
 const WRAPPING_ACTION = "h-auto min-h-11 py-2 text-center leading-tight whitespace-normal";
 
-function SectionHeading({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <h2 id={id} className="text-overline text-foreground-secondary uppercase">
-      {children}
-    </h2>
-  );
-}
-
-function StepImage({ media }: { media: Media }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image.
-    <img
-      src={media.url}
-      alt={media.altText ?? ""}
-      width={media.width}
-      height={media.height}
-      loading="lazy"
-      className="h-auto w-full max-w-md rounded-md bg-muted"
-    />
-  );
-}
-
-export function PostDetail({ post, related }: { post: PostDetailData; related: PostCardData[] }) {
+export function PostDetail({
+  post,
+  related,
+  progress,
+}: {
+  post: PostDetailData;
+  related: PostCardData[];
+  /** The signed-in user's ticks; null for signed-out visitors. */
+  progress: PostProgress | null;
+}) {
   const path = `/p/${post.id}`;
   const skills = [...post.skills].sort(
     (a, b) => Number(b.id === post.primarySkillId) - Number(a.id === post.primarySkillId),
@@ -114,45 +105,12 @@ export function PostDetail({ post, related }: { post: PostDetailData; related: P
             </p>
           ) : null}
 
-          {post.materials.length > 0 ? (
-            <section aria-labelledby="post-materials">
-              <SectionHeading id="post-materials">Materials</SectionHeading>
-              <ul className="mt-2.5 divide-y divide-border rounded-card border border-border bg-background">
-                {post.materials.map((material) => (
-                  <li key={material.id} className="px-4 py-3 text-body text-foreground">
-                    {material.name}
-                    {material.note ? (
-                      <span className="text-foreground-secondary"> · {material.note}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {post.steps.length > 0 ? (
-            <section aria-labelledby="post-steps">
-              <SectionHeading id="post-steps">Steps</SectionHeading>
-              <ol className="mt-3 flex flex-col gap-4">
-                {post.steps.map((step, index) => (
-                  <li key={step.position} className="flex gap-3">
-                    <span
-                      aria-hidden
-                      className="flex size-7 shrink-0 items-center justify-center rounded-full border-control border-foreground text-control-sm font-bold text-foreground"
-                    >
-                      {index + 1}
-                    </span>
-                    <div className="flex min-w-0 flex-col gap-2.5 pt-0.5">
-                      <p className="text-body-lg whitespace-pre-line text-foreground">
-                        {step.text}
-                      </p>
-                      {step.media ? <StepImage media={step.media} /> : null}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ) : null}
+          <TutorialSections
+            postId={post.id}
+            materials={post.materials}
+            steps={post.steps}
+            initialProgress={progress}
+          />
 
           {post.attribution ? <AttributionBlock attribution={post.attribution} /> : null}
         </div>

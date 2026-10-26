@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
 import { NotFoundError } from "@/server/lib/errors";
 import { orNotFound } from "@/server/lib/not-found";
-import { getPostDetail, getRelatedPosts } from "@/server/modules/content";
+import { getPostDetail, getPostProgress, getRelatedPosts } from "@/server/modules/content";
 
 type Params = PageProps<"/p/[id]">["params"];
 
@@ -42,11 +42,12 @@ export default function PostPage({ params }: PageProps<"/p/[id]">) {
 async function PostContent({ params }: { params: Params }) {
   const actor = await getActor();
   const { id } = await params;
-  const [post, related] = await Promise.all([
+  const [post, related, progress] = await Promise.all([
     orNotFound(getPostDetail(actor, id)),
     orNotFound(getRelatedPosts(actor, id)),
+    actor ? orNotFound(getPostProgress(actor, id)) : null,
   ]);
-  return <PostDetail post={post} related={related} />;
+  return <PostDetail post={post} related={related} progress={progress} />;
 }
 
 function PostSkeleton() {

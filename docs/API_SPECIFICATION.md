@@ -230,7 +230,7 @@ Undo: same body → `204`.
 `{ "checkedMaterialIds": string[], "completedStepPositions": number[], "updatedAt": string | null }` (empty defaults if none).
 
 ### PUT /api/posts/{postId}/progress — User
-`{ "checkedMaterialIds"?: string[], "completedStepPositions"?: number[] }` — partial replace, idempotent. Ids must belong to the post; positions must exist in the post. → `200` new progress. (POST-11/12)
+`{ "checkedMaterialIds"?: string[], "completedStepPositions"?: number[] }` — partial replace, idempotent. Ids must belong to the post; positions must exist in the post (`400` with field errors). → `200` new progress. Signed out → `401`; draft/unpublished → `404` (admins excepted). No rate limit defined (SECURITY §6); the web client sends one request at a time. (POST-11/12, P1-20b)
 
 ### GET /api/posts/{postId}/related — User*
 `{ items: PostCard[] }` — up to 12 published posts sharing skills, ordered by most shared skills, then same primary skill, then newest (CONFIRMED, P1-15). No pagination.

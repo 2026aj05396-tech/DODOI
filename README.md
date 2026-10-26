@@ -84,6 +84,7 @@ Read the documents in this order before writing any code.
 | Admin content rules | Up to 10 media per post, images and videos mixed; any skill (predefined too) can be hidden; published posts editable if they still meet the publish rules; attribution rules incl. stock source link | CONFIRMED |
 | Seed importer | File is the source of truth (re-run updates the post); per-file `publish` flag; skills by slug; seed content kept outside git (`pnpm seed:content <folder>`) | CONFIRMED (P1-18) |
 | Post detail (P1-20) | Save "coming soon" until P1-25; signed-out visitors get a slim bar (Log in / Sign up) instead of the app shell; Share is an icon (Web Share API, copy-link fallback); several media: swipe + dots on mobile, arrows + thumbnails from 768px | CONFIRMED |
+| Tutorial progress (P1-20b) | Signed-out visitors see the checklist and steps; tapping sends them to sign-in and back to the post; "Next step" sits in the steps header (hidden when all steps are done) | CONFIRMED |
 | Admin skill create/rename/delete | Requested by PO (2026-10-26), **on hold**: needs delete rule for skills in use, editable fields (name/slug/accent) and type of new skills. Today admin can edit editorial fields, hide/show and set related skills | OPEN |
 | Admin onboarding | Admins skip onboarding: `/` and `/onboarding` redirect them to `/admin` (age check still applies) | CONFIRMED |
 | Post lists | Related posts: 12, most shared skills → same primary → newest; skill pages newest first; hidden/deactivated creators: post stays, creator row not shown | CONFIRMED |
