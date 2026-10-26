@@ -210,16 +210,16 @@ type FeedItem =
   | { kind: "post"; post: PostCard }
   | { kind: "skill_suggestion"; skill: SkillSummary; pitch: string; beginnerProjectCount: number; coverMedia: Media | null };
 ```
-`skill_suggestion` placement per FEED-14 (PROPOSED: first item on page 1, max one per page; never a skill already in the actor's interests or one they dismissed).
+`skill_suggestion` placement per FEED-14 (CONFIRMED: first item on page 1 of a `for-you` session only; never a skill already in the actor's interests). Errors: `400 INVALID_FILTER` (skill chip not among the interests), `400 FEED_SESSION_EXPIRED` (cursor of an expired or another user's session — start again without a cursor).
 
 ### GET /api/feed/filters — User
-Chips for the filter bar: `{ items: [{ key: "for-you", label: "For you" }, { key: "skill:crochet", label: "Crochet" }, …, { key: "new-to-you", label: "New to you" }] }`.
+Chips for the filter bar (up to 5 interests, most recently added first): `{ items: [{ key: "for-you", label: "For you" }, { key: "skill:crochet", label: "Crochet" }, …, { key: "new-to-you", label: "New to you" }] }`.
 
 ### GET /api/feed/suggestion — User
 Single `skill_suggestion` for the desktop right rail (`2b`), or `204` if none.
 
 ### POST /api/feed/feedback — User
-`{ "postId": "…", "type": "NOT_INTERESTED" }` → `204` (idempotent).
+`{ "postId": "…", "type": "NOT_INTERESTED" }` → `204` (idempotent; `404` for unpublished posts). The post never appears in the feed again and its skills weigh −2 for 30 days.
 ### DELETE /api/feed/feedback — User
 Undo: same body → `204`.
 

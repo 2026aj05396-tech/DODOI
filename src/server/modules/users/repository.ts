@@ -273,12 +273,31 @@ export async function findUserSkillRows(userId: string): Promise<UserSkillRow[]>
   });
 }
 
-/** Replaces the user's whole skill set in one transaction. */
+/**
+ * Replaces the user's whole skill set in one transaction. Skills that stay keep their original
+ * `createdAt`, so "most recently added interests" (feed chips, FEED-13) survive later edits.
+ */
 export async function replaceUserSkillRows(userId: string, rows: UserSkillRow[]): Promise<void> {
-  await db.$transaction([
-    db.userSkill.deleteMany({ where: { userId } }),
-    db.userSkill.createMany({ data: rows.map((row) => ({ ...row, userId })) }),
-  ]);
+  await db.$transaction(async (tx) => {
+    const existing = await tx.userSkill.findMany({
+      where: { userId },
+      select: { skillId: true, createdAt: true },
+    });
+    const addedAt = new Map(existing.map((row) => [row.skillId, row.createdAt]));
+    await tx.userSkill.deleteMany({ where: { userId } });
+    await tx.userSkill.createMany({
+      data: rows.map((row) => ({ ...row, userId, createdAt: addedAt.get(row.skillId) })),
+    });
+  });
+}
+
+/** The user's interests with their level, most recently added first (feed, P1-21). */
+export async function findInterestRows(userId: string) {
+  return db.userSkill.findMany({
+    where: { userId, isInterest: true },
+    orderBy: [{ createdAt: "desc" }, { skillId: "asc" }],
+    select: { skillId: true, level: true },
+  });
 }
 
 export async function findOnboardingRow(userId: string) {

@@ -107,6 +107,52 @@ export async function findRelatedCandidates(postId: string, skillIds: string[], 
   });
 }
 
+/** Published posts for the feed to rank (P1-21), newest first, without `excludeIds`. */
+export async function findFeedCandidates(options: {
+  excludeIds: string[];
+  skillId?: string;
+  take: number;
+}) {
+  return db.post.findMany({
+    where: {
+      ...PUBLISHED,
+      ...(options.excludeIds.length > 0 ? { id: { notIn: options.excludeIds } } : {}),
+      ...(options.skillId ? { skills: { some: { skillId: options.skillId } } } : {}),
+      // Cards need a cover (P1-15); posts without media never reach a page.
+      media: { some: {} },
+    },
+    orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+    take: options.take,
+    select: {
+      id: true,
+      publishedAt: true,
+      difficulty: true,
+      skills: { select: { skillId: true, isPrimary: true } },
+    },
+  });
+}
+
+/** Published beginner posts (Curious or Beginner) per skill, and how many take ≤ `maxMinutes`. */
+export async function countBeginnerPosts(skillIds: string[], maxMinutes: number) {
+  const where = {
+    skillId: { in: skillIds },
+    post: { ...PUBLISHED, difficulty: { in: ["CURIOUS" as const, "BEGINNER" as const] } },
+  };
+  const [all, quick] = await Promise.all([
+    db.postSkill.groupBy({ by: ["skillId"], where, _count: { _all: true } }),
+    db.postSkill.groupBy({
+      by: ["skillId"],
+      where: { ...where, post: { ...where.post, estimatedMinutes: { lte: maxMinutes } } },
+      _count: { _all: true },
+    }),
+  ]);
+  return { all, quick };
+}
+
+export async function isPublishedPost(id: string): Promise<boolean> {
+  return (await db.post.count({ where: { id, ...PUBLISHED } })) > 0;
+}
+
 const themeSelect = {
   id: true,
   slug: true,

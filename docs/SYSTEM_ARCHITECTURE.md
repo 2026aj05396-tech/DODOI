@@ -157,27 +157,27 @@ Each module folder: `index.ts` (public API), `service.ts`, `repository.ts` (Pris
 
 ## 7. Feed Ranking (Phase 1)
 
-Rules-based, computed per request in `server/modules/feed`. All weights are **PROPOSED** constants in one config file for tuning.
+Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the PO (2026-10-26, P1-21)**; every number is a constant in `src/server/modules/feed/config.ts` for tuning.
 
 **Candidate pool:** published posts, excluding: posts the user hid ("not interested"), posts already served in this feed session, (P2: blocked users' posts).
 
 **Score** = `interestMatch` + `levelFit` + `freshness` + `saveAffinity` − `negativeFeedbackPenalty`, then **diversity re-ranking**.
 
-| Signal | Rule (PROPOSED) |
+| Signal | Rule (CONFIRMED) |
 |---|---|
 | interestMatch | +3 per post skill in user's interests |
-| levelFit | +1 if post difficulty ≤ one step above user's level for that skill |
+| levelFit | +1 if post difficulty ≤ one step above user's level for the post's main skill; no level given = Curious; posts without difficulty get 0 |
 | freshness | decays with post age (e.g. +2 if < 7 days, +1 if < 30 days) |
-| saveAffinity | +1 per post skill that appears in user's recent saves |
-| negativeFeedbackPenalty | −2 per post skill the user marked "not interested" recently |
-| Discovery quota | ≥ 20% of each page drawn from skills outside the user's interests |
+| saveAffinity | +1 per post skill that appears in user's saves from the last 30 days (0 until saving exists, P1-24) |
+| negativeFeedbackPenalty | −2 per post skill of posts the user marked "not interested" in the last 30 days (those posts are hidden for good) |
+| Discovery quota | ≥ 20% of each For you page drawn from posts with no skill among the user's interests (when such posts exist), replacing the lowest-ranked interest posts |
 | Diversity | no more than 2 consecutive items with the same primary skill |
 
 **Filters (FEED-13):** `for-you` = full ranking above · `skill:<slug>` = candidates restricted to that skill, same ranking without discovery quota · `new-to-you` = candidates restricted to skills outside the user's interests, ranked by freshness + level fit.
 
-**Skill suggestion (FEED-14, PROPOSED rules):** pick an ACTIVE skill not in the user's interests, not dismissed, preferring skills related (SkillRelation) to the user's interests and with ≥ 1 published beginner post; requires `Skill.pitch`. Inserted as first item of page 1.
+**Skill suggestion (FEED-14, CONFIRMED):** pick an ACTIVE skill not in the user's interests, with `Skill.pitch` and ≥ 1 published beginner (Curious/Beginner) post; skills related (SkillRelation) to the user's interests first, then most beginner projects under an hour, then name. Inserted as the first item of page 1 of a **For you** session only (not on skill chips or New to you); desktop shows it in the right rail (`/api/feed/suggestion`). No dismiss in P1. Candidate pool: the newest 1,000 published posts with media.
 
-**Pagination & no-repeat (FEED-09):** a `feedSessionId` is created on first page load (returned to client); served post IDs are recorded server-side (FeedImpression table, see schema) and excluded on subsequent pages. Cursor encodes session ID + page index. Session expiry PROPOSED: 24h.
+**Pagination & no-repeat (FEED-09):** a `feedSessionId` is created on first page load (returned to client); served post IDs are recorded server-side (FeedImpression table, see schema) and excluded on subsequent pages. Cursor encodes session ID + page index. Session expiry CONFIRMED: 24h; an expired or foreign session answers `400 FEED_SESSION_EXPIRED` and the client starts again.
 
 ## 8. Media Architecture
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import type { ExperienceLevel } from "@/lib/schemas/me";
 import type { PostPageQuery } from "@/lib/schemas/posts";
 import type { Paginated } from "@/lib/types/api";
 import type { Attribution, PostCard, PostDetail, ThemeSummary } from "@/lib/types/posts";
@@ -15,6 +16,8 @@ import { getCreatorProfiles } from "@/server/modules/users";
 
 import { toMedia } from "./media-service";
 import {
+  countBeginnerPosts,
+  findFeedCandidates,
   findPostDetail,
   findPublishedCards,
   findPublishedCardsForSkill,
@@ -22,6 +25,7 @@ import {
   findPublishedThemes,
   findRelatedCandidates,
   findThemePostIds,
+  isPublishedPost,
   updatePostSearchVector,
   type PostCardRow,
 } from "./post-repository";
@@ -233,4 +237,63 @@ export async function getTheme(
 /** Keeps search in step with a post's text and skills; the admin editor calls it on save (P1-16). */
 export async function refreshPostSearchIndex(postId: string): Promise<void> {
   await updatePostSearchVector(postId);
+}
+
+// --- For the feed (P1-21) -------------------------------------------------------------------
+
+export type FeedCandidate = {
+  id: string;
+  publishedAt: Date;
+  difficulty: ExperienceLevel | null;
+  skillIds: string[];
+  primarySkillId: string | null;
+};
+
+/** Published posts with a cover, newest first, for the feed to rank. */
+export async function getFeedCandidates(options: {
+  excludeIds: string[];
+  skillId?: string;
+  take: number;
+}): Promise<FeedCandidate[]> {
+  const rows = await findFeedCandidates(options);
+  return rows.map((row) => ({
+    id: row.id,
+    publishedAt: row.publishedAt ?? new Date(0),
+    difficulty: row.difficulty,
+    skillIds: row.skills.map((skill) => skill.skillId),
+    primarySkillId: row.skills.find((skill) => skill.isPrimary)?.skillId ?? null,
+  }));
+}
+
+/** Cards for `ids` in the same order; unpublished posts and posts without media are dropped. */
+export async function getPostCards(
+  actor: Actor,
+  ids: string[],
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<PostCard[]> {
+  if (ids.length === 0) return [];
+  return toCards(actor, await findPublishedCards(ids), provider);
+}
+
+/**
+ * Beginner projects per skill (FEED-14): published Curious/Beginner posts (`all`) and those
+ * taking at most `maxMinutes` (`quick`, the "3 beginner projects under an hour" line).
+ */
+export async function getBeginnerProjectCounts(
+  skillIds: string[],
+  maxMinutes: number,
+): Promise<Map<string, { all: number; quick: number }>> {
+  const counts = new Map<string, { all: number; quick: number }>();
+  if (skillIds.length === 0) return counts;
+  const { all, quick } = await countBeginnerPosts(skillIds, maxMinutes);
+  for (const row of all) counts.set(row.skillId, { all: row._count._all, quick: 0 });
+  for (const row of quick) {
+    const entry = counts.get(row.skillId);
+    if (entry) entry.quick = row._count._all;
+  }
+  return counts;
+}
+
+export async function isPostPublished(id: string): Promise<boolean> {
+  return isPublishedPost(id);
 }

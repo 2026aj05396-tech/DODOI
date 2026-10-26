@@ -1,12 +1,17 @@
 import "server-only";
 
-import type { ReplaceUserSkillsInput } from "@/lib/schemas/me";
+import type { ExperienceLevel, ReplaceUserSkillsInput } from "@/lib/schemas/me";
 import type { UserSkillItem, UserSkills } from "@/lib/types/me";
 import type { Actor } from "@/server/lib/actor";
 import { UnauthenticatedError, ValidationError } from "@/server/lib/errors";
 import { getActiveSkillSummaries } from "@/server/modules/skills";
 
-import { findUserSkillRows, replaceUserSkillRows, type UserSkillRow } from "./repository";
+import {
+  findInterestRows,
+  findUserSkillRows,
+  replaceUserSkillRows,
+  type UserSkillRow,
+} from "./repository";
 
 // The signed-in user's skills: interests, can help, want to learn, level (ONB-02…06, ONB-08).
 
@@ -64,4 +69,14 @@ export async function replaceMySkills(
 
   await replaceUserSkillRows(userId, rows);
   return getMySkills(actor);
+}
+
+/**
+ * The user's interests (skill id and level), most recently added first, for the feed (P1-21).
+ * Hidden skills are included; the feed only uses them to match posts.
+ */
+export async function getInterestProfile(
+  userId: string,
+): Promise<{ skillId: string; level: ExperienceLevel | null }[]> {
+  return findInterestRows(userId);
 }

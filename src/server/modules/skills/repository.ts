@@ -116,6 +116,20 @@ export async function findActiveSkillsByIds(ids: string[]): Promise<SkillSummary
   });
 }
 
+/** Active skills with a pitch, except `excludeIds`, with their related skills (FEED-14). */
+export async function findPitchedSkills(excludeIds: string[]) {
+  return db.skill.findMany({
+    where: { status: "ACTIVE", pitch: { not: null }, id: { notIn: excludeIds } },
+    orderBy: { name: "asc" },
+    select: {
+      ...summarySelect,
+      pitch: true,
+      coverMediaId: true,
+      relatedFrom: { select: { toSkillId: true } },
+    },
+  });
+}
+
 export async function findSkillStatuses(ids: string[]) {
   return db.skill.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } });
 }

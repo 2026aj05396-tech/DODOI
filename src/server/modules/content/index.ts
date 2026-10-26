@@ -12,13 +12,18 @@ export {
 } from "./media-service";
 export { checkDeclaredUpload, checkUploadedAsset, limitsFor } from "./media-rules";
 export {
+  getBeginnerProjectCounts,
+  getFeedCandidates,
+  getPostCards,
   getPostDetail,
   getRelatedPosts,
   getTheme,
+  isPostPublished,
   listSkillPosts,
   listThemes,
   refreshPostSearchIndex,
   RELATED_POSTS_LIMIT,
+  type FeedCandidate,
 } from "./post-service";
 export {
   createAdminPost,

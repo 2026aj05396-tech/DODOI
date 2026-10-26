@@ -31,6 +31,7 @@ import { canCreateCustomSkill } from "./policies";
 import {
   findActiveSkillDetailBySlug,
   findActiveSkillsByIds,
+  findPitchedSkills,
   findSkillsBySlugs,
   findSkillStatuses,
   findSkillByNormalizedName,
@@ -211,4 +212,29 @@ export async function getSkillStatuses(ids: string[]): Promise<Map<string, "ACTI
   if (ids.length === 0) return new Map();
   const rows = await findSkillStatuses(ids);
   return new Map(rows.map((row) => [row.id, row.status]));
+}
+
+export type SkillSuggestionCandidate = {
+  skill: SkillSummary;
+  pitch: string;
+  coverMediaId: string | null;
+  /** Related (SkillRelation) to one of the user's interests. */
+  isRelated: boolean;
+};
+
+/**
+ * Skills the feed may suggest (FEED-14): active, with an admin-written pitch, not among
+ * `interestIds`. The feed adds the beginner-post rule and picks one.
+ */
+export async function getSuggestionCandidates(
+  interestIds: string[],
+): Promise<SkillSuggestionCandidate[]> {
+  const interests = new Set(interestIds);
+  const rows = await findPitchedSkills(interestIds);
+  return rows.map((row) => ({
+    skill: toSummary(row),
+    pitch: row.pitch ?? "",
+    coverMediaId: row.coverMediaId,
+    isRelated: row.relatedFrom.some((relation) => interests.has(relation.toSkillId)),
+  }));
 }

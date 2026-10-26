@@ -12,6 +12,8 @@ export {
   getSkillBySlug,
   getSkillsBySlugs,
   getSkillStatuses,
+  getSuggestionCandidates,
+  type SkillSuggestionCandidate,
   listSkills,
   resolveCustomSkill,
 } from "./service";

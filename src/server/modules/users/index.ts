@@ -7,7 +7,7 @@ export {
   type CreatorProfile,
 } from "./creators";
 export { completeOnboarding, getOnboardingState, setOnboardingStep } from "./onboarding";
-export { getMySkills, replaceMySkills } from "./user-skills";
+export { getInterestProfile, getMySkills, replaceMySkills } from "./user-skills";
 export {
   changePassword,
   PASSWORD_CHANGE_RATE_LIMIT,
