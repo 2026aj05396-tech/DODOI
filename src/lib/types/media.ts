@@ -10,6 +10,11 @@ export type Media = {
   altText: string | null;
   /** Video only: a still from the first frame. */
   posterUrl?: string;
+  /**
+   * Smaller copies of the still (the image, or a video's poster) for `<img srcSet>`: widths from
+   * 320px up to the original's, at most 1920px. Pair it with `sizes` for the slot it fills.
+   */
+  srcSet: string;
   /** Video only. */
   durationSec?: number;
 };

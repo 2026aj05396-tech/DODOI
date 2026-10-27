@@ -124,6 +124,10 @@ describe("media", () => {
         width: 1600,
         height: 1200,
         altText: "Granny square",
+        // Scaled copies below the 1600px original, then the original itself.
+        srcSet: [320, 640, 960, 1280, 1600]
+          .map((width) => `https://cdn.test/image/w${width}/${POSTS}/a ${width}w`)
+          .join(", "),
       });
       expect(await db.mediaAsset.findUniqueOrThrow({ where: { id: media.id } })).toMatchObject({
         bytes: 2 * MB,
@@ -148,6 +152,10 @@ describe("media", () => {
         posterUrl: `https://cdn.test/poster/${POSTS}/v.jpg`,
         durationSec: 42,
       });
+      // The poster is the still for a video, up to the original's 1600px.
+      expect(media.srcSet.split(", ").at(-1)).toBe(
+        `https://cdn.test/poster/w1600/${POSTS}/v.jpg 1600w`,
+      );
     });
 
     it.each([

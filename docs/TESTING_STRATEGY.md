@@ -121,6 +121,20 @@ Defined now so it is not forgotten; implemented in P4.
 
 - Lighthouse (mobile profile) on landing, feed, post detail during P1-31; track LCP, CLS, INP proxy (TBT).
 - Real-user CWV monitoring depends on analytics decision (OD-20).
+- **P1-31 baseline (2026-10-27, lab, production build, real Cloudinary images; Moto-G-sized viewport, 4× CPU slowdown, 150 ms RTT, 1.6 Mbps; median of 3):**
+
+  | Page | LCP | CLS | TBT | JS transferred |
+  |---|---|---|---|---|
+  | Landing `/` | 0.82 s (h1) | 0.003 | 66 ms | 240 KB |
+  | Post detail (1 image, 1200px original) | 0.90 s (cover image, served at 960px) | 0.001 | 61 ms | 271 KB |
+  | Sign in | 0.82 s | 0.000 | 60 ms | 245 KB |
+
+  Feed needs a signed-in account: PO measures it with Lighthouse (mobile, production build). Images were sent at full upload size before P1-31; every content image now has a Cloudinary `srcSet` (320–1920px, `c_limit`) and `sizes` for its slot; avatars are delivered at 256px.
+
+## 8b. Accessibility Checks (P1-31)
+
+- `tests/e2e/accessibility.spec.ts`: axe (WCAG 2.0/2.1/2.2 A + AA tags) on every Phase 1 screen — signed out, onboarding, signed in, admin, theme — at 390, 834 and 1280px; serious/critical violations fail. Plus a keyboard sweep (30 Tab stops on feed, explore, post, saved, account at 390 and 1280): every focused element visible and showing the focus ring.
+- Manual keyboard walkthrough (PO): sign in → onboarding → feed (save, Not interested, Load more) → post (gallery arrows, tick a step, collection picker, Escape) → saved → settings, using only Tab/Shift+Tab/Enter/Space/Escape/arrows.
 
 ## 9. Running Tests
 

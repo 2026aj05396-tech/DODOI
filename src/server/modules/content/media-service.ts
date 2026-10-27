@@ -93,6 +93,22 @@ function toError(problem: MediaProblem): AppError {
   return new ValidationError(problem.message, { code: "MEDIA_REJECTED" });
 }
 
+/** Widths offered in `srcSet` (P1-31): phones at 1x–3x up to a full-width desktop gallery. */
+const RESPONSIVE_WIDTHS = [320, 640, 960, 1280, 1920];
+/** Avatars are shown at most 128 CSS pixels wide; 256 covers 2x screens. */
+const AVATAR_WIDTH = 256;
+
+/** `srcSet` for a stored still: each width below the original, then the original (≤ 1920px). */
+function stillSrcSet(row: MediaRow, provider: MediaProvider): string {
+  const largest = Math.min(row.width, RESPONSIVE_WIDTHS.at(-1) ?? row.width);
+  const widths = [...RESPONSIVE_WIDTHS.filter((width) => width < largest), largest];
+  const urlFor = (width: number) =>
+    row.type === "VIDEO"
+      ? provider.posterUrl(row.publicId, { width })
+      : provider.deliveryUrl(row.publicId, "image", { width });
+  return widths.map((width) => `${urlFor(width)} ${width}w`).join(", ");
+}
+
 export function toMedia(row: MediaRow, provider: MediaProvider = defaultProvider): Media {
   const resourceType = resourceTypeOf(row.type);
   const media: Media = {
@@ -102,6 +118,7 @@ export function toMedia(row: MediaRow, provider: MediaProvider = defaultProvider
     width: row.width,
     height: row.height,
     altText: row.altText,
+    srcSet: stillSrcSet(row, provider),
   };
   if (row.type === "VIDEO") {
     media.posterUrl = provider.posterUrl(row.publicId);
@@ -243,7 +260,7 @@ export async function getOwnAvatar(
   return toMedia(row, provider);
 }
 
-/** Delivery URL for a stored avatar (profiles and creator rows). */
+/** Delivery URL for a stored avatar (profiles and creator rows), scaled for its small slot. */
 export function avatarUrl(publicId: string, { provider = defaultProvider }: ProviderOption = {}) {
-  return provider.deliveryUrl(publicId, "image");
+  return provider.deliveryUrl(publicId, "image", { width: AVATAR_WIDTH });
 }

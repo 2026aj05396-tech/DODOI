@@ -41,6 +41,8 @@ export type ProviderAsset = {
   durationSec: number | null;
 };
 
+export type DeliveryOptions = { width?: number };
+
 export interface MediaProvider {
   signUpload(params: SignUploadParams): SignedUploadParams;
   /** Uploads from the server and returns the provider's metadata for the stored file. */
@@ -48,8 +50,11 @@ export interface MediaProvider {
   /** Null when no such file exists. */
   getAsset(publicId: string, resourceType: ResourceType): Promise<ProviderAsset | null>;
   deleteAsset(publicId: string, resourceType: ResourceType): Promise<void>;
-  /** Delivery URL with automatic format and quality, which also drops EXIF/location metadata. */
-  deliveryUrl(publicId: string, resourceType: ResourceType): string;
+  /**
+   * Delivery URL with automatic format and quality, which also drops EXIF/location metadata.
+   * With `width`, scaled down to at most that many pixels wide (never up).
+   */
+  deliveryUrl(publicId: string, resourceType: ResourceType, options?: DeliveryOptions): string;
   /** Video only: a still image from the first frame. */
-  posterUrl(publicId: string): string;
+  posterUrl(publicId: string, options?: DeliveryOptions): string;
 }

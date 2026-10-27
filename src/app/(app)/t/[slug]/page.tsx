@@ -38,9 +38,11 @@ async function ThemeContent({ params }: { params: Params }) {
     <>
       <header className="relative overflow-hidden rounded-card">
         {theme.coverMedia ? (
-          // eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image.
+          // eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet.
           <img
             src={theme.coverMedia.url}
+            srcSet={theme.coverMedia.srcSet}
+            sizes="(min-width: 1024px) 960px, 100vw"
             alt=""
             className="absolute inset-0 size-full object-cover"
           />

@@ -21,6 +21,9 @@ function frameRatio(media: Media[]): number {
   return Math.min(MAX_RATIO, Math.max(MIN_RATIO, first.width / first.height));
 }
 
+/** Full width on phones, a centred column on tablets, half the screen beside details from 1024px. */
+const GALLERY_SIZES = "(min-width: 1024px) 50vw, (min-width: 768px) 672px, 100vw";
+
 function Slide({
   media,
   index,
@@ -60,9 +63,11 @@ function Slide({
             aria-label={media.altText ? `Play video: ${media.altText}` : "Play video"}
             className="group relative size-full"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image. */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet. */}
             <img
               src={media.posterUrl}
+              srcSet={media.srcSet}
+              sizes={GALLERY_SIZES}
               alt=""
               width={media.width}
               height={media.height}
@@ -79,9 +84,11 @@ function Slide({
   }
   return (
     <div role="group" aria-roledescription="slide" aria-label={label} className="size-full">
-      {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image. */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet. */}
       <img
         src={media.url}
+        srcSet={media.srcSet}
+        sizes={GALLERY_SIZES}
         alt={media.altText ?? ""}
         width={media.width}
         height={media.height}
@@ -221,9 +228,11 @@ export function PostGallery({
                     : "border-transparent opacity-75 hover:opacity-100",
                 )}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image. */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet. */}
                 <img
                   src={item.posterUrl ?? item.url}
+                  srcSet={item.srcSet}
+                  sizes="64px"
                   alt=""
                   loading="lazy"
                   className="size-full object-cover"

@@ -97,9 +97,11 @@ export function MediaField({
               className="grid grid-cols-[80px_minmax(0,1fr)] gap-3 rounded-md border border-border-faint bg-background p-3 md:grid-cols-[96px_minmax(0,1fr)_auto]"
             >
               <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image. */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet. */}
                 <img
                   src={media.posterUrl ?? media.url}
+                  srcSet={media.srcSet}
+                  sizes="96px"
                   alt=""
                   className="aspect-square w-full rounded-md bg-muted object-cover"
                 />

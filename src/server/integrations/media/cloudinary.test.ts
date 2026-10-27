@@ -60,6 +60,15 @@ describe("createCloudinaryProvider", () => {
     );
   });
 
+  it("scales down to a width without ever scaling up (c_limit)", () => {
+    expect(provider.deliveryUrl("dodoi/local/posts/a", "image", { width: 640 })).toBe(
+      "https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,c_limit,w_640/dodoi/local/posts/a",
+    );
+    expect(provider.posterUrl("dodoi/local/posts/v", { width: 320 })).toBe(
+      "https://res.cloudinary.com/demo/video/upload/so_0,f_auto,q_auto,c_limit,w_320/dodoi/local/posts/v.jpg",
+    );
+  });
+
   describe("uploadFile", () => {
     afterEach(() => {
       vi.unstubAllGlobals();

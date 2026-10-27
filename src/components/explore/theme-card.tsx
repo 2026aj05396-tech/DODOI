@@ -27,9 +27,11 @@ export function ThemeCard({
       )}
     >
       {theme.coverMedia ? (
-        // eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image.
+        // eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet.
         <img
           src={theme.coverMedia.url}
+          srcSet={theme.coverMedia.srcSet}
+          sizes="180px"
           alt=""
           className="absolute inset-0 size-full object-cover"
         />

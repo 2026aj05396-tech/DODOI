@@ -2,7 +2,7 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
-import type { MediaProvider, ProviderAsset, ResourceType } from "./types";
+import type { DeliveryOptions, MediaProvider, ProviderAsset, ResourceType } from "./types";
 
 // Cloudinary over its REST APIs (no SDK): signed uploads straight from the browser
 // (https://cloudinary.com/documentation/upload_images#authenticated_requests), signed uploads from
@@ -26,6 +26,11 @@ type CloudinaryConfig = {
   /** Admin API base; E2E runs point it at a local mock (uploads still name the real API). */
   adminApiBase?: string;
 };
+
+/** `c_limit` scales down to the width but never up, so small originals are sent as they are. */
+function scaling({ width }: DeliveryOptions): string {
+  return width ? `,c_limit,w_${width}` : "";
+}
 
 /** Cloudinary's signature: the sorted `key=value` pairs joined with `&`, plus the secret, SHA-1. */
 export function signParams(params: Record<string, string | number>, apiSecret: string): string {
@@ -128,12 +133,12 @@ export function createCloudinaryProvider(config: CloudinaryConfig): MediaProvide
       if (!response.ok) throw new Error(`Cloudinary delete failed (${response.status})`);
     },
 
-    deliveryUrl(publicId, resourceType) {
-      return `${DELIVERY_BASE}/${config.cloudName}/${resourceType}/upload/f_auto,q_auto/${publicId}`;
+    deliveryUrl(publicId, resourceType, options = {}) {
+      return `${DELIVERY_BASE}/${config.cloudName}/${resourceType}/upload/f_auto,q_auto${scaling(options)}/${publicId}`;
     },
 
-    posterUrl(publicId) {
-      return `${DELIVERY_BASE}/${config.cloudName}/video/upload/so_0,f_auto,q_auto/${publicId}.jpg`;
+    posterUrl(publicId, options = {}) {
+      return `${DELIVERY_BASE}/${config.cloudName}/video/upload/so_0,f_auto,q_auto${scaling(options)}/${publicId}.jpg`;
     },
   };
 }

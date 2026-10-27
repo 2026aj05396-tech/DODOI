@@ -15,9 +15,11 @@ function Slot({ index, collection }: { index: number; collection: CollectionSumm
   if (!media)
     return <PatternTile accent={FILLERS[index] ?? "sky"} className="size-full rounded-none" />;
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image.
+    // eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet.
     <img
       src={media.posterUrl ?? media.url}
+      srcSet={media.srcSet}
+      sizes={index === 0 ? "240px" : "120px"}
       alt=""
       loading="lazy"
       className="size-full bg-muted object-cover"

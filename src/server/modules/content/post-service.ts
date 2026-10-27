@@ -14,7 +14,7 @@ import { getSavedPostIds } from "@/server/modules/collections";
 import { getActiveSkillSummaries, getSkillBySlug } from "@/server/modules/skills";
 import { getCreatorProfiles } from "@/server/modules/users";
 
-import { toMedia } from "./media-service";
+import { avatarUrl, toMedia } from "./media-service";
 import {
   countBeginnerPosts,
   countPublishedPostsBySkill,
@@ -93,7 +93,7 @@ async function toCards(
               username: creator.username,
               displayName: creator.displayName,
               avatarUrl: creator.avatarPublicId
-                ? provider.deliveryUrl(creator.avatarPublicId, "image")
+                ? avatarUrl(creator.avatarPublicId, { provider })
                 : null,
             }
           : null,

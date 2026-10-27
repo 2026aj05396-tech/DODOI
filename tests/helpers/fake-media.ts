@@ -55,7 +55,9 @@ export function createFakeMediaProvider(): MediaProvider & {
       assets.delete(publicId);
       deleted.push(publicId);
     },
-    deliveryUrl: (publicId, resourceType) => `https://cdn.test/${resourceType}/${publicId}`,
-    posterUrl: (publicId) => `https://cdn.test/poster/${publicId}.jpg`,
+    deliveryUrl: (publicId, resourceType, { width } = {}) =>
+      `https://cdn.test/${resourceType}/${width ? `w${width}/` : ""}${publicId}`,
+    posterUrl: (publicId, { width } = {}) =>
+      `https://cdn.test/poster/${width ? `w${width}/` : ""}${publicId}.jpg`,
   };
 }

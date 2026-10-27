@@ -103,9 +103,11 @@ export function PostList({ initialPage }: { initialPage: Paginated<AdminPostSumm
                 className="grid grid-cols-[64px_minmax(0,1fr)] items-center gap-3 p-3 hover:bg-muted md:grid-cols-[72px_minmax(0,1fr)_140px_120px_120px] md:gap-4 md:px-4"
               >
                 {post.coverMedia ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image.
+                  // eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet.
                   <img
                     src={post.coverMedia.posterUrl ?? post.coverMedia.url}
+                    srcSet={post.coverMedia.srcSet}
+                    sizes="72px"
                     alt=""
                     className="aspect-square w-full rounded-md bg-muted object-cover"
                   />

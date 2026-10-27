@@ -40,9 +40,11 @@ function SectionHeading({ id, children }: { id: string; children: React.ReactNod
 
 function StepImage({ media }: { media: Media }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- Cloudinary sizes the image.
+    // eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet.
     <img
       src={media.url}
+      srcSet={media.srcSet}
+      sizes="(min-width: 768px) 448px, 100vw"
       alt={media.altText ?? ""}
       width={media.width}
       height={media.height}

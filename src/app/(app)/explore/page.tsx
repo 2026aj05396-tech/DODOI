@@ -110,7 +110,12 @@ async function ExploreContent() {
           </h2>
           <ComingSoonBadge />
         </div>
-        <ul className="flex scrollbar-none gap-2 overflow-x-auto rounded-card border-control border-dashed border-border-faint p-2.5">
+        {/* Focusable so keyboard users can scroll the row when it overflows (WCAG 2.1.1). */}
+        <ul
+          tabIndex={0}
+          aria-labelledby="explore-use"
+          className="flex scrollbar-none gap-2 overflow-x-auto rounded-card border-control border-dashed border-border-faint p-2.5"
+        >
           {USE_WHAT_YOU_HAVE.map((item) => (
             <li
               key={item}
