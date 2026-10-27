@@ -5,5 +5,6 @@ export {
   getFeedFilters,
   getSkillSuggestion,
   markNotInterested,
+  purgeExpiredFeedSessions,
   undoNotInterested,
 } from "./service";

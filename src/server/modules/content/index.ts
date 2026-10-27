@@ -35,6 +35,8 @@ export {
   createAdminTheme,
   deleteAdminPost,
   deleteAdminTheme,
+  deleteContentOfUser,
+  deleteUnusedMedia,
   getAdminPost,
   getAdminTheme,
   listAdminPosts,

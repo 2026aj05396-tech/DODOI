@@ -144,8 +144,9 @@ Routing (P1-11): after sign-in or sign-up, `/` and every signed-in page send a u
 ### F-14 Account deletion (AUTH-08)
 
 1. `[Settings] → Account → Delete account`.
-2. Explanation of what is deleted; re-authentication required (password or Google).
-3. Confirm → account deactivated, signed out → confirmation "Your account will be deleted on {date}. Sign in before then to cancel." → hard delete after 14 days (OD-22).
+2. `/settings/account/delete`: explanation of what is deleted; re-authentication required (password, or for Google-only accounts *Confirm with Google*, which signs in again and returns here).
+3. Confirm → account deactivated, signed out → confirmation "We'll delete it on {date}. Changed your mind? Sign in before then to cancel." → hard delete after 14 days (OD-22).
+4. Signing in during the grace period → `/account-deletion` only: *Cancel deletion* (→ feed) or *Sign out*.
 
 ### F-15 Admin: manage seed content (ADM-04…06)
 

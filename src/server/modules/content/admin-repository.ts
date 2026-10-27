@@ -255,6 +255,16 @@ export async function deletePostReturningMedia(id: string, tx: Tx): Promise<stri
   ];
 }
 
+export async function findPostIdsByAuthor(authorId: string, tx: Tx): Promise<string[]> {
+  const posts = await tx.post.findMany({ where: { authorId }, select: { id: true } });
+  return posts.map((post) => post.id);
+}
+
+export async function findMediaIdsByOwner(ownerId: string, tx: Tx): Promise<string[]> {
+  const media = await tx.mediaAsset.findMany({ where: { ownerId }, select: { id: true } });
+  return media.map((item) => item.id);
+}
+
 /** Of `ids`, the media no longer used anywhere (posts, steps, avatars, covers). */
 export async function findUnusedMedia(ids: string[]) {
   return db.mediaAsset.findMany({

@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { SettingsFrame } from "@/components/settings/settings-frame";
-import { ComingSoonCard } from "@/components/ui/coming-soon";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
 import { getMyProfile } from "@/server/modules/library";
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   title: "Account · dodoi",
 };
 
-// Account settings (P1-14): email (read only), password, sign out. Account deletion arrives with
-// P1-28, so it is "coming soon" here.
+// Account settings (P1-14): email (read only), password, sign out, delete account (P1-28; not
+// offered to admins).
 export default function AccountSettingsPage() {
   return (
     <SettingsFrame title="Account">
@@ -69,12 +69,19 @@ async function AccountContent() {
           <SignOutButton />
         </div>
       </Section>
-      <Section title="Delete account">
-        <ComingSoonCard
-          title="Delete your account"
-          description="You'll be able to delete your account and everything in it from here."
-        />
-      </Section>
+      {actor.role === "ADMIN" ? null : (
+        <Section title="Delete account">
+          <p className="text-body text-foreground-secondary">
+            Your account is deactivated straight away and deleted for good after 14 days. You can
+            cancel by signing in before then.
+          </p>
+          <div>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/settings/account/delete">Delete account</Link>
+            </Button>
+          </div>
+        </Section>
+      )}
     </div>
   );
 }

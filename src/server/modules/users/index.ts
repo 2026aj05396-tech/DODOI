@@ -1,4 +1,16 @@
 // Public API of the users module (CODE_QUALITY §3.2): accounts and profiles.
+export {
+  ACCOUNT_DELETION_RATE_LIMIT,
+  cancelAccountDeletion,
+  deleteAccountIfDue,
+  deletionDateFor,
+  getAccountsDueForDeletion,
+  getDeletionScheduledFor,
+  isRecentSignIn,
+  purgeSpentAuthTokens,
+  REAUTHENTICATION_WINDOW_SECONDS,
+  requestAccountDeletion,
+} from "./account-deletion";
 export { confirmAge } from "./age-check";
 export {
   getCreatorProfiles,

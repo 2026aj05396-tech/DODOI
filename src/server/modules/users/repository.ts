@@ -16,6 +16,7 @@ export async function findSessionUserById(id: string) {
       emailVerified: true,
       ageConfirmedAt: true,
       onboardingCompletedAt: true,
+      deletionRequestedAt: true,
     },
   });
 }
@@ -466,4 +467,76 @@ export async function findProfilesForModeration(userIds: string[]) {
 
 export async function updateProfileHidden(userId: string, isHidden: boolean): Promise<void> {
   await db.profile.update({ where: { userId }, data: { isHidden } });
+}
+
+// --- Account deletion (P1-28, SECURITY_AND_PRIVACY §7.3) ----------------------------------------
+
+export async function findDeletionState(userId: string) {
+  return db.user.findUnique({
+    where: { id: userId },
+    select: { role: true, passwordHash: true, deletionRequestedAt: true },
+  });
+}
+
+/** Deactivates the account and signs out every session. False if it was already deactivated. */
+export async function markDeletionRequested(userId: string, now: Date): Promise<boolean> {
+  const { count } = await db.user.updateMany({
+    where: { id: userId, deletionRequestedAt: null },
+    data: { deletionRequestedAt: now, sessionVersion: { increment: 1 } },
+  });
+  return count > 0;
+}
+
+/** Reactivates the account. False if no deletion was scheduled. */
+export async function clearDeletionRequested(userId: string): Promise<boolean> {
+  const { count } = await db.user.updateMany({
+    where: { id: userId, deletionRequestedAt: { not: null } },
+    data: { deletionRequestedAt: null },
+  });
+  return count > 0;
+}
+
+/** Accounts past their grace period, and never-verified accounts older than the cutoff. */
+function dueForDeletion(cutoffs: { requestedBefore: Date; unverifiedCreatedBefore: Date }) {
+  return {
+    OR: [
+      { deletionRequestedAt: { lte: cutoffs.requestedBefore } },
+      { emailVerified: null, createdAt: { lte: cutoffs.unverifiedCreatedBefore } },
+    ],
+  } satisfies Prisma.UserWhereInput;
+}
+
+export async function findUserIdsDueForDeletion(cutoffs: {
+  requestedBefore: Date;
+  unverifiedCreatedBefore: Date;
+}): Promise<string[]> {
+  const users = await db.user.findMany({
+    where: dueForDeletion(cutoffs),
+    select: { id: true },
+    orderBy: { createdAt: "asc" },
+  });
+  return users.map((user) => user.id);
+}
+
+/**
+ * Deletes the user if still due, re-checked inside the caller's transaction (they may have
+ * cancelled meanwhile). Cascades remove everything the user owns; see DATABASE_SCHEMA §7.
+ */
+export async function deleteUserIfDue(
+  userId: string,
+  cutoffs: { requestedBefore: Date; unverifiedCreatedBefore: Date },
+  client: Client,
+): Promise<boolean> {
+  const { count } = await client.user.deleteMany({
+    where: { id: userId, ...dueForDeletion(cutoffs) },
+  });
+  return count > 0;
+}
+
+/** Tokens that can no longer be used: expired or already used. */
+export async function deleteSpentAuthTokens(now: Date): Promise<number> {
+  const { count } = await db.authToken.deleteMany({
+    where: { OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }] },
+  });
+  return count;
 }

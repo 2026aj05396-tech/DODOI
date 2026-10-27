@@ -6,6 +6,12 @@ export async function insertSession(userId: string, filter: string, expiresAt: D
   return db.feedSession.create({ data: { userId, filter, expiresAt }, select: { id: true } });
 }
 
+/** Removes sessions that expired before `cutoff`; their impressions go with them (cascade). */
+export async function deleteSessionsExpiredBefore(cutoff: Date): Promise<number> {
+  const { count } = await db.feedSession.deleteMany({ where: { expiresAt: { lt: cutoff } } });
+  return count;
+}
+
 export async function findSession(id: string) {
   return db.feedSession.findUnique({
     where: { id },

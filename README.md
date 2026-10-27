@@ -107,6 +107,7 @@ Read the documents in this order before writing any code.
 | Collections | ≤ 100 per user, ≤ 1,000 items, unique names | CONFIRMED |
 | Reporting in P1 | Custom skills and profiles | CONFIRMED |
 | Account deletion | Deactivate now, hard delete after 14 days | CONFIRMED |
+| Account deletion details | Password accounts confirm with their password; Google-only accounts sign in with Google again (fresh login) and confirm within 5 minutes. Signing in during the grace period shows only a blocking "scheduled for deletion" screen (Cancel deletion / Sign out). Invited creators' posts are deleted with their media. Admin accounts can't be deleted from settings | CONFIRMED (2026-10-27) |
 | Code hosting / CI | GitHub + GitHub Actions | CONFIRMED |
 | Usernames | Auto-generated at sign-up, editable; 3–20 chars `[a-z][a-z0-9_-]`, reserved names blocked, one change per 30 days | CONFIRMED |
 | Seeded post creators | Invited creators = real accounts; team/stock/Creative Commons (CC BY, BY-SA only) = "via dodoi editors" + attribution | CONFIRMED |
@@ -197,6 +198,7 @@ pnpm dev
 | `pnpm db:migrate` | `prisma migrate dev` + `prisma generate` (Prisma 7 no longer regenerates the client after migrating) |
 | `pnpm db:seed` | Load predefined skills (idempotent); refuses production without `--confirm-production` |
 | `pnpm seed:content [folder]` | Import seed posts from `<folder>/posts/*.json` (default `./seed-content`, outside git); `--check` validates only; refuses production without `--confirm-production` |
+| `pnpm jobs:daily` | Daily maintenance (P1-33): delete accounts that are due, purge spent auth tokens, old feed sessions, expired rate-limit buckets and orphaned media. Idempotent; exits 1 if a job failed |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:reset` | Drop, re-migrate, re-seed (local only) |
 

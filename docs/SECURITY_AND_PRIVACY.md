@@ -148,12 +148,13 @@ Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed wi
 
 ### 7.3 Account deletion lifecycle (CONFIRMED, OD-22)
 
-1. User requests deletion (re-authentication required) → account **deactivated immediately**: sessions revoked (`sessionVersion`++), profile hidden from everyone, excluded from search.
-2. **14-day grace period**: signing in shows "Your account is scheduled for deletion on {date}" with *Cancel deletion*.
+1. User requests deletion (re-authentication required: the password, or for Google-only accounts a fresh Google sign-in within the last 5 minutes) → account **deactivated immediately**: sessions revoked (`sessionVersion`++), profile hidden from everyone, excluded from search. Admin accounts can't be deleted from settings.
+2. **14-day grace period**: signing in is allowed but every page shows only "Your account is scheduled for deletion" (`/account-deletion`) with *Cancel deletion* and *Sign out*; every API call except cancelling answers `403 ACCOUNT_DELETION_SCHEDULED`.
 3. After 14 days a scheduled job **hard-deletes**: User, Profile, Accounts, tokens, UserSkills, Saves, Collections, PostProgress, feed sessions/feedback, Reports filed by the user, and the Cloudinary avatar.
 4. Kept, de-identified: custom skills they created (`createdById` = null), audit-log rows (`actorId` = null).
-5. **Invited creators:** their seeded posts are unpublished and their media deleted from Cloudinary.
+5. **Invited creators:** their posts are deleted, with their media deleted from Cloudinary (PO decision 2026-10-27: deleting rather than unpublishing leaves no attribution text naming them).
 6. Unverified accounts older than 30 days (OD-08) are hard-deleted by the same job without a grace period.
+7. Implemented in P1-28: `users/account-deletion.ts` (request, cancel), `jobs/account-cleanup.ts` (hard delete, run by `pnpm jobs:daily`). The hard delete re-checks inside its transaction, so a deletion cancelled while the job runs deletes nothing.
 
 ## 8. Community Safety
 

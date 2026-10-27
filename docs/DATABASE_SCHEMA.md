@@ -510,10 +510,10 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 
 | Data | Rule |
 |---|---|
-| User account deletion | CONFIRMED (OD-22): deactivate immediately, hard delete after 14 days (SECURITY §7.3). Cascades remove profile, accounts, skills, saves, collections, progress, feed data, tokens, reports filed. Custom skills remain (creator null); audit logs keep rows (actor null); invited creators' posts unpublished and media deleted. |
+| User account deletion | CONFIRMED (OD-22): deactivate immediately, hard delete after 14 days (SECURITY §7.3). Cascades remove profile, accounts, skills, saves, collections, progress, feed data, tokens, reports filed. Custom skills remain (creator null); audit logs keep rows (actor null); invited creators' posts deleted with their media (PO decision 2026-10-27). Run by `pnpm jobs:daily` (P1-28/P1-33). |
 | Unverified accounts | Hard-deleted after 30 days (OD-08) |
 | Rate-limit buckets | Purged daily after their window expires |
-| Auth tokens | Deleted after use or expiry (cleanup script, PROPOSED daily) |
+| Auth tokens | Deleted after use or expiry by the daily jobs (P1-33) |
 | Feed sessions/impressions | Deleted 7 days after expiry (CONFIRMED) |
 | Feed feedback | Retained while account exists (PROPOSED) |
 | Media assets | Deleted from Cloudinary when DB record deleted; orphans cleaned after 24h (CONFIRMED) |

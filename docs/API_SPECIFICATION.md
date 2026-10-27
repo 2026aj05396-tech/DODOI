@@ -139,10 +139,12 @@ Rate limit: 3 / hour / user. → `204` (also when already verified) · `503 EMAI
 `{ "email", "emailVerified": bool, "hasPassword": bool, "providers": ["google"], "role", "onboardingCompleted": bool }`
 
 ### DELETE /api/account — User
-Requires recent re-authentication (PROPOSED: within 5 minutes, or password in body). Deactivates immediately and schedules hard delete in 14 days (OD-22) → `202 { "deletionScheduledFor": "…" }`.
+Body `{ "password"?: string }`. Accounts with a password must send it (`400 INVALID_PASSWORD`, 5 tries / 15 min); Google-only accounts must have signed in within the last 5 minutes (`403 REAUTHENTICATION_REQUIRED`; the client signs in with Google again with `prompt=login`). Admins → `403 ADMIN_ACCOUNT`. Deactivates immediately, signs out every session and schedules hard delete in 14 days (OD-22) → `202 { "deletionScheduledFor": "…" }`.
+
+While an account is deactivated, every other `/api/*` call answers `403 ACCOUNT_DELETION_SCHEDULED`.
 
 ### POST /api/account/deletion/cancel — User
-Within the grace period → `204`.
+Reactivates a deactivated account → `204` (also when none was scheduled). Allowed until the daily job has deleted the account.
 
 ---
 

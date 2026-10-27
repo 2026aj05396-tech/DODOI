@@ -56,7 +56,7 @@ Line-coverage numbers are not a goal by themselves. Required coverage by kind:
 - [ ] Unverified user: private actions allowed; custom skill / public collection → 403 EMAIL_NOT_VERIFIED
 - [ ] Google sign-in on unverified password account removes password and bumps sessionVersion
 - [ ] Reports: idempotent per reporter/target; admin hide hides skill/profile; audited
-- [ ] Deletion: deactivated immediately, cancel within 14 days, hard delete job removes listed data
+- [x] Deletion: deactivated immediately, cancel within 14 days, hard delete job removes listed data (`account-deletion.test.ts`, `daily-jobs.test.ts`, `account-deletion.spec.ts`)
 - [ ] Collection name uniqueness (case-insensitive) and 100/1,000 limits
 - [ ] Media: oversize / wrong type / video > 60 s rejected
 - [ ] Post detail: draft/unpublished → 404 for user, 200 for admin

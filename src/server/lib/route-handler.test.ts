@@ -158,6 +158,8 @@ describe("withRouteHandler", () => {
       role: "USER",
       isEmailVerified: true,
       isAgeConfirmed: true,
+      isDeletionScheduled: false,
+      signedInAt: null,
     };
 
     it('answers 401 UNAUTHENTICATED on a "user" route when signed out, without running the handler', async () => {
@@ -198,6 +200,22 @@ describe("withRouteHandler", () => {
       expect(blockedResponse.status).toBe(403);
       expect((await readError(blockedResponse)).code).toBe("AGE_CHECK_REQUIRED");
       expect(ageCheckResponse.status).toBe(204);
+    });
+
+    it("answers 403 ACCOUNT_DELETION_SCHEDULED to a deactivated account, except on cancel", async () => {
+      mockedGetActor.mockResolvedValue({ ...actor, isDeletionScheduled: true });
+      const blocked = withRouteHandler({ auth: "user" }, async () => noContent());
+      const cancel = withRouteHandler(
+        { auth: "user", allowWhileDeletionScheduled: true },
+        async () => noContent(),
+      );
+
+      const blockedResponse = await blocked(jsonRequest(""), noParams);
+      const cancelResponse = await cancel(jsonRequest(""), noParams);
+
+      expect(blockedResponse.status).toBe(403);
+      expect((await readError(blockedResponse)).code).toBe("ACCOUNT_DELETION_SCHEDULED");
+      expect(cancelResponse.status).toBe(204);
     });
 
     it('passes a null actor to a "public" route when signed out', async () => {

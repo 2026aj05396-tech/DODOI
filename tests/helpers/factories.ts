@@ -36,6 +36,8 @@ export function actorFor(
     role,
     isEmailVerified: user.emailVerified !== null,
     isAgeConfirmed: user.ageConfirmedAt !== null,
+    isDeletionScheduled: false,
+    signedInAt: null,
   };
 }
 

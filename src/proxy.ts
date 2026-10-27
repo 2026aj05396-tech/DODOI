@@ -8,9 +8,10 @@ import { serverEnv } from "@/server/lib/env";
 // cookie is checked here, never the database: every page and route handler still validates the
 // session itself through `getActor()` (Data Access Layer). API routes answer 401 instead.
 //
-// Signed-in users are sent, in order, to: /confirm-age until Google sign-ups have entered their
-// date of birth (AUTH-11), then /onboarding until onboarding is complete (F-05). Admins skip
-// onboarding (PO decision, P1-17): the welcome page and /onboarding send them to /admin.
+// Signed-in users are sent, in order, to: /account-deletion while their account is deactivated
+// and waiting for deletion (P1-28), /confirm-age until Google sign-ups have entered their date of
+// birth (AUTH-11), then /onboarding until onboarding is complete (F-05). Admins skip onboarding
+// (PO decision, P1-17): the welcome page and /onboarding send them to /admin.
 //
 // /admin answers 404 to anyone whose session is not an admin's (SECURITY_AND_PRIVACY §3), so it
 // never reveals itself with a sign-in redirect; the admin layout re-checks against the database.
@@ -22,6 +23,7 @@ const ADMIN_PATH = "/admin";
 const NOT_FOUND_PATH = "/_admin-not-found";
 const ONBOARDING_PATH = "/onboarding";
 const FEED_PATH = "/feed";
+const DELETION_SCHEDULED_PATH = "/account-deletion";
 
 function redirectTo(path: string, request: NextRequest): NextResponse {
   const destination = new URL(path, request.url);
@@ -36,6 +38,16 @@ export async function proxy(request: NextRequest) {
     secret: serverEnv.AUTH_SECRET,
     secureCookie: usesSecureCookies(serverEnv.APP_ENV),
   });
+
+  // A deactivated account can only cancel the deletion or sign out.
+  if (token?.dl === true) {
+    return pathname === DELETION_SCHEDULED_PATH
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL(DELETION_SCHEDULED_PATH, request.url));
+  }
+  if (pathname === DELETION_SCHEDULED_PATH) {
+    return NextResponse.redirect(new URL(token ? FEED_PATH : "/sign-in", request.url));
+  }
 
   if (pathname === ADMIN_PATH || pathname.startsWith(`${ADMIN_PATH}/`)) {
     return token?.role === "ADMIN"
@@ -79,5 +91,6 @@ export const config = {
     "/profile",
     "/settings/:path*",
     "/admin/:path*",
+    "/account-deletion",
   ],
 };

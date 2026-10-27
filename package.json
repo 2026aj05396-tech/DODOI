@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:seed": "prisma db seed",
-    "seed:content": "tsx --conditions=react-server --env-file-if-exists=.env.local prisma/seed/import-content.ts"
+    "seed:content": "tsx --conditions=react-server --env-file-if-exists=.env.local prisma/seed/import-content.ts",
+    "jobs:daily": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/daily-jobs.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",

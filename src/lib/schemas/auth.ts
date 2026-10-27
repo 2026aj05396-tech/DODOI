@@ -71,3 +71,10 @@ export const changePasswordSchema = z.object({
 });
 
 export type ChangePasswordInput = z.output<typeof changePasswordSchema>;
+
+/** DELETE /api/account: accounts with a password confirm with it; Google-only accounts send none. */
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Enter your password.").max(PASSWORD_MAX_LENGTH).optional(),
+});
+
+export type DeleteAccountInput = z.output<typeof deleteAccountSchema>;

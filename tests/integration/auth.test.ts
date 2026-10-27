@@ -248,14 +248,32 @@ describe("auth", () => {
 
       const token = await refreshSessionToken({ token: {}, user: { id: user.id } });
 
-      expect(token).toEqual({ sub: user.id, sv: 0, role: "USER", ev: true, ac: true, oc: false });
+      const signedInAt = Math.floor(Date.now() / 1000);
+      expect(token).toEqual({
+        sub: user.id,
+        sv: 0,
+        role: "USER",
+        ev: true,
+        ac: true,
+        oc: false,
+        dl: false,
+        at: expect.any(Number) as number,
+      });
+      expect(Math.abs((token?.at as number) - signedInAt)).toBeLessThanOrEqual(1);
       const session = toSession({
         session: { expires: "2026-11-22T00:00:00.000Z" },
         token: token ?? {},
       });
       expect(session).toEqual({
         expires: "2026-11-22T00:00:00.000Z",
-        actor: { id: user.id, role: "USER", isEmailVerified: true, isAgeConfirmed: true },
+        actor: {
+          id: user.id,
+          role: "USER",
+          isEmailVerified: true,
+          isAgeConfirmed: true,
+          isDeletionScheduled: false,
+          signedInAt: token?.at,
+        },
       });
     });
 

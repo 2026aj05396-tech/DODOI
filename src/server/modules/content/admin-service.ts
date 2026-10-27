@@ -36,6 +36,8 @@ import {
   findAdminThemes,
   findExistingMediaIds,
   findExistingPostIds,
+  findMediaIdsByOwner,
+  findPostIdsByAuthor,
   findUnusedMedia,
   insertPost,
   insertTheme,
@@ -379,16 +381,50 @@ export async function deleteAdminPost(
     );
     return used;
   });
+  await deleteUnusedMedia(mediaIds, { provider });
+}
 
+/**
+ * Deletes, from the provider and the database, those of `mediaIds` that nothing uses any more.
+ * Failures are logged and left for the daily orphan cleanup (P1-33) to retry.
+ */
+export async function deleteUnusedMedia(
+  mediaIds: string[],
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<void> {
+  if (mediaIds.length === 0) return;
   for (const media of await findUnusedMedia(mediaIds)) {
     try {
       await provider.deleteAsset(media.publicId, media.type === "VIDEO" ? "video" : "image");
       await deleteMediaRow(media.id);
     } catch (error) {
-      // Left for the daily orphan cleanup (P1-33) to retry.
-      logger.error("Could not delete media of a deleted post", { mediaId: media.id, error });
+      logger.error("Could not delete unused media", { mediaId: media.id, error });
     }
   }
+}
+
+/**
+ * Account hard delete (P1-28, SECURITY_AND_PRIVACY §7.3): deletes every post the user authored
+ * (invited creators' seeded posts, PO decision 2026-10-27) inside the caller's transaction.
+ * Returns the media those posts used plus the media the user uploaded (avatars), for
+ * `deleteUnusedMedia` once the transaction has committed.
+ */
+export async function deleteContentOfUser(userId: string, tx: Tx): Promise<string[]> {
+  const mediaIds = new Set(await findMediaIdsByOwner(userId, tx));
+  for (const postId of await findPostIdsByAuthor(userId, tx)) {
+    for (const mediaId of await deletePostReturningMedia(postId, tx)) mediaIds.add(mediaId);
+    await recordAudit(
+      {
+        actorId: null,
+        action: "post.delete",
+        targetType: "post",
+        targetId: postId,
+        metadata: { reason: "account_deleted" },
+      },
+      tx,
+    );
+  }
+  return [...mediaIds];
 }
 
 // --- Themes ---------------------------------------------------------------------------------

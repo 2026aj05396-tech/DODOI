@@ -33,6 +33,11 @@ type RouteSchemas = {
    * (API_SPECIFICATION §3). Only the age check itself sets this.
    */
   allowBeforeAgeCheck?: true;
+  /**
+   * Deactivated accounts waiting for deletion get 403 ACCOUNT_DELETION_SCHEDULED on every route
+   * (P1-28). Only cancelling the deletion sets this.
+   */
+  allowWhileDeletionScheduled?: true;
   body?: z.ZodType;
   query?: z.ZodType;
   params?: z.ZodType;
@@ -135,6 +140,11 @@ export function withRouteHandler<TSchemas extends RouteSchemas>(
       if (actor && !actor.isAgeConfirmed && !schemas.allowBeforeAgeCheck) {
         throw new ForbiddenError("Please confirm your date of birth to continue.", {
           code: "AGE_CHECK_REQUIRED",
+        });
+      }
+      if (actor?.isDeletionScheduled && !schemas.allowWhileDeletionScheduled) {
+        throw new ForbiddenError("Your account is scheduled for deletion.", {
+          code: "ACCOUNT_DELETION_SCHEDULED",
         });
       }
 

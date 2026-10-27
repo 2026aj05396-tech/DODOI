@@ -28,6 +28,7 @@ import { FEED_CONFIG } from "./config";
 import { rankPage, type RankingContext } from "./ranking";
 import {
   deleteNotInterested,
+  deleteSessionsExpiredBefore,
   findNotInterested,
   findPagePostIds,
   findServedPostIds,
@@ -232,4 +233,11 @@ export async function markNotInterested(actor: Actor, input: FeedFeedbackInput):
 export async function undoNotInterested(actor: Actor, input: FeedFeedbackInput): Promise<void> {
   const user = requireSignedIn(actor);
   await deleteNotInterested(user.id, input.postId);
+}
+
+/** Daily cleanup (P1-33): feed sessions 7 days after they expired. Returns how many were removed. */
+export async function purgeExpiredFeedSessions(now = new Date()): Promise<number> {
+  return deleteSessionsExpiredBefore(
+    new Date(now.getTime() - FEED_CONFIG.expiredSessionRetentionDays * DAY_MS),
+  );
 }

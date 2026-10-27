@@ -1,14 +1,15 @@
 import type {
   ChangePasswordInput,
   ConfirmAgeInput,
+  DeleteAccountInput,
   PasswordResetConfirmInput,
   PasswordResetRequestInput,
   RegisterInput,
   VerifyEmailInput,
 } from "@/lib/schemas/auth";
-import type { RegisterResponse } from "@/lib/types/auth";
+import type { AccountDeletionResponse, RegisterResponse } from "@/lib/types/auth";
 
-import { postJson } from "./request";
+import { postJson, requestJson } from "./request";
 
 // Account endpoints (API_SPECIFICATION §3).
 
@@ -38,4 +39,12 @@ export function confirmPasswordReset(input: PasswordResetConfirmInput): Promise<
 
 export function changePassword(input: ChangePasswordInput): Promise<void> {
   return postJson("/api/account/password", input);
+}
+
+export function deleteAccount(input: DeleteAccountInput): Promise<AccountDeletionResponse> {
+  return requestJson<AccountDeletionResponse>("DELETE", "/api/account", input);
+}
+
+export function cancelAccountDeletion(): Promise<void> {
+  return postJson("/api/account/deletion/cancel");
 }

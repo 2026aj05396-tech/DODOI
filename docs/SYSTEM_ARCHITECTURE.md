@@ -236,7 +236,7 @@ Required on: register, sign-in, password reset request, resend verification, med
 
 ## 12b. Scheduled Jobs
 
-Daily maintenance (PROPOSED trigger: GitHub Actions scheduled workflow calling a protected endpoint, or `pnpm jobs:daily` locally — deployment target is OPEN): purge expired auth tokens, feed sessions, rate-limit buckets; delete accounts past the 14-day grace period and unverified accounts older than 30 days; delete orphaned media.
+Daily maintenance, `pnpm jobs:daily` (built in P1-33, `src/server/modules/jobs`): delete accounts past the 14-day grace period and unverified accounts older than 30 days; purge spent auth tokens, feed sessions 7 days after expiry, rate-limit buckets older than the longest window; delete orphaned media. Every job is idempotent and runs even if an earlier one failed; the command exits 1 if any failed. Trigger on hosted environments: OPEN with hosting (OD-01) — e.g. the host's cron running the command, or a GitHub Actions schedule calling a protected endpoint.
 
 ## 13. Environments
 

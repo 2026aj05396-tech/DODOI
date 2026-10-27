@@ -121,6 +121,30 @@ describe("proxy", () => {
     expect(appPage.headers.get("location")).toBeNull();
   });
 
+  it("sends a deactivated account to /account-deletion from every page", async () => {
+    const deactivated = await encode({
+      token: { sub: "user_1", sv: 0, role: "USER", ev: true, ac: true, oc: true, dl: true },
+      secret: SECRET,
+      salt: COOKIE_NAME,
+    });
+    const cookie = `${COOKIE_NAME}=${deactivated}`;
+
+    for (const path of ["/", "/feed", "/settings/account"]) {
+      const response = await proxy(requestTo(path, cookie));
+      expect(new URL(response.headers.get("location") ?? "").pathname).toBe("/account-deletion");
+    }
+    const deletionPage = await proxy(requestTo("/account-deletion", cookie));
+    expect(deletionPage.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("sends active accounts away from /account-deletion", async () => {
+    const active = await proxy(requestTo("/account-deletion", await sessionCookie()));
+    const signedOut = await proxy(requestTo("/account-deletion"));
+
+    expect(new URL(active.headers.get("location") ?? "").pathname).toBe("/feed");
+    expect(new URL(signedOut.headers.get("location") ?? "").pathname).toBe("/sign-in");
+  });
+
   it("treats a tampered session cookie as signed out", async () => {
     const valid = await sessionCookie();
     const tampered = `${valid.slice(0, -6)}AAAAAA`;

@@ -157,6 +157,8 @@ export type SessionUser = {
   isEmailVerified: boolean;
   isAgeConfirmed: boolean;
   hasCompletedOnboarding: boolean;
+  /** Deactivated, waiting for deletion (P1-28): only the "scheduled for deletion" screen works. */
+  isDeletionScheduled: boolean;
 };
 
 /** Current state of a signed-in user, read on every request; null if the user no longer exists. */
@@ -170,6 +172,7 @@ export async function getSessionUser(userId: string): Promise<SessionUser | null
     isEmailVerified: user.emailVerified !== null,
     isAgeConfirmed: user.ageConfirmedAt !== null,
     hasCompletedOnboarding: user.onboardingCompletedAt !== null,
+    isDeletionScheduled: user.deletionRequestedAt !== null,
   };
 }
 

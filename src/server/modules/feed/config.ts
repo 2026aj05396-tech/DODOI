@@ -25,6 +25,8 @@ export const FEED_CONFIG = {
   maxSameSkillInARow: 2,
   /** Feed sessions (no repeats, FEED-09) expire after this long. */
   sessionHours: 24,
+  /** Expired sessions and their impressions are kept this long, then purged (DATABASE_SCHEMA §7). */
+  expiredSessionRetentionDays: 7,
   /** Newest published posts considered per page. */
   candidateLimit: 1000,
   /** Interest chips in the filter bar (FEED-13), most recently added first. */
