@@ -34,13 +34,16 @@ export const COMMUNITY: NavItem = { key: "community", label: "Community", icon: 
 export const MESSAGES: NavItem = { key: "messages", label: "Messages", icon: MessageSquare };
 export const JOURNAL: NavItem = { key: "journal", label: "Journal", icon: NotebookPen };
 
-/** Profile links to the signed-in user's public profile; without a user it leads to sign-in. */
+/**
+ * Profile links to the user's public profile. The shell usually doesn't know the username (it is
+ * static), so it links to `/profile`, which forwards to `/u/{username}` (P1-14).
+ */
 export function profileNavItem(username: string | null): NavItem {
   return {
     key: "profile",
     label: "Profile",
     icon: User,
-    href: username ? `/u/${username}` : "/sign-in",
+    href: username ? `/u/${username}` : "/profile",
   };
 }
 

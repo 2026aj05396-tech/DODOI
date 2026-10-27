@@ -76,6 +76,7 @@ export const config = {
     "/saved/:path*",
     "/u/:path*",
     "/onboarding/:path*",
+    "/profile",
     "/settings/:path*",
     "/admin/:path*",
   ],

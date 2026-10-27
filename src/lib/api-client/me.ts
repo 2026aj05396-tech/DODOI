@@ -1,5 +1,9 @@
-import type { OnboardingStepInput, ReplaceUserSkillsInput } from "@/lib/schemas/me";
-import type { OnboardingState, UserSkills } from "@/lib/types/me";
+import type {
+  OnboardingStepInput,
+  ReplaceUserSkillsInput,
+  UpdateProfileInput,
+} from "@/lib/schemas/me";
+import type { MyProfile, OnboardingState, UserSkills } from "@/lib/types/me";
 
 import { postJson, requestJson } from "./request";
 
@@ -23,4 +27,12 @@ export function saveOnboardingStep(input: OnboardingStepInput): Promise<Onboardi
 
 export function completeOnboarding(): Promise<void> {
   return postJson("/api/me/onboarding/complete");
+}
+
+export function getMyProfile(): Promise<MyProfile> {
+  return requestJson<MyProfile>("GET", "/api/me/profile");
+}
+
+export function updateMyProfile(input: UpdateProfileInput): Promise<MyProfile> {
+  return requestJson<MyProfile>("PATCH", "/api/me/profile", input);
 }

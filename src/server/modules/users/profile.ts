@@ -36,6 +36,14 @@ function requireSignedIn(actor: Actor): AuthenticatedActor {
 
 export type OwnProfileRow = NonNullable<Awaited<ReturnType<typeof findOwnProfile>>>;
 
+/**
+ * "Pick your username" (DC-26): shown on the owner's profile until they dismiss it or change the
+ * generated username.
+ */
+export function showsUsernamePrompt(row: OwnProfileRow): boolean {
+  return !row.usernamePromptDismissedAt && !row.usernameChangedAt;
+}
+
 /** When the username may next change, or null if it may change now. */
 export function usernameChangeAvailableAt(row: OwnProfileRow, now = new Date()): Date | null {
   if (!row.usernameChangedAt) return null;
@@ -88,6 +96,7 @@ export async function updateOwnProfile(
 
   try {
     return await updateProfileRow(user.id, {
+      ...(input.dismissUsernamePrompt ? { usernamePromptDismissedAt: new Date() } : {}),
       ...(changesUsername ? { username: input.username, usernameChangedAt: new Date() } : {}),
       ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
       ...(input.bio !== undefined ? { bio: input.bio } : {}),

@@ -292,7 +292,7 @@ Error messages: what happened + what to do next. No blame, jargon or codes in th
 | Error, focus, coming-soon patterns | `3b` | |
 | Saved / collections | `1i` (profile tab) | Collection detail, picker not designed. **Built (P1-25, PO review):** `/saved` = collections row (sideways on mobile, grid from 768px) then All saved masonry; `/saved/{id}` collection page; picker = `sheet` dialog (checkbox per collection, "New collection" inline, Done) |
 | Public profile | `1i` | |
-| Edit profile, Settings, Account deletion | — | Not designed |
+| Edit profile, Settings, Account deletion | — | Not designed. **Built (P1-14, PO review):** `/settings` list → Edit profile, Your skills, Privacy, Account (single centred column, back link); profile `/u/{username}` per `1i` with DC-08 groups (Can help with = coral, Want to learn = butter, Interests = outline, level after the name); account deletion coming soon (P1-28) |
 | Admin posts/themes/skills | — | Not designed — built from system in P1-17 (`/admin`, top bar + sections in cards, sticky action bar); PO review pending |
 
 **Rule for undesigned screens (CONFIRMED):** build them only from the tokens (§2), components (§4), layout (§3) and voice (§6) in this document — no new colors, fonts, radii or component styles. Each such screen is a review item: the agent reports it as "built from system, needs product-owner review" with screenshots at mobile, tablet and desktop (390 / 834 / 1280px), and the screen is not done until reviewed. **Every screen is built for all three widths in the same task** (PO instruction, 2026-10-24) — never mobile-only.

@@ -185,11 +185,11 @@ Rules: skill must exist and be ACTIVE (else `400 SKILL_NOT_AVAILABLE`, field `it
 Marks onboarding complete. Precondition: at least 3 active interests (OD-14), else `422 NOT_ENOUGH_INTERESTS`. → `204` (idempotent; the first completion time is kept).
 
 ### GET /api/me/profile — User
-Own full profile: `{ username, displayName, bio, avatar: Media|null, visibility, usernameChangeAvailableAt: string|null }` (`usernameChangeAvailableAt` = when the username may change again; null = now).
+Own full profile: `{ username, displayName, bio, avatar: Media|null, visibility, usernameChangeAvailableAt: string|null, showUsernamePrompt, email, hasPassword }` (`usernameChangeAvailableAt` = when the username may change again, null = now; `showUsernamePrompt` until dismissed or the username is changed, DC-26; `email` and `hasPassword` for Account settings, own profile only).
 
 ### PATCH /api/me/profile — User
 ```json
-{ "username": "…", "displayName": "…", "bio": "…", "avatarMediaId": "…|null", "visibility": "PUBLIC|PRIVATE" }
+{ "username": "…", "displayName": "…", "bio": "…", "avatarMediaId": "…|null", "visibility": "PUBLIC|PRIVATE", "dismissUsernamePrompt": true }
 ```
 `409 USERNAME_TAKEN` · `400` invalid/reserved username · `422 USERNAME_CHANGE_TOO_SOON` (within 30 days of last change; sending the current username is not a change) · `avatarMediaId` must be the actor's own uploaded avatar (IMAGE in `avatars/`), else `400` on the field · usernames and display names with offensive words → `400` (OD-36 list, PO decision P1-13) · display name 1–50, bio ≤ 300 (empty clears it). Unverified users may edit everything (PO decision).
 

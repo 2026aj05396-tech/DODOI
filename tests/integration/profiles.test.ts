@@ -82,6 +82,22 @@ describe("profiles", () => {
     expect((await updateMyProfile(actor, { bio: null }, options)).bio).toBeNull();
   });
 
+  it("shows the username prompt until it is dismissed or the username changes", async () => {
+    const dismisser = await member();
+    const changer = await member();
+
+    expect((await getMyProfile(dismisser, options)).showUsernamePrompt).toBe(true);
+    await updateMyProfile(dismisser, { dismissUsernamePrompt: true }, options);
+    expect((await getMyProfile(dismisser, options)).showUsernamePrompt).toBe(false);
+
+    await updateMyProfile(changer, { username: "new-name" }, options);
+    expect((await getMyProfile(changer, options)).showUsernamePrompt).toBe(false);
+    expect(await getMyProfile(changer, options)).toMatchObject({
+      hasPassword: false,
+      email: expect.stringContaining("@example.test"),
+    });
+  });
+
   it("changes the username once per 30 days and refuses taken, reserved or offensive ones", async () => {
     const actor = await member();
     const other = await member();

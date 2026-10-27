@@ -134,6 +134,7 @@ model Profile {
   userId      String   @id
   username    String   @unique          // 3–20, [a-z][a-z0-9_-]*, auto-generated at sign-up (OD-11, DC-26)
   usernameChangedAt DateTime?           // enforce max one change per 30 days
+  usernamePromptDismissedAt DateTime?   // "Pick your username" dismissed (DC-26, P1-14)
   displayName String   @db.VarChar(50)  // limit CONFIRMED
   bio         String?  @db.VarChar(300) // limit CONFIRMED
   avatarMediaId String? @unique

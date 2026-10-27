@@ -5,12 +5,9 @@ import { Suspense } from "react";
 import { OnboardingDone } from "@/components/onboarding/onboarding-done";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MAX_PAGE_SIZE } from "@/lib/constants/pagination";
 import { MIN_ONBOARDING_INTERESTS } from "@/lib/schemas/me";
-import type { SkillSummary } from "@/lib/types/skills";
 import { getActor } from "@/server/auth";
-import type { AuthenticatedActor } from "@/server/lib/actor";
-import { listSkills } from "@/server/modules/skills";
+import { listPredefinedSkills } from "@/server/modules/skills";
 import { getMySkills, getOnboardingState } from "@/server/modules/users";
 
 export const metadata: Metadata = {
@@ -35,18 +32,6 @@ export default function OnboardingPage() {
   );
 }
 
-/** Every predefined skill, alphabetically (51 today, so a couple of pages at most). */
-async function loadCatalogue(actor: AuthenticatedActor): Promise<SkillSummary[]> {
-  const skills: SkillSummary[] = [];
-  let cursor: string | undefined;
-  do {
-    const page = await listSkills(actor, { origin: "PREDEFINED", limit: MAX_PAGE_SIZE, cursor });
-    skills.push(...page.items);
-    cursor = page.nextCursor ?? undefined;
-  } while (cursor);
-  return skills;
-}
-
 async function OnboardingContent() {
   const actor = await getActor();
   if (!actor) redirect("/sign-in?returnTo=%2Fonboarding");
@@ -57,7 +42,10 @@ async function OnboardingContent() {
   const state = await getOnboardingState(actor);
   if (state.completed) return <OnboardingDone finishPath={FINISH_PATH} />;
 
-  const [catalogue, mySkills] = await Promise.all([loadCatalogue(actor), getMySkills(actor)]);
+  const [catalogue, mySkills] = await Promise.all([
+    listPredefinedSkills(actor),
+    getMySkills(actor),
+  ]);
   // Steps 2 and 3 need 3 interests; if some were hidden meanwhile, start again at step 1.
   const step = state.interestCount < MIN_ONBOARDING_INTERESTS ? 1 : state.step;
 

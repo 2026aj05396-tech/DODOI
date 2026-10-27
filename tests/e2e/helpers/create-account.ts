@@ -39,6 +39,13 @@ async function main(): Promise<void> {
       await db.user.create({
         data: {
           email,
+          // Like a real sign-up, every account has a profile with a generated username.
+          profile: {
+            create: {
+              username: `e2e-${randomBytes(4).toString("hex")}`,
+              displayName: "E2E Maker",
+            },
+          },
           skills: {
             create: interests.map((skill) => ({ skillId: skill.id, isInterest: true })),
           },

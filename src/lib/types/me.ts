@@ -35,6 +35,11 @@ export type MyProfile = {
   visibility: ProfileVisibility;
   /** When the username may next change (OD-11: once per 30 days); null = now. */
   usernameChangeAvailableAt: string | null;
+  /** "Pick your username" prompt on the own profile (DC-26). */
+  showUsernamePrompt: boolean;
+  /** Account settings: own email, and whether a password is set (Google-only accounts: no). */
+  email: string;
+  hasPassword: boolean;
 };
 
 export type ProfileSkill = { skill: SkillSummary; level: ExperienceLevel | null };

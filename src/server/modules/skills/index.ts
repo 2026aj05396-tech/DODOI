@@ -14,6 +14,7 @@ export {
   getSkillsBySlugs,
   getSkillStatuses,
   getSuggestionCandidates,
+  listPredefinedSkills,
   type SkillSuggestionCandidate,
   listSkills,
   resolveCustomSkill,

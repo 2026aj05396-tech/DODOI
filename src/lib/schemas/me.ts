@@ -65,6 +65,8 @@ export const updateProfileSchema = z
       .transform((bio) => bio || null),
     avatarMediaId: z.string().min(1).max(40).nullable(),
     visibility: z.enum(["PUBLIC", "PRIVATE"]),
+    /** Hides the "Pick your username" prompt for good (DC-26). */
+    dismissUsernamePrompt: z.literal(true),
   })
   .partial();
 export type UpdateProfileInput = z.output<typeof updateProfileSchema>;

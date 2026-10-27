@@ -35,6 +35,7 @@ import {
   getOwnProfile,
   getProfileForView,
   getProfileSkills,
+  showsUsernamePrompt,
   updateOwnProfile,
   usernameChangeAvailableAt,
   type OwnProfileRow,
@@ -138,6 +139,9 @@ async function toMyProfile(row: OwnProfileRow, provider: MediaProvider): Promise
     avatar: row.avatarMediaId ? await getMedia(row.avatarMediaId, { provider }) : null,
     visibility: row.visibility,
     usernameChangeAvailableAt: usernameChangeAvailableAt(row)?.toISOString() ?? null,
+    showUsernamePrompt: showsUsernamePrompt(row),
+    email: row.user.email,
+    hasPassword: row.user.passwordHash !== null,
   };
 }
 

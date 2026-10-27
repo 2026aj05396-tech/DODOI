@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { Prisma } from "@/generated/prisma/client";
+import { MAX_PAGE_SIZE } from "@/lib/constants/pagination";
 import type { CreateCustomSkillInput, ListSkillsQuery } from "@/lib/schemas/skills";
 import type { Paginated } from "@/lib/types/api";
 import type { SkillDetail, SkillSummary } from "@/lib/types/skills";
@@ -186,6 +187,18 @@ export async function resolveCustomSkill(
     }
   }
   throw new Error("Could not create a unique slug for a custom skill");
+}
+
+/** Every active predefined skill, alphabetically (the onboarding and "Your skills" catalogue). */
+export async function listPredefinedSkills(actor: Actor): Promise<SkillSummary[]> {
+  const skills: SkillSummary[] = [];
+  let cursor: string | undefined;
+  do {
+    const page = await listSkills(actor, { origin: "PREDEFINED", limit: MAX_PAGE_SIZE, cursor });
+    skills.push(...page.items);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor);
+  return skills;
 }
 
 /**

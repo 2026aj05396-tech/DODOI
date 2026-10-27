@@ -199,19 +199,21 @@ model AuthToken {
 // ---------------------------------------------------------------------------
 
 model Profile {
-  userId            String            @id @map("user_id")
+  userId                    String            @id @map("user_id")
   /// 3–20 chars, [a-z][a-z0-9_-]*, auto-generated at sign-up.
-  username          String            @unique
+  username                  String            @unique
   /// Enforces at most one username change per 30 days.
-  usernameChangedAt DateTime?         @map("username_changed_at")
-  displayName       String            @map("display_name") @db.VarChar(50)
-  bio               String?           @db.VarChar(300)
-  avatarMediaId     String?           @unique @map("avatar_media_id")
-  visibility        ProfileVisibility @default(PUBLIC)
+  usernameChangedAt         DateTime?         @map("username_changed_at")
+  /// When the "Pick your username" prompt was dismissed (DC-26; remembered on the account, P1-14).
+  usernamePromptDismissedAt DateTime?         @map("username_prompt_dismissed_at")
+  displayName               String            @map("display_name") @db.VarChar(50)
+  bio                       String?           @db.VarChar(300)
+  avatarMediaId             String?           @unique @map("avatar_media_id")
+  visibility                ProfileVisibility @default(PUBLIC)
   /// Hidden by an admin after a report.
-  isHidden          Boolean           @default(false) @map("is_hidden")
-  createdAt         DateTime          @default(now()) @map("created_at")
-  updatedAt         DateTime          @updatedAt @map("updated_at")
+  isHidden                  Boolean           @default(false) @map("is_hidden")
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  updatedAt                 DateTime          @updatedAt @map("updated_at")
 
   user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   avatar MediaAsset? @relation("ProfileAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)

@@ -13,6 +13,7 @@ export {
   getOwnProfile,
   getProfileForView,
   getProfileSkills,
+  showsUsernamePrompt,
   updateOwnProfile,
   usernameChangeAvailableAt,
   type OwnProfileRow,

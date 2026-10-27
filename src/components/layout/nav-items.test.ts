@@ -12,8 +12,8 @@ describe("isActivePath", () => {
 });
 
 describe("profileNavItem", () => {
-  it("links to the user's profile, or to sign-in when signed out", () => {
+  it("links to the user's profile, or to /profile when the shell doesn't know the username", () => {
     expect(profileNavItem("aanya-4821").href).toBe("/u/aanya-4821");
-    expect(profileNavItem(null).href).toBe("/sign-in");
+    expect(profileNavItem(null).href).toBe("/profile");
   });
 });

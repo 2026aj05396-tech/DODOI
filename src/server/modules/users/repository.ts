@@ -359,6 +359,8 @@ export async function findDisplayName(userId: string): Promise<string | null> {
 }
 
 const ownProfileSelect = {
+  usernamePromptDismissedAt: true,
+  user: { select: { email: true, passwordHash: true } },
   username: true,
   displayName: true,
   bio: true,
