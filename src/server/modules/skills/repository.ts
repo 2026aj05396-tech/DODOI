@@ -9,6 +9,7 @@ const summarySelect = {
   slug: true,
   accent: true,
   origin: true,
+  hint: true,
 } as const;
 
 export type SkillSummaryRow = {
@@ -17,6 +18,7 @@ export type SkillSummaryRow = {
   slug: string;
   accent: SkillAccent;
   origin: SkillOrigin;
+  hint: string | null;
 };
 
 export async function findSkillByNormalizedName(normalizedName: string) {
@@ -98,7 +100,7 @@ export async function searchActiveSkills(options: {
   const { term, origin, offset, take } = options;
   const prefixPattern = `${term.replace(/[\\%_]/g, "\\$&")}%`;
   return db.$queryRaw<SkillSummaryRow[]>`
-    SELECT id, name, slug, accent, origin
+    SELECT id, name, slug, accent, origin, hint
     FROM skill
     WHERE status = 'ACTIVE'
       AND (${origin ?? null}::"SkillOrigin" IS NULL OR origin = ${origin ?? null}::"SkillOrigin")

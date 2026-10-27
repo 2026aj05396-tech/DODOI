@@ -285,7 +285,7 @@ Error messages: what happened + what to do next. No blame, jargon or codes in th
 | Onboarding: interests | `1b` | |
 | Onboarding steps 2 (familiarity) and 3 (skills you can help with) | — | Defined in DC-18, not drawn — built from system in P1-11 (level chips per interest; can-help picker). Step headings: design 32px → `text-title` (28px) mobile, `text-title-web` (40px) from 768px; PO review pending |
 | Home feed | `1c`, `2b` | |
-| Explore | `1d` | Web not designed |
+| Explore | `1d` | Web not designed. **Built (P1-26, PO review):** designed sections first, then Popular skills / New on dodoi (skill chip rows) and Beginner-friendly projects (masonry); "See all" → `/explore/skills`; search results, skill and theme pages built from the system |
 | Search results, Skill page, Theme page | — | Not designed |
 | Post / tutorial detail | `1e`, `2c` | Attribution block, persisted materials/steps (DC-07, DC-10) |
 | Home (tablet) | `3c` | |

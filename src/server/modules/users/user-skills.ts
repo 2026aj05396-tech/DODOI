@@ -1,15 +1,21 @@
 import "server-only";
 
-import type { ExperienceLevel, ReplaceUserSkillsInput } from "@/lib/schemas/me";
+import {
+  MAX_USER_SKILLS,
+  MIN_ONBOARDING_INTERESTS,
+  type ExperienceLevel,
+  type ReplaceUserSkillsInput,
+} from "@/lib/schemas/me";
 import type { UserSkillItem, UserSkills } from "@/lib/types/me";
 import type { Actor } from "@/server/lib/actor";
-import { UnauthenticatedError, ValidationError } from "@/server/lib/errors";
+import { UnauthenticatedError, UnprocessableError, ValidationError } from "@/server/lib/errors";
 import { getActiveSkillSummaries } from "@/server/modules/skills";
 
 import {
   findInterestRows,
   findUserSkillRows,
   replaceUserSkillRows,
+  setInterestFlag,
   type UserSkillRow,
 } from "./repository";
 
@@ -79,4 +85,39 @@ export async function getInterestProfile(
   userId: string,
 ): Promise<{ skillId: string; level: ExperienceLevel | null }[]> {
   return findInterestRows(userId);
+}
+
+/**
+ * Adds or removes one interest (skill page, P1-26). Adding needs an active skill and room in the
+ * 50-skill limit; removing keeps at least 3 interests (OD-14), like Your skills. The skill's other
+ * lists (can help, want to learn) are kept.
+ */
+export async function setInterest(
+  actor: Actor,
+  skillId: string,
+  isInterest: boolean,
+): Promise<void> {
+  const userId = requireActorId(actor);
+  const rows = await findUserSkillRows(userId);
+  const current = rows.find((row) => row.skillId === skillId);
+  if (isInterest) {
+    if (current?.isInterest) return;
+    if ((await getActiveSkillSummaries([skillId])).size === 0) {
+      throw new ValidationError("That skill isn't available.", { code: "SKILL_NOT_AVAILABLE" });
+    }
+    if (!current && rows.length >= MAX_USER_SKILLS) {
+      throw new UnprocessableError(`You can add up to ${MAX_USER_SKILLS} skills.`, {
+        code: "TOO_MANY_SKILLS",
+      });
+    }
+  } else {
+    if (!current?.isInterest) return;
+    if ((await countMyInterests(userId)) <= MIN_ONBOARDING_INTERESTS) {
+      throw new UnprocessableError(
+        `Keep at least ${MIN_ONBOARDING_INTERESTS} interests so your feed has something to go on.`,
+        { code: "NOT_ENOUGH_INTERESTS" },
+      );
+    }
+  }
+  await setInterestFlag(userId, skillId, isInterest);
 }

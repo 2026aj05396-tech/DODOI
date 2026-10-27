@@ -2,6 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/utils/cn";
+
 // Frame for settings screens (P1-14; not designed, built from the system): a back link, the
 // title and a single centred column at every width.
 
@@ -10,16 +12,24 @@ export function SettingsFrame({
   description,
   backHref = "/settings",
   backLabel = "Settings",
+  className,
   children,
 }: {
   title: string;
   description?: string;
   backHref?: string;
   backLabel?: string;
+  /** E.g. a wider column for a grid (`max-w-6xl`). */
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-5 pt-4 pb-10 md:px-7 md:pt-8">
+    <div
+      className={cn(
+        "mx-auto flex max-w-2xl flex-col gap-6 px-5 pt-4 pb-10 md:px-7 md:pt-8",
+        className,
+      )}
+    >
       <div className="flex flex-col gap-2">
         <Link
           href={backHref}

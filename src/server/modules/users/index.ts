@@ -20,7 +20,7 @@ export {
   type OwnProfileRow,
   type ProfileForView,
 } from "./profile";
-export { getInterestProfile, getMySkills, replaceMySkills } from "./user-skills";
+export { getInterestProfile, getMySkills, replaceMySkills, setInterest } from "./user-skills";
 export {
   changePassword,
   PASSWORD_CHANGE_RATE_LIMIT,

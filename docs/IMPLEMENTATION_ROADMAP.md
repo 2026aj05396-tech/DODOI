@@ -195,7 +195,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | ID | Task | Size | Depends on | Acceptance criteria | Status |
 |---|---|---|---|---|---|
 | P1-23 | Search module (FTS + trigram; posts, skills, creators; private/hidden excluded) + explore endpoint (themes, skills to try with hints, popular/new, beginner-friendly). Built: `search` module (no tables; queries in content/users/skills/collections), `GET /api/search`, `GET /api/explore` (`skillsToTry`, theme `postCount`); popular = saves topped up by post counts; 8/8/8/all/12 (PO decisions 2026-10-27) | M | P1-15, P1-09 | "croch" finds Crochet; custom skills findable; query limits enforced | ☑ |
-| P1-26 | Explore (`1d`, "Use what you have" coming soon), search results (tabs), skill page, theme page | M | P1-23, P1-26b | SRCH criteria; no-result state; E2E-05, E2E-09 | ☐ |
+| P1-26 | Explore (`1d`, "Use what you have" coming soon), search results (tabs), skill page, theme page. Built: `/explore` (1d sections, then Popular, New on dodoi, Beginner-friendly), `/explore/skills` (all skills A–Z with filter, from "See all"), `/search?q=&type=` (tabs All · Posts · Skills · Makers, "See all", no-results and empty states, skill suggestions from 2 characters), `/s/{slug}` (hint, description, "Add to my interests" via `PUT/DELETE /api/me/interests/{skillId}`, related skills, posts), `/t/{slug}`; skill chips, "Try it →" and the feed search field now link through; `SkillSummary.hint` (PO decisions 2026-10-27) | M | P1-23, P1-26b | SRCH criteria; no-result state; E2E-05, E2E-09, E2E-15 skill step (`search.spec.ts`). **PO: review screens (390/834/1280)** | ◐ |
 
 **Exit (M5):** E2E-04, -05, -09 pass.
 

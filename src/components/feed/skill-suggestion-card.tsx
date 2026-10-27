@@ -1,11 +1,11 @@
-import { ComingSoonTrigger } from "@/components/layout/coming-soon-trigger";
+import Link from "next/link";
+
 import { PatternTile } from "@/components/ui/pattern-tile";
 import type { SkillSuggestion } from "@/lib/types/feed";
 import { cn } from "@/lib/utils/cn";
 
 // "New to you" card (FEED-14, `1c`/`2b`/`3c`): lavender stripes, overline, skill name, the
-// admin-written pitch plus "3 beginner projects under an hour.", and "Try it →". The skill page
-// arrives with P1-26, so "Try it" is coming soon until then.
+// admin-written pitch plus "3 beginner projects under an hour.", and "Try it →" to the skill page.
 
 function quickLine(count: number): string | null {
   if (count === 0) return null;
@@ -31,12 +31,13 @@ export function SkillSuggestionCard({
           {suggestion.pitch}
           {line ? ` ${line}` : null}
         </p>
-        <ComingSoonTrigger
-          label={`Try ${suggestion.skill.name}`}
-          className="mt-1 self-start rounded-sm text-control font-bold text-foreground"
+        <Link
+          href={`/s/${suggestion.skill.slug}`}
+          className="mt-1 self-start rounded-sm text-control font-bold text-foreground hover:underline"
         >
-          <span aria-hidden>Try it →</span>
-        </ComingSoonTrigger>
+          Try it<span className="sr-only">: {suggestion.skill.name}</span>{" "}
+          <span aria-hidden>→</span>
+        </Link>
       </PatternTile>
     </section>
   );

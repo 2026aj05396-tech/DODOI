@@ -8,6 +8,8 @@ export type SkillSummary = {
   slug: string;
   accent: SkillAccentName;
   origin: "PREDEFINED" | "CUSTOM";
+  /** Editor-set tag for skill cards, e.g. "Pairs with drawing" (SRCH-08). */
+  hint: string | null;
 };
 
 /** Skill page data. `coverMedia` is added with the media integration (P1-03). */

@@ -63,7 +63,14 @@ function requireActor(actor: Actor): AuthenticatedActor {
 }
 
 function toSummary(row: SkillSummaryRow): SkillSummary {
-  return { id: row.id, name: row.name, slug: row.slug, accent: row.accent, origin: row.origin };
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    accent: row.accent,
+    origin: row.origin,
+    hint: row.hint,
+  };
 }
 
 /** Active skills for the onboarding picker and search suggestions; signed-in users only (OD-29). */

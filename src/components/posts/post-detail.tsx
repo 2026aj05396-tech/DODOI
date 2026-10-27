@@ -1,5 +1,6 @@
 import { Sparkles } from "lucide-react";
 
+import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { Tag } from "@/components/ui/chip";
 import type {
   PostCard as PostCardData,
@@ -22,7 +23,7 @@ import { TutorialSections } from "./tutorial-sections";
 // system). Mobile: full-width media with Back and Share on top, details below, a sticky action bar.
 // Tablet: media above details in a centred column. From 1024px: side by side, media sticky.
 // Optional fields render nothing (POST-10). Materials and steps carry the user's progress
-// (P1-20b, `TutorialSections`). Skill chips link to skill pages once those exist (P1-26).
+// (P1-20b, `TutorialSections`). Skill chips open skill pages (P1-26).
 
 /** Two equal buttons side by side, their text wrapping like the design (`2c`). */
 const WRAPPING_ACTION = "h-auto min-h-11 py-2 text-center leading-tight whitespace-normal";
@@ -66,7 +67,7 @@ export function PostDetail({
             <ul className="flex flex-wrap gap-1.5" aria-label="About this post">
               {skills.map((skill) => (
                 <li key={skill.id}>
-                  <Tag variant="skill">{skill.name}</Tag>
+                  <SkillChipLink skill={skill} />
                 </li>
               ))}
               {post.difficulty ? (

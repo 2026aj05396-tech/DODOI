@@ -37,11 +37,22 @@ function SkillGroup({
       <h3 className="text-overline text-foreground-secondary uppercase">{label}</h3>
       <ul className="flex flex-wrap gap-2">
         {skills.map(({ skill, level }) => (
-          <li key={skill.id} className={cn("rounded-full px-3 py-1.5 text-chip", chip)}>
-            {skill.name}
-            {level ? (
-              <span className="font-normal text-foreground-secondary"> · {levelLabel(level)}</span>
-            ) : null}
+          <li key={skill.id}>
+            <Link
+              href={`/s/${skill.slug}`}
+              className={cn(
+                "inline-block rounded-full px-3 py-1.5 text-chip hover:underline",
+                chip,
+              )}
+            >
+              {skill.name}
+              {level ? (
+                <span className="font-normal text-foreground-secondary">
+                  {" "}
+                  · {levelLabel(level)}
+                </span>
+              ) : null}
+            </Link>
           </li>
         ))}
       </ul>

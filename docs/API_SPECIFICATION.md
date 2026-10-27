@@ -160,10 +160,13 @@ Create or resolve a custom interest. Rate limit: 10 / day / user (PROPOSED).
 - Validation (OD-13): 2–40 chars, Unicode letters/digits/space/`-`/`'`/`&`, blocklist → `400 SKILL_NAME_NOT_ALLOWED`. Requires verified email → `403 EMAIL_NOT_VERIFIED`.
 
 ### GET /api/skills/{slug} — User*
-Skill detail: `{ ...SkillSummary, description, coverMedia, relatedSkills: SkillSummary[] }`. Hidden skill → 404.
+Skill detail: `{ ...SkillSummary, description, coverMedia, relatedSkills: SkillSummary[] }`. Hidden skill → 404. `SkillSummary` carries the editor's `hint` (string | null, SRCH-08; added P1-26).
 
 ### GET /api/skills/{slug}/posts — User*
 Paginated `PostCard[]`, published posts newest first (CONFIRMED, P1-15). Hidden skill → 404.
+
+### PUT / DELETE /api/me/interests/{skillId} — User
+One interest on or off (skill page, P1-26) → `204` (idempotent). Adding: `400 SKILL_NOT_AVAILABLE` (hidden/unknown) · `422 TOO_MANY_SKILLS` (50). Removing keeps at least 3 interests → `422 NOT_ENOUGH_INTERESTS`. A skill's can-help / want-to-learn flags are kept.
 
 ### GET /api/me/skills — User
 `{ items: [{ skill: SkillSummary, isInterest, canHelp, wantsToLearn, level }] }`

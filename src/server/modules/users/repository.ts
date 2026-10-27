@@ -429,3 +429,29 @@ export async function searchPublicProfiles(options: {
     LIMIT ${take}
   `;
 }
+
+/** Marks one skill as an interest, adding the row if the user had none for it. */
+export async function setInterestFlag(userId: string, skillId: string, isInterest: boolean) {
+  if (isInterest) {
+    await db.userSkill.upsert({
+      where: { userId_skillId: { userId, skillId } },
+      create: { userId, skillId, isInterest: true },
+      update: { isInterest: true },
+    });
+    return;
+  }
+  await db.$transaction([
+    db.userSkill.updateMany({
+      where: { userId, skillId },
+      data: { isInterest: false, level: null },
+    }),
+    // A row with no flag left is removed (DATABASE_SCHEMA §4.2).
+    db.userSkill.deleteMany({
+      where: { userId, skillId, isInterest: false, canHelp: false, wantsToLearn: false },
+    }),
+  ]);
+}
+
+export async function countUserSkillRows(userId: string): Promise<number> {
+  return db.userSkill.count({ where: { userId } });
+}
