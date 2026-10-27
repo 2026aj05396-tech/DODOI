@@ -294,7 +294,13 @@ Removes from this collection only; save remains. → `204`.
 ## 6b. Reports (Phase 1: skills and profiles)
 
 ### POST /api/reports — User (verified email)
-`{ "targetType": "SKILL" | "PROFILE", "targetId": "…", "reason": "OFFENSIVE" | "SPAM" | "IMPERSONATION" | "OTHER", "note"?: "…" }` → `201` (also `201` if an open report by the same user already exists — idempotent). Rate limit 10 / day / user. Cannot report yourself → `422`.
+`{ "targetType": "SKILL" | "PROFILE", "targetId": "…", "reason": "OFFENSIVE" | "SPAM" | "IMPERSONATION" | "OTHER", "note"?: "…" }` → `201` (also `201` if an open report by the same user already exists — idempotent). `targetId` is the skill id, or the **username** for a profile (public responses never expose user ids; the report stores the user id). Only custom skills (`400 NOT_REPORTABLE`); unverified → `403 EMAIL_NOT_VERIFIED`; yourself → `422 SELF_REPORT`. Rate limit 10 / day / user (`429`).
+
+### GET /api/admin/reports?status=OPEN|RESOLVED&cursor= — Admin
+One row per reported target (PO decision, P1-28b): `{ reportId, targetType, target: { label, href, detail, isHidden }, reportCount, reasons: { REASON: n }, notes: [{ reason, note, createdAt }], latestAt, status }`, newest report first. Reporters are never included (RPT-05).
+
+### POST /api/admin/reports/{id}/action — Admin
+`{ "action": "HIDE_TARGET" | "DISMISS" | "RESTORE_TARGET" }` for the report's target: hide it and resolve all its open reports as ACTIONED; resolve them as DISMISSED; or show a hidden target again (Resolved tab). Audited as `report.hide_target` / `report.dismiss` / `report.restore_target`. → `204`.
 
 ## 7. Media
 
@@ -330,8 +336,8 @@ Avatar uploads for regular users (P1-12): any signed-in user may sign and regist
 | `GET /api/admin/skills/{id}` | Skill with editorial fields and `relatedSkillIds` |
 | `PATCH /api/admin/skills/{id}` | Edit description/hint/pitch/cover/status (any skill can be hidden) |
 | `PUT /api/admin/skills/{id}/related` | Set related skills |
-| `GET /api/admin/reports?status=OPEN&cursor=` | List reports |
-| `POST /api/admin/reports/{id}/action` | `{ "action": "HIDE_TARGET" \| "DISMISS" }` — hides skill / profile or dismisses; audited |
+| `GET /api/admin/reports?status=OPEN\|RESOLVED&cursor=` | Reports grouped by target (§6b) |
+| `POST /api/admin/reports/{id}/action` | `{ "action": "HIDE_TARGET" \| "DISMISS" \| "RESTORE_TARGET" }` — for all open reports on the target; audited (§6b) |
 
 Admin post create/update body:
 ```json

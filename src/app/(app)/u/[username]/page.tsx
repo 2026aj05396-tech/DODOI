@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ProfileView } from "@/components/profile/profile-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
+import { serverEnv } from "@/server/lib/env";
 import { orNotFound } from "@/server/lib/not-found";
 import { getMyProfile, getProfile } from "@/server/modules/library";
 
@@ -32,7 +33,13 @@ async function ProfileContent({ params }: { params: Params }) {
   const profile = await orNotFound(getProfile(actor, username));
   const isOwner = !profile.isPrivate && profile.isOwner;
   const showUsernamePrompt = isOwner ? (await getMyProfile(actor)).showUsernamePrompt : false;
-  return <ProfileView profile={profile} showUsernamePrompt={showUsernamePrompt} />;
+  return (
+    <ProfileView
+      profile={profile}
+      showUsernamePrompt={showUsernamePrompt}
+      supportEmail={serverEnv.SUPPORT_EMAIL ?? null}
+    />
+  );
 }
 
 function ProfileSkeleton() {

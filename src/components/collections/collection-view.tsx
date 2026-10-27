@@ -137,7 +137,7 @@ export function CollectionView({ initialPage }: { initialPage: CollectionPage })
             Saved
           </Link>
         ) : null}
-        <h1 className="text-greeting text-balance break-words text-foreground md:text-greeting-web">
+        <h1 className="text-greeting text-balance wrap-break-word text-foreground md:text-greeting-web">
           {collection.name}
         </h1>
         <p className="flex flex-wrap items-center gap-1.5 text-body text-foreground-secondary">

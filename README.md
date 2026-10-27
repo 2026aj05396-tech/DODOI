@@ -93,6 +93,7 @@ Read the documents in this order before writing any code.
 | Profile screens (P1-14) | Tabs Projects · Collections · Posts with Projects/Posts coming soon; "Pick your username" dismissal remembered on the account; one "Your skills" screen linked from Edit profile and Settings; the profile shows only public collections, also to its owner | CONFIRMED |
 | Search & Explore (P1-23) | Popular skills = most saves in 30 days, topped up by most published posts (never empty); Explore shows 8 popular, 8 new, 8 skills to try (with hint, outside your interests, related first), all themes with idea counts, 12 newest beginner-friendly posts | CONFIRMED |
 | Explore & skill pages (P1-26) | Explore adds Popular, New on dodoi and Beginner-friendly below the designed sections; "See all" opens an All skills page; skill pages have "Add to my interests" (removing keeps ≥ 3 interests) | CONFIRMED |
+| Reporting (P1-28b) | Admin sees one row per reported target; Hide/Dismiss resolve all its open reports; hidden targets can be shown again from Resolved; owners of hidden profiles see a neutral notice with `SUPPORT_EMAIL` (optional env; "the dodoi team" until set) | CONFIRMED |
 | Admin skill create/rename/delete | Requested by PO (2026-10-26), **on hold**: needs delete rule for skills in use, editable fields (name/slug/accent) and type of new skills. Today admin can edit editorial fields, hide/show and set related skills | OPEN |
 | Admin onboarding | Admins skip onboarding: `/` and `/onboarding` redirect them to `/admin` (age check still applies) | CONFIRMED |
 | Post lists | Related posts: 12, most shared skills → same primary → newest; skill pages newest first; hidden/deactivated creators: post stays, creator row not shown | CONFIRMED |
@@ -224,6 +225,7 @@ Each environment (local, test, production) has its **own values for every variab
 | `CLOUDINARY_API_BASE` | No — automated tests only | Points the Cloudinary Admin API at the local mock in E2E runs; refused unless `APP_ENV=local` |
 | `AUTH_GOOGLE_ISSUER` | No — automated tests only | Points Google sign-in at the local mock provider in E2E runs; refused unless `APP_ENV=local` |
 | `SEED_ADMIN_EMAIL` | No | Email of the account promoted to ADMIN after it signs in with a verified email (P1-04) |
+| `SUPPORT_EMAIL` | No | Support address shown to owners of profiles hidden after a report (P1-28b); set before launch |
 
 Rule: only variables prefixed `NEXT_PUBLIC_` may be read in client code, and none of them may contain secrets.
 

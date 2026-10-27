@@ -33,8 +33,10 @@ import {
   findActiveSkillDetailBySlug,
   findActiveSkillsByIds,
   findHintedSkills,
+  findSkillsForModeration,
   findNewestActiveSkills,
   findPitchedSkills,
+  updateSkillStatus,
   findSkillsBySlugs,
   findSkillStatuses,
   findSkillByNormalizedName,
@@ -293,4 +295,26 @@ export async function getSkillsToTry(
     .sort((a, b) => Number(b.isRelated) - Number(a.isRelated))
     .slice(0, take)
     .map(({ skill, hint }) => ({ skill, hint }));
+}
+
+export type ModerationSkill = {
+  id: string;
+  name: string;
+  slug: string;
+  origin: "PREDEFINED" | "CUSTOM";
+  status: "ACTIVE" | "HIDDEN";
+};
+
+/** Skills by id for moderation (hidden ones included), keyed by id. */
+export async function getSkillsForModeration(ids: string[]): Promise<Map<string, ModerationSkill>> {
+  if (ids.length === 0) return new Map();
+  return new Map((await findSkillsForModeration(ids)).map((row) => [row.id, row]));
+}
+
+/**
+ * Hides or shows a skill after a report (P1-28b). The caller checks the actor is an admin and
+ * writes the audit entry; hidden skills disappear from pickers, search and skill pages.
+ */
+export async function setSkillHidden(id: string, hidden: boolean): Promise<void> {
+  await updateSkillStatus(id, hidden ? "HIDDEN" : "ACTIVE");
 }

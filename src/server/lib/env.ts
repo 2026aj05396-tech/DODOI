@@ -22,6 +22,11 @@ const serverEnvSchema = z.object({
     .url()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  /** Optional: shown to owners of profiles hidden after a report (P1-28b); set before launch. */
+  SUPPORT_EMAIL: z
+    .email()
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   /** Optional: this account becomes ADMIN after its first sign-in with a verified email. */
   SEED_ADMIN_EMAIL: z
     .email()

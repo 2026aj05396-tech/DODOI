@@ -3,9 +3,11 @@ import "server-only";
 import {
   findCreatorRows,
   findDisplayName,
+  findProfilesForModeration,
   findUsernamesByIds,
   findUsersByUsernames,
   searchPublicProfiles,
+  updateProfileHidden,
 } from "./repository";
 
 export type CreatorProfile = {
@@ -71,4 +73,27 @@ export async function searchCreators(
   page: { offset: number; take: number },
 ): Promise<{ username: string; displayName: string; avatarPublicId: string | null }[]> {
   return searchPublicProfiles({ term: term.toLowerCase(), ...page });
+}
+
+export type ModerationProfile = {
+  userId: string;
+  username: string;
+  displayName: string;
+  isHidden: boolean;
+};
+
+/** Profiles by user id for moderation (hidden ones included), keyed by user id. */
+export async function getProfilesForModeration(
+  userIds: string[],
+): Promise<Map<string, ModerationProfile>> {
+  if (userIds.length === 0) return new Map();
+  return new Map((await findProfilesForModeration(userIds)).map((row) => [row.userId, row]));
+}
+
+/**
+ * Hides or shows a profile after a report (`Profile.isHidden`, P1-28b): others then get "not
+ * found", search and creator rows leave it out. The caller checks the admin and audits.
+ */
+export async function setProfileHidden(userId: string, hidden: boolean): Promise<void> {
+  await updateProfileHidden(userId, hidden);
 }

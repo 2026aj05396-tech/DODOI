@@ -117,6 +117,7 @@ src/
 │   │   ├── feed/                       # ranking, feedback, sessions
 │   │   ├── library/                    # saves and collections as post cards (above content + collections)
 │   │   ├── search/                     # search + explore; no tables, combines the owning modules
+│   │   ├── reports/                    # reports + moderation (hides skills/profiles, audits via admin)
 │   │   ├── search/
 │   │   ├── collections/                # saves, collections
 │   │   ├── admin/                      # audit log, admin ops

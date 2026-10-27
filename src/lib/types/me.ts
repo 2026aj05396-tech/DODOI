@@ -60,6 +60,8 @@ export type ProfileView =
       isOwner: boolean;
       /** The owner's own setting (others only ever see public profiles in full). */
       visibility: ProfileVisibility;
+      /** Hidden after a report (owner only; others get 404). */
+      isHidden: boolean;
       username: string;
       displayName: string;
       bio: string | null;

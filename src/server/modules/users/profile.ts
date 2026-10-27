@@ -123,6 +123,8 @@ export type ProfileForView = {
   bio: string | null;
   avatarPublicId: string | null;
   visibility: "PUBLIC" | "PRIVATE";
+  /** Hidden after a report; only ever true for the owner (others get 404). */
+  isHidden: boolean;
 };
 
 /**
@@ -145,6 +147,7 @@ export async function getProfileForView(actor: Actor, username: string): Promise
     bio: row.bio,
     avatarPublicId: row.avatar?.publicId ?? null,
     visibility: row.visibility,
+    isHidden: row.isHidden,
   };
 }
 

@@ -1,8 +1,9 @@
-import { Lock, Settings } from "lucide-react";
+import { EyeOff, Lock, Settings } from "lucide-react";
 import Link from "next/link";
 
 import { CollectionTile } from "@/components/collections/collection-tile";
 import { ComingSoonTrigger } from "@/components/layout/coming-soon-trigger";
+import { ReportButton } from "@/components/reports/report-button";
 import { Button } from "@/components/ui/button";
 import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import type { ProfileSkill, ProfileView as ProfileViewData } from "@/lib/types/me";
@@ -72,12 +73,20 @@ function Header({
       <div className="flex items-center gap-4 md:gap-6">
         <Avatar url={profile.avatarUrl} className="size-22 shrink-0 md:size-28" />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h1 className="text-greeting break-words text-foreground md:text-greeting-web">
+          <h1 className="text-greeting wrap-break-word text-foreground md:text-greeting-web">
             {profile.displayName}
           </h1>
           <p className="text-body text-foreground-secondary">@{profile.username}</p>
         </div>
       </div>
+      {!isOwner ? (
+        <ReportButton
+          targetType="PROFILE"
+          targetId={profile.username}
+          targetLabel="this profile"
+          className="self-start"
+        />
+      ) : null}
       {isOwner ? (
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
@@ -98,9 +107,12 @@ function Header({
 export function ProfileView({
   profile,
   showUsernamePrompt,
+  supportEmail,
 }: {
   profile: ProfileViewData;
   showUsernamePrompt: boolean;
+  /** For the hidden-profile notice; without it the notice names the dodoi team. */
+  supportEmail: string | null;
 }) {
   if (profile.isPrivate) {
     return (
@@ -118,6 +130,29 @@ export function ProfileView({
   return (
     <div className="flex flex-col gap-6">
       <Header profile={profile} isOwner={profile.isOwner} />
+      {profile.isOwner && profile.isHidden ? (
+        <p
+          role="status"
+          className="flex items-start gap-2.5 rounded-card bg-destructive-surface p-4 text-body text-foreground"
+        >
+          <EyeOff aria-hidden className="mt-0.5 size-4.5 shrink-0" />
+          <span>
+            Your profile is hidden from other makers after a report. If you think this is a mistake,
+            {supportEmail ? (
+              <>
+                {" "}
+                contact us at{" "}
+                <a href={`mailto:${supportEmail}`} className="font-bold text-link hover:underline">
+                  {supportEmail}
+                </a>
+                .
+              </>
+            ) : (
+              " contact the dodoi team."
+            )}
+          </span>
+        </p>
+      ) : null}
       {profile.isOwner && showUsernamePrompt ? (
         <UsernamePrompt username={profile.username} />
       ) : null}

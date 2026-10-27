@@ -1,0 +1,155 @@
+"use client";
+
+import { Flag } from "lucide-react";
+import { useId, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { FieldError } from "@/components/ui/field-error";
+import { Label } from "@/components/ui/input";
+import { sendReport } from "@/lib/api-client/reports";
+import { ApiRequestError } from "@/lib/api-client/request";
+import type { ReportReason } from "@/lib/schemas/reports";
+import { cn } from "@/lib/utils/cn";
+
+// Report a custom skill or a profile (RPT-01…05; not designed, built from the system): a reason,
+// an optional note, then a neutral thank-you. The reported person is never told who reported.
+
+const REASONS: { value: ReportReason; label: string }[] = [
+  { value: "OFFENSIVE", label: "Offensive or hateful" },
+  { value: "SPAM", label: "Spam or advertising" },
+  { value: "IMPERSONATION", label: "Pretending to be someone else" },
+  { value: "OTHER", label: "Something else" },
+];
+
+const NOTE_MAX = 500;
+
+export function ReportButton({
+  targetType,
+  targetId,
+  targetLabel,
+  className,
+}: {
+  targetType: "SKILL" | "PROFILE";
+  /** Skill id, or username for a profile. */
+  targetId: string;
+  /** "this profile", "this skill" (used in the title). */
+  targetLabel: string;
+  className?: string;
+}) {
+  const id = useId();
+  const [isOpen, setIsOpen] = useState(false);
+  const [reason, setReason] = useState<ReportReason | null>(null);
+  const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isSent, setIsSent] = useState(false);
+
+  function open(next: boolean) {
+    setIsOpen(next);
+    if (next) {
+      setReason(null);
+      setNote("");
+      setError(null);
+      setIsSent(false);
+    }
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!reason) {
+      setError("Choose a reason.");
+      return;
+    }
+    setIsSending(true);
+    setError(null);
+    try {
+      await sendReport({ targetType, targetId, reason, note: note.trim() || undefined });
+      setIsSent(true);
+    } catch (caught) {
+      setError(
+        caught instanceof ApiRequestError ? caught.message : "We couldn't send that. Try again.",
+      );
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  return (
+    <>
+      <Button
+        variant="text"
+        onClick={() => open(true)}
+        className={cn("gap-1.5 text-foreground-secondary", className)}
+      >
+        <Flag aria-hidden className="size-4" />
+        Report
+      </Button>
+      <Dialog open={isOpen} onOpenChange={open}>
+        <DialogContent layout="sheet">
+          {isSent ? (
+            <>
+              <DialogTitle>Thanks for letting us know</DialogTitle>
+              <DialogDescription>
+                Our team will take a look. We won&apos;t tell anyone who sent the report.
+              </DialogDescription>
+              <Button onClick={() => open(false)}>Done</Button>
+            </>
+          ) : (
+            <>
+              <DialogTitle>Report {targetLabel}</DialogTitle>
+              <DialogDescription>
+                Reports are private. We&apos;ll review it and act if it breaks our guidelines.
+              </DialogDescription>
+              <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-control-sm font-bold text-foreground">
+                    What&apos;s wrong?
+                  </legend>
+                  {REASONS.map((option) => (
+                    <label
+                      key={option.value}
+                      className={cn(
+                        "flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3.5",
+                        reason === option.value ? "border-foreground" : "border-border",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name={`${id}-reason`}
+                        value={option.value}
+                        checked={reason === option.value}
+                        onChange={() => setReason(option.value)}
+                        className="size-4.5 shrink-0 accent-[var(--color-foreground)]"
+                      />
+                      <span className="text-body text-foreground">{option.label}</span>
+                    </label>
+                  ))}
+                </fieldset>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`${id}-note`}>Anything else? (optional)</Label>
+                  <textarea
+                    id={`${id}-note`}
+                    value={note}
+                    maxLength={NOTE_MAX}
+                    rows={3}
+                    onChange={(event) => setNote(event.target.value)}
+                    aria-describedby={`${id}-count`}
+                    className="w-full rounded-md border-control border-input bg-background px-3.5 py-3 text-control-lg text-foreground"
+                  />
+                  <p id={`${id}-count`} className="text-meta text-foreground-secondary">
+                    {note.length} / {NOTE_MAX}
+                  </p>
+                </div>
+                <FieldError id={`${id}-error`}>{error}</FieldError>
+                <Button type="submit" disabled={isSending}>
+                  {isSending ? "Sending…" : "Send report"}
+                </Button>
+              </form>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

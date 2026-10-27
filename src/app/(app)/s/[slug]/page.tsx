@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
+import { ReportButton } from "@/components/reports/report-button";
 import { InterestToggle } from "@/components/skills/interest-toggle";
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { SkillPosts } from "@/components/skills/skill-posts";
@@ -51,7 +52,9 @@ async function SkillContent({ params }: { params: Params }) {
           className="h-24 w-full shrink-0 md:size-28"
         />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h1 className="text-hero break-words text-foreground md:text-hero-web">{skill.name}</h1>
+          <h1 className="text-hero wrap-break-word text-foreground md:text-hero-web">
+            {skill.name}
+          </h1>
           {skill.hint ? (
             <p className="self-start rounded-full bg-muted px-3 py-1 text-meta text-foreground">
               {skill.hint}
@@ -62,8 +65,12 @@ async function SkillContent({ params }: { params: Params }) {
               {skill.description}
             </p>
           ) : null}
-          <div className="mt-1">
+          <div className="mt-1 flex flex-wrap items-center gap-3">
             <InterestToggle skillId={skill.id} skillName={skill.name} initial={isInterest} />
+            {/* Only skills added by makers can be reported (RPT-01). */}
+            {skill.origin === "CUSTOM" ? (
+              <ReportButton targetType="SKILL" targetId={skill.id} targetLabel="this skill" />
+            ) : null}
           </div>
         </div>
       </header>

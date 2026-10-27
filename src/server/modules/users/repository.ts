@@ -455,3 +455,15 @@ export async function setInterestFlag(userId: string, skillId: string, isInteres
 export async function countUserSkillRows(userId: string): Promise<number> {
   return db.userSkill.count({ where: { userId } });
 }
+
+/** Profiles by user id with what moderation needs (reports, P1-28b). */
+export async function findProfilesForModeration(userIds: string[]) {
+  return db.profile.findMany({
+    where: { userId: { in: userIds } },
+    select: { userId: true, username: true, displayName: true, isHidden: true },
+  });
+}
+
+export async function updateProfileHidden(userId: string, isHidden: boolean): Promise<void> {
+  await db.profile.update({ where: { userId }, data: { isHidden } });
+}

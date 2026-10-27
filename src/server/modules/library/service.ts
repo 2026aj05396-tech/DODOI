@@ -191,6 +191,7 @@ export async function getProfile(
     isPrivate: false,
     isOwner: profile.isOwner,
     visibility: profile.visibility,
+    isHidden: profile.isOwner && profile.isHidden,
     username: profile.username,
     displayName: profile.displayName,
     bio: profile.bio,

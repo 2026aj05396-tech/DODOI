@@ -214,3 +214,15 @@ export async function findHintedSkills(excludeIds: string[]) {
     select: { ...summarySelect, hint: true, relatedFrom: { select: { toSkillId: true } } },
   });
 }
+
+/** Skills by id with what moderation needs (reports, P1-28b). */
+export async function findSkillsForModeration(ids: string[]) {
+  return db.skill.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, name: true, slug: true, origin: true, status: true },
+  });
+}
+
+export async function updateSkillStatus(id: string, status: "ACTIVE" | "HIDDEN"): Promise<void> {
+  await db.skill.update({ where: { id }, data: { status } });
+}
