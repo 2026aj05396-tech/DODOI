@@ -21,6 +21,7 @@ const ADMIN_PATH = "/admin";
 /** Any path without a page: Next.js renders the standard 404 page with a 404 status. */
 const NOT_FOUND_PATH = "/_admin-not-found";
 const ONBOARDING_PATH = "/onboarding";
+const FEED_PATH = "/feed";
 
 function redirectTo(path: string, request: NextRequest): NextResponse {
   const destination = new URL(path, request.url);
@@ -45,11 +46,13 @@ export async function proxy(request: NextRequest) {
   const isAdmin = token?.role === "ADMIN";
   const needsOnboarding = token?.oc === false && !isAdmin;
 
-  // The welcome page is public; signed-in users who still have setup to do go there instead.
+  // The welcome page is for signed-out visitors; signed-in users go on to setup or their feed.
   if (pathname === WELCOME_PATH) {
     if (token?.ac === false) return NextResponse.redirect(new URL("/confirm-age", request.url));
     if (isAdmin) return NextResponse.redirect(new URL(ADMIN_PATH, request.url));
     if (needsOnboarding) return NextResponse.redirect(new URL(ONBOARDING_PATH, request.url));
+    // Signed-in users who are set up land on their feed (F-05, P1-22).
+    if (token) return NextResponse.redirect(new URL(FEED_PATH, request.url));
     return NextResponse.next();
   }
 

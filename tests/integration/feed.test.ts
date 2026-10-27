@@ -86,6 +86,20 @@ describe("feed", () => {
     expect(third.nextCursor).toBeNull();
   });
 
+  it("returns the same posts when a page is asked for again (a retry)", async () => {
+    const actor = await userWithInterests([crochet]);
+    await posts(5, crochet);
+    const first = await feed(actor, { limit: 2 });
+
+    const second = await feed(actor, { limit: 2, cursor: first.nextCursor ?? "" });
+    const retried = await feed(actor, { limit: 2, cursor: first.nextCursor ?? "" });
+
+    expect(postIds(retried.items)).toEqual(postIds(second.items));
+    expect(retried.nextCursor).toBe(second.nextCursor);
+    const third = await feed(actor, { limit: 2, cursor: second.nextCursor ?? "" });
+    expect(postIds(third.items)).toHaveLength(1);
+  });
+
   it("puts at least 20% of a For you page outside the user's interests", async () => {
     const actor = await userWithInterests([crochet]);
     await posts(10, crochet);

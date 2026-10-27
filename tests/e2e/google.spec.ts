@@ -45,7 +45,7 @@ test("Google links to an existing password account with the same email", async (
   await page.getByRole("button", { name: "Continue with Google" }).click();
 
   // The account already confirmed its age at registration, so it goes straight back.
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/feed$/);
   await page.goto("/sign-in");
   await expect(page.getByText("You're signed in.")).toBeVisible();
 });

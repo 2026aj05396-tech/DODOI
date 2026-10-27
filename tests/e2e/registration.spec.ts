@@ -107,7 +107,7 @@ test("E2E-01 (until the feed exists): sign up, verify, onboard", async ({ page }
   await page.getByRole("button", { name: "Skip" }).click();
   await page.getByRole("button", { name: "Skip" }).click();
   // The personalised feed (P1-22) will be the destination; until then onboarding returns to /.
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/feed$/);
 });
 
 test("sign-up refuses under-18s with the agreed message", async ({ page }) => {

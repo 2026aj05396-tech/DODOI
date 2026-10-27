@@ -1,6 +1,11 @@
 import "server-only";
 
-import { findCreatorRows, findUsernamesByIds, findUsersByUsernames } from "./repository";
+import {
+  findCreatorRows,
+  findDisplayName,
+  findUsernamesByIds,
+  findUsersByUsernames,
+} from "./repository";
 
 export type CreatorProfile = {
   username: string;
@@ -52,4 +57,9 @@ export async function getUsernames(userIds: string[]): Promise<Map<string, strin
   if (userIds.length === 0) return new Map();
   const rows = await findUsernamesByIds(userIds);
   return new Map(rows.map((row) => [row.userId, row.username]));
+}
+
+/** The user's own display name (feed greeting, P1-22); null without a profile. */
+export async function getDisplayName(userId: string): Promise<string | null> {
+  return findDisplayName(userId);
 }

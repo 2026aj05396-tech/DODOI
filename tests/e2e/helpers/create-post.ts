@@ -9,15 +9,70 @@ import { PrismaClient } from "@/generated/prisma/client";
 // Creates a Creative Commons tutorial (three photos and a video, materials, steps) on the
 // predefined skill "crochet", plus one related post on the same skill, so the post page has every
 // section. Options: { "status": "PUBLISHED" | "DRAFT" }.
+// Feed mode: { "feed": { "count": 30 } } → creates a new skill (unique name, with a pitch) and that
+// many published posts on it; prints `{ "skillSlug", "skillName", "ids" }`.
 
 async function main(): Promise<void> {
-  const options = JSON.parse(process.argv[2] ?? "{}") as { status?: "PUBLISHED" | "DRAFT" };
+  const options = JSON.parse(process.argv[2] ?? "{}") as {
+    status?: "PUBLISHED" | "DRAFT";
+    feed?: { count: number };
+  };
   const databaseUrl =
     process.env.TEST_DATABASE_URL ??
     "postgresql://dodoi:dodoi@localhost:5433/dodoi_test?schema=public";
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
 
   try {
+    if (options.feed) {
+      const key = randomUUID().slice(0, 8);
+      const name = `Feed craft ${key}`;
+      const feedSkill = await db.skill.create({
+        data: {
+          name,
+          normalizedName: name.toLowerCase(),
+          slug: `feed-craft-${key}`,
+          accent: "MINT",
+          pitch: "A tiny craft made for testing the feed.",
+        },
+      });
+      const ids: string[] = [];
+      for (let index = 0; index < options.feed.count; index += 1) {
+        const cover = await db.mediaAsset.create({
+          data: {
+            type: "IMAGE",
+            publicId: `dodoi/local/posts/e2e-feed-${key}-${index}`,
+            format: "jpg",
+            width: 1200,
+            height: index % 2 ? 1500 : 900,
+            bytes: 100_000,
+            altText: `Feed photo ${index}`,
+          },
+        });
+        const post = await db.post.create({
+          data: {
+            type: "FINISHED",
+            status: "PUBLISHED",
+            publishedAt: new Date(),
+            difficulty: "BEGINNER",
+            estimatedMinutes: 30,
+            title: `Feed post ${key} ${index}`,
+            skills: { create: { skillId: feedSkill.id, isPrimary: true } },
+            media: { create: { mediaId: cover.id, position: 0 } },
+            attribution: {
+              create: {
+                sourceType: "TEAM_ORIGINAL",
+                license: "Owned",
+                attributionText: "Made by the dodoi team",
+              },
+            },
+          },
+        });
+        ids.push(post.id);
+      }
+      process.stdout.write(JSON.stringify({ skillSlug: feedSkill.slug, skillName: name, ids }));
+      return;
+    }
+
     const skill = await db.skill.findUniqueOrThrow({ where: { slug: "crochet" } });
     const key = randomUUID().slice(0, 8);
     const media = async (index: number, type: "IMAGE" | "VIDEO" = "IMAGE") =>

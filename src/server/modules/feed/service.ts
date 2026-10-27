@@ -29,6 +29,7 @@ import { rankPage, type RankingContext } from "./ranking";
 import {
   deleteNotInterested,
   findNotInterested,
+  findPagePostIds,
   findServedPostIds,
   findSession,
   insertImpressions,
@@ -106,8 +107,9 @@ export async function getFeed(
   const skillId = await resolveSkillFilter(session.filter, profile);
 
   const since = new Date(Date.now() - FEED_CONFIG.recentSignalDays * DAY_MS);
-  const [served, notInterested, savedSkills] = await Promise.all([
-    findServedPostIds(session.id),
+  const [served, alreadyOnPage, notInterested, savedSkills] = await Promise.all([
+    findServedPostIds(session.id, session.page),
+    findPagePostIds(session.id, session.page),
     findNotInterested(user.id, since),
     getRecentlySavedSkillIds(user.id, since),
   ]);
@@ -130,13 +132,18 @@ export async function getFeed(
     );
   }
 
-  const page = rankPage(candidates, context, {
-    limit: query.limit,
-    mode: session.filter === "new-to-you" ? "newToYou" : "full",
-    discoveryQuota: session.filter === "for-you",
-  });
-  const ids = page.map((candidate) => candidate.id);
-  await insertImpressions(session.id, ids);
+  // A page asked for again (a retry after a lost response) returns the same posts, so nothing is
+  // skipped; otherwise rank a new page and remember it.
+  const hidden = new Set(notInterested.postIds);
+  let ids = alreadyOnPage.filter((id) => !hidden.has(id));
+  if (alreadyOnPage.length === 0) {
+    ids = rankPage(candidates, context, {
+      limit: query.limit,
+      mode: session.filter === "new-to-you" ? "newToYou" : "full",
+      discoveryQuota: session.filter === "for-you",
+    }).map((candidate) => candidate.id);
+    await insertImpressions(session.id, session.page, ids);
+  }
   const cards = await getPostCards(user, ids, { provider });
 
   const items: FeedPage["items"] = cards.map((post) => ({ kind: "post", post }));
@@ -149,7 +156,7 @@ export async function getFeed(
   return {
     items,
     nextCursor:
-      candidates.length > page.length
+      candidates.length > ids.length
         ? encodeCursor({ session: session.id, page: session.page + 1 })
         : null,
   };

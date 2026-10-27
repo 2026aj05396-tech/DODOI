@@ -74,9 +74,10 @@ describe("proxy", () => {
     expect(onOnboarding.headers.get("location")).toBeNull();
   });
 
-  it("shows the welcome page to signed-out visitors and finished users", async () => {
+  it("shows the welcome page to signed-out visitors and sends finished users to their feed", async () => {
     expect((await proxy(requestTo("/"))).headers.get("location")).toBeNull();
-    expect((await proxy(requestTo("/", await sessionCookie()))).headers.get("location")).toBeNull();
+    const response = await proxy(requestTo("/", await sessionCookie()));
+    expect(new URL(response.headers.get("location") ?? "").pathname).toBe("/feed");
   });
 
   it("lets an older cookie without the onboarding claim through", async () => {

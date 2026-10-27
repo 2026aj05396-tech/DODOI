@@ -18,7 +18,7 @@ test("an unverified user sees the verify banner on app pages and can resend", as
   const { email, password } = createPasswordAccount({ unverified: true });
   await page.goto("/sign-in");
   await signIn(page, email, password);
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/feed$/);
 
   // /shell-preview is the local preview of the signed-in shell (no app pages exist yet).
   await page.goto("/shell-preview");
@@ -32,7 +32,7 @@ test("a verified user sees no verify banner", async ({ page }) => {
   const { email, password } = createPasswordAccount();
   await page.goto("/sign-in");
   await signIn(page, email, password);
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/feed$/);
 
   await page.goto("/shell-preview");
   await expect(page.getByRole("navigation", { name: "Main" }).first()).toBeAttached();

@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   title: "Getting started · dodoi",
 };
 
-/** Until the home feed exists (P1-22), finishing returns to `/`. */
-const FINISH_PATH = "/";
+/** Finishing onboarding opens the home feed (F-05). */
+const FINISH_PATH = "/feed";
 
 // Onboarding (P1-11). Full screen, outside the app shell: no navigation until it is done.
 export default function OnboardingPage() {

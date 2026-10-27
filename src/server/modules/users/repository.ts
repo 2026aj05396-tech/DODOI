@@ -352,3 +352,8 @@ export async function findUsernamesByIds(userIds: string[]) {
     select: { userId: true, username: true },
   });
 }
+
+export async function findDisplayName(userId: string): Promise<string | null> {
+  const profile = await db.profile.findUnique({ where: { userId }, select: { displayName: true } });
+  return profile?.displayName ?? null;
+}

@@ -13,9 +13,9 @@ async function signIn(page: Page, options: { admin?: boolean } = {}) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  // Admins skip onboarding and land on /admin; other users stay on the welcome page.
+  // Admins skip onboarding and land on /admin; other users land on their feed.
   // Wait for the last redirect (/ → /admin → /admin/posts), or the next goto can interrupt it.
-  await expect(page).toHaveURL(options.admin ? /\/admin\/posts$/ : /\/$/);
+  await expect(page).toHaveURL(options.admin ? /\/admin\/posts$/ : /\/feed$/);
   await page.waitForLoadState();
 }
 

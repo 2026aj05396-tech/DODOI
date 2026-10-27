@@ -13,16 +13,34 @@ export async function findSession(id: string) {
   });
 }
 
-export async function findServedPostIds(sessionId: string): Promise<string[]> {
-  const rows = await db.feedImpression.findMany({ where: { sessionId }, select: { postId: true } });
+/** Posts served on the session's pages before `page`. */
+export async function findServedPostIds(sessionId: string, page: number): Promise<string[]> {
+  const rows = await db.feedImpression.findMany({
+    where: { sessionId, page: { lt: page } },
+    select: { postId: true },
+  });
+  return rows.map((row) => row.postId);
+}
+
+/** Posts already served on this page, in order (the same page asked for again). */
+export async function findPagePostIds(sessionId: string, page: number): Promise<string[]> {
+  const rows = await db.feedImpression.findMany({
+    where: { sessionId, page },
+    orderBy: { position: "asc" },
+    select: { postId: true },
+  });
   return rows.map((row) => row.postId);
 }
 
 /** Two requests for the same page may race; an impression is only stored once. */
-export async function insertImpressions(sessionId: string, postIds: string[]): Promise<void> {
+export async function insertImpressions(
+  sessionId: string,
+  page: number,
+  postIds: string[],
+): Promise<void> {
   if (postIds.length === 0) return;
   await db.feedImpression.createMany({
-    data: postIds.map((postId) => ({ sessionId, postId })),
+    data: postIds.map((postId, position) => ({ sessionId, postId, page, position })),
     skipDuplicates: true,
   });
 }

@@ -126,7 +126,12 @@ export function PostDetail({
           </h2>
           <div className="mt-4 columns-2 gap-3 md:gap-4 xl:columns-3">
             {related.map((card) => (
-              <PostCard key={card.id} post={card} className="mb-5 break-inside-avoid" />
+              <PostCard
+                key={card.id}
+                post={card}
+                isSignedIn={progress !== null}
+                className="mb-5 break-inside-avoid"
+              />
             ))}
           </div>
         </section>

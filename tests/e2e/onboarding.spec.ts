@@ -80,7 +80,7 @@ test("levels and can-help are saved, and a reload resumes on the same step", asy
 
   await pick(page, "Knitting");
   await page.getByRole("button", { name: "Finish" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/feed$/);
 
   const saved = await page.evaluate(async () => (await fetch("/api/me/skills")).json());
   expect(saved).toMatchObject({
@@ -97,7 +97,7 @@ test("levels and can-help are saved, and a reload resumes on the same step", asy
   });
   // Finished: onboarding no longer appears.
   await page.goto("/onboarding");
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/feed$/);
 });
 
 test("app pages send an unfinished account to onboarding first", async ({ page }) => {

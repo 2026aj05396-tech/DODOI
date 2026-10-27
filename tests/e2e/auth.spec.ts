@@ -60,13 +60,13 @@ test("signing in returns to the requested page, and signing out ends the session
   page,
 }) => {
   const { email, password } = createPasswordAccount();
-  await page.goto("/sign-in?returnTo=%2F%3Fwelcome%3D1");
+  await page.goto("/sign-in?returnTo=%2Fp%2Fmissing%3Fwelcome%3D1");
 
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL(/\/\?welcome=1$/);
+  await expect(page).toHaveURL(/\/p\/missing\?welcome=1$/);
 
   await page.goto("/sign-in");
   await expect(page.getByText("You're signed in.")).toBeVisible();
@@ -85,5 +85,6 @@ test("an unsafe returnTo is ignored", async ({ page }) => {
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL(/^http:\/\/localhost:3100\/$/);
+  // Falls back to the home page, which sends a signed-in user on to their feed.
+  await expect(page).toHaveURL(/^http:\/\/localhost:3100\/feed$/);
 });

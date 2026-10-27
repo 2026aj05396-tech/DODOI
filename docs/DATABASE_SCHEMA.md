@@ -375,7 +375,7 @@ model FeedSession {
   @@index([userId, createdAt(sort: Desc)])
 }
 
-model FeedImpression {
+model FeedImpression {                     // + page, position (P1-22): repeat requests for a page return the same posts
   sessionId String
   postId    String
   servedAt  DateTime @default(now())

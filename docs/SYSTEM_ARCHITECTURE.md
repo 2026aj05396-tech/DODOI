@@ -61,7 +61,7 @@ Libraries are installed in the task that first uses them, so the project never c
 | Formatting | Prettier + `prettier-plugin-tailwindcss` | Consistent formatting and Tailwind class order (Markdown excluded to keep doc tables readable) | P0-02 ☑ |
 | Import rules | `eslint-plugin-import` | Import order and circular-dependency checks | P0-02 ☑ |
 | Forms | React Hook Form + `@hookform/resolvers` | Accessible, performant forms with Zod | P1-07 |
-| Client data fetching/cache | TanStack Query | Infinite feed pagination, optimistic save, retries | P1-07 / first data-driven client UI |
+| Client data fetching/cache | TanStack Query | Infinite feed pagination, optimistic save, retries | P1-22 ☑ (`@tanstack/react-query`, PO approved 2026-10-27) |
 | PWA / service worker | Serwist | Maintained Next.js service-worker tooling (verify Turbopack support at P1-27) | P1-27 |
 | Password hashing | `argon2` (or `bcryptjs` if native build is problematic) | Secure password storage | P1-04 |
 | Cloudinary SDK | Not used — Cloudinary's REST APIs are called directly (`src/server/integrations/media/cloudinary.ts`): signing, Admin API lookup/delete (P1-03) | Signed uploads, verification, deletion | P1-03 |
@@ -178,7 +178,7 @@ Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the P
 
 **Skill suggestion (FEED-14, CONFIRMED):** pick an ACTIVE skill not in the user's interests, with `Skill.pitch` and ≥ 1 published beginner (Curious/Beginner) post; skills related (SkillRelation) to the user's interests first, then most beginner projects under an hour, then name. Inserted as the first item of page 1 of a **For you** session only (not on skill chips or New to you); desktop shows it in the right rail (`/api/feed/suggestion`). No dismiss in P1. Candidate pool: the newest 1,000 published posts with media.
 
-**Pagination & no-repeat (FEED-09):** a `feedSessionId` is created on first page load (returned to client); served post IDs are recorded server-side (FeedImpression table, see schema) and excluded on subsequent pages. Cursor encodes session ID + page index. Session expiry CONFIRMED: 24h; an expired or foreign session answers `400 FEED_SESSION_EXPIRED` and the client starts again.
+**Pagination & no-repeat (FEED-09):** a `feedSessionId` is created on first page load (returned to client); served post IDs are recorded server-side (FeedImpression table, with the page and position each was served on) and excluded on subsequent pages; asking for the same page again (a retry) returns the same posts (P1-22). Cursor encodes session ID + page index. Session expiry CONFIRMED: 24h; an expired or foreign session answers `400 FEED_SESSION_EXPIRED` and the client starts again.
 
 ## 8. Media Architecture
 

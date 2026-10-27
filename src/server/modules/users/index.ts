@@ -2,6 +2,7 @@
 export { confirmAge } from "./age-check";
 export {
   getCreatorProfiles,
+  getDisplayName,
   getPublicProfile,
   getUserIdByUsername,
   getUsernames,

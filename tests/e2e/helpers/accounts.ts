@@ -24,6 +24,8 @@ export function createPasswordAccount(
     noPassword?: boolean;
     onboardingIncomplete?: boolean;
     admin?: boolean;
+    /** Skill slugs added as interests. */
+    interests?: string[];
   } = {},
 ): { email: string; password: string } {
   const email = uniqueEmail();
@@ -36,6 +38,7 @@ export function createPasswordAccount(
     ...(options.noPassword ? ["--no-password"] : []),
     ...(options.onboardingIncomplete ? ["--onboarding-incomplete"] : []),
     ...(options.admin ? ["--admin"] : []),
+    ...(options.interests ? [`--interests=${options.interests.join(",")}`] : []),
   ]);
   return { email, password: PASSWORD };
 }
@@ -66,4 +69,18 @@ export function createPost(options: { status?: "PUBLISHED" | "DRAFT" } = {}): {
     { encoding: "utf8" },
   );
   return JSON.parse(output) as { id: string; relatedId: string };
+}
+
+/** A new skill (unique name, with a pitch) and `count` published posts on it, for feed tests. */
+export function createFeedPosts(count: number): {
+  skillSlug: string;
+  skillName: string;
+  ids: string[];
+} {
+  const output = execFileSync(
+    "pnpm",
+    ["exec", "tsx", join(__dirname, "create-post.ts"), JSON.stringify({ feed: { count } })],
+    { encoding: "utf8" },
+  );
+  return JSON.parse(output) as { skillSlug: string; skillName: string; ids: string[] };
 }

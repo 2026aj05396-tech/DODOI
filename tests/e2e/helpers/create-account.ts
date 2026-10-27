@@ -8,7 +8,8 @@ import { PrismaClient } from "@/generated/prisma/client";
 // Run with tsx by accounts.ts (Playwright loads test files as CommonJS, but the generated Prisma
 // client is ESM-only). Usage:
 //   tsx create-account.ts account <email> <password> [--unverified] [--age-unconfirmed]
-//       [--no-password] [--onboarding-incomplete] [--admin]   (onboarding finished by default)
+//       [--no-password] [--onboarding-incomplete] [--admin] [--interests=slug,slug]
+//       (onboarding finished by default; --interests adds those skills as interests)
 //   tsx create-account.ts verification-token <email>   (prints a fresh raw token)
 //   tsx create-account.ts reset-token <email>          (prints a fresh raw token)
 //   tsx create-account.ts reset-rate-limits
@@ -30,9 +31,17 @@ async function main(): Promise<void> {
 
     if (command === "account") {
       if (!password) throw new Error("Missing password");
+      const interestSlugs =
+        flags.find((flag) => flag.startsWith("--interests="))?.slice("--interests=".length) ?? "";
+      const interests = interestSlugs
+        ? await db.skill.findMany({ where: { slug: { in: interestSlugs.split(",") } } })
+        : [];
       await db.user.create({
         data: {
           email,
+          skills: {
+            create: interests.map((skill) => ({ skillId: skill.id, isInterest: true })),
+          },
           emailVerified: flags.includes("--unverified") ? null : new Date(),
           ageConfirmedAt: flags.includes("--age-unconfirmed") ? null : new Date(),
           onboardingCompletedAt: flags.includes("--onboarding-incomplete") ? null : new Date(),

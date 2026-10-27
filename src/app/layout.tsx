@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 
 import "@/styles/globals.css";
 
+import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/toast";
 
 // DM Sans is the only typeface (UI_UX_GUIDELINES §2.4). Self-hosted at build time by next/font.
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={dmSans.variable}>
       <body>
-        {children}
+        <QueryProvider>{children}</QueryProvider>
         <Toaster />
       </body>
     </html>
