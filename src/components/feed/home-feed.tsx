@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Masonry, cardHeight } from "@/components/posts/masonry";
 import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
 import { PostCard } from "@/components/posts/post-card";
-import { useColumnCount } from "@/components/posts/use-column-count";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -67,12 +66,17 @@ export function HomeFeed({
   initialPage: FeedPage;
 }) {
   const queryClient = useQueryClient();
-  const columnCount = useColumnCount();
   const [filter, setFilter] = useState<FeedFilter>("for-you");
   // The server's first page is used once; after any switch every filter starts a new session.
   const [useServerPage, setUseServerPage] = useState(true);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
+  // The server's cards are there from the first paint, so only later cards fade in: an image at
+  // opacity 0 doesn't count as painted, which held back the page's largest paint by ~550 ms (P1-31).
+  const [serverPostIds] = useState(
+    () =>
+      new Set(initialPage.items.flatMap((item) => (item.kind === "post" ? [item.post.id] : []))),
+  );
   const sentinel = useRef<HTMLDivElement>(null);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
@@ -164,12 +168,11 @@ export function HomeFeed({
       const key = itemKey(item);
       if (seen.has(key) || dismissed.has(key)) return false;
       seen.add(key);
-      // From 1280px the suggestion sits in the right rail instead (`2b`).
-      return !(item.kind === "skill_suggestion" && columnCount === 3);
+      return true;
     });
 
   let body: React.ReactNode;
-  if (feed.isPending || columnCount === null) {
+  if (feed.isPending) {
     body = <MasonrySkeleton />;
   } else if (feed.isError && !isFetchNextPageError) {
     body = <ErrorState message="We couldn't load your feed." onRetry={() => void feed.refetch()} />;
@@ -179,12 +182,16 @@ export function HomeFeed({
   } else {
     body = (
       <>
+        {/* Keeps headings in order (h1 greeting → h2 → card h3) when the suggestion card's h2
+            moves to the rail from 1280px. */}
+        <h2 className="sr-only">Posts</h2>
         <Masonry
           items={items}
-          columns={columnCount}
+          // From 1280px the suggestion sits in the right rail instead (`2b`).
+          include={(item, columns) => !(item.kind === "skill_suggestion" && columns === 3)}
           getKey={itemKey}
           getHeight={itemHeight}
-          renderItem={(item) => {
+          renderItem={(item, { isAboveFold }) => {
             if (item.kind === "skill_suggestion") return <SkillSuggestionCard suggestion={item} />;
             const { post } = item;
             if (hidden.has(post.id)) {
@@ -194,7 +201,8 @@ export function HomeFeed({
               <PostCard
                 post={post}
                 isSignedIn
-                className="animate-dd-up"
+                isAboveFold={isAboveFold}
+                className={serverPostIds.has(post.id) ? undefined : "animate-dd-up"}
                 menu={
                   <PostMenu
                     postId={post.id}

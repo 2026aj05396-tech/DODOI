@@ -35,7 +35,11 @@ test("E2E-06: pages load without repeats until the end of the feed", async ({ pa
 
   await page.getByRole("button", { name: craft.skillName }).click();
   // Newest first: the last post created is on the first page of the chip's session.
-  await expect(feed(page).locator(`a[href="/p/${craft.ids.at(-1)}"]`)).toBeVisible();
+  await expect(
+    feed(page)
+      .locator(`a[href="/p/${craft.ids.at(-1)}"]`)
+      .filter({ visible: true }),
+  ).toBeVisible();
   await expect(cardLinks(page)).toHaveCount(20);
 
   // The next page loads on scroll ("Load more" is the keyboard fallback, tested below).
@@ -95,7 +99,7 @@ test("E2E-15: an interest chip shows only that skill; New to you only other skil
   );
   await expect(cardLinks(page)).toHaveCount(2);
   for (const id of mine.ids) {
-    await expect(feed(page).locator(`a[href="/p/${id}"]`)).toBeVisible();
+    await expect(feed(page).locator(`a[href="/p/${id}"]`).filter({ visible: true })).toBeVisible();
   }
 
   await page.getByRole("button", { name: "New to you" }).click();
@@ -162,11 +166,27 @@ test("Load more fetches the next page for keyboard users", async ({ page }) => {
   const craft = createFeedPosts(25);
   await signInWithInterests(page, [craft.skillSlug]);
   await page.getByRole("button", { name: craft.skillName }).click();
-  await expect(feed(page).locator(`a[href="/p/${craft.ids.at(-1)}"]`)).toBeVisible();
+  await expect(
+    feed(page)
+      .locator(`a[href="/p/${craft.ids.at(-1)}"]`)
+      .filter({ visible: true }),
+  ).toBeVisible();
 
   const loadMore = page.getByRole("button", { name: "Load more" });
   await loadMore.focus();
   await page.keyboard.press("Enter");
 
   await expect(cardLinks(page)).toHaveCount(25);
+});
+
+// P1-31: the first cards come in the server's HTML with their images loading straight away, so
+// the largest paint doesn't wait for the JavaScript (it used to show a skeleton until hydration).
+test("the first cards and their images are in the server HTML", async ({ page }) => {
+  const craft = createFeedPosts(3);
+  await signInWithInterests(page, [craft.skillSlug]);
+
+  const html = await (await page.request.get("/feed")).text();
+
+  expect(craft.ids.some((id) => html.includes(`href="/p/${id}"`))).toBe(true);
+  expect(html).toMatch(/<img[^>]*fetchPriority="high"|<img[^>]*fetchpriority="high"/);
 });

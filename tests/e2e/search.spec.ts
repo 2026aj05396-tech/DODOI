@@ -35,7 +35,9 @@ test("E2E-09: part of a word finds the skill and its posts; nonsense shows the n
   const skills = page.getByRole("region", { name: "Skills" });
   await expect(skills.getByRole("link", { name: new RegExp(craft.skillName) })).toBeVisible();
   const posts = page.getByRole("region", { name: "Posts" });
-  await expect(posts.locator(`a[href="/p/${craft.ids[0]}"]`)).toBeVisible();
+  await expect(
+    posts.locator(`a[href="/p/${craft.ids[0]}"]`).filter({ visible: true }),
+  ).toBeVisible();
 
   await page.getByRole("link", { name: "Skills", exact: true }).click();
   await expect(page).toHaveURL(/type=skills/);
@@ -80,7 +82,9 @@ test("a skill page adds the skill to your interests", async ({ page }) => {
   await page.goto(`/s/${craft.skillSlug}`);
 
   await expect(page.getByRole("heading", { level: 1, name: craft.skillName })).toBeVisible();
-  await expect(page.locator(`a[href="/p/${craft.ids[0]}"]`)).toBeVisible();
+  await expect(
+    page.locator(`a[href="/p/${craft.ids[0]}"]`).filter({ visible: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Add to my interests" }).click();
   await expect(page.getByRole("button", { name: "In your interests" })).toBeVisible();
 

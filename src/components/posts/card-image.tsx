@@ -12,7 +12,15 @@ const CARD_SIZES = "(min-width: 1024px) 320px, (min-width: 768px) 360px, 50vw";
  * A card's cover image. If it fails to load, the skill's craft pattern takes its place (FEED-10),
  * so the card keeps its size and never shows a broken image.
  */
-export function CardImage({ media, fallback }: { media: Media; fallback: PatternAccent }) {
+export function CardImage({
+  media,
+  fallback,
+  isAboveFold = false,
+}: {
+  media: Media;
+  fallback: PatternAccent;
+  isAboveFold?: boolean;
+}) {
   const [hasFailed, setHasFailed] = useState(false);
   if (hasFailed) return <PatternTile accent={fallback} className="size-full rounded-none" />;
   return (
@@ -24,7 +32,8 @@ export function CardImage({ media, fallback }: { media: Media; fallback: Pattern
       alt={media.altText ?? ""}
       width={media.width}
       height={media.height}
-      loading="lazy"
+      loading={isAboveFold ? "eager" : "lazy"}
+      fetchPriority={isAboveFold ? "high" : undefined}
       onError={() => setHasFailed(true)}
       className="size-full object-cover"
     />

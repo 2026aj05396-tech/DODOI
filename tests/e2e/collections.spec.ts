@@ -38,7 +38,9 @@ test("E2E-08: save → new collection → rename → delete; the post stays in A
   await page.goto("/saved");
   const tile = page.getByRole("link", { name: /Crochet ideas/ });
   await expect(tile).toContainText("1 saved · Private");
-  await expect(allSaved(page).locator(`a[href="/p/${id}"]`)).toBeVisible();
+  await expect(
+    allSaved(page).locator(`a[href="/p/${id}"]`).filter({ visible: true }),
+  ).toBeVisible();
 
   await tile.click();
   await expect(page.getByRole("heading", { level: 1, name: "Crochet ideas" })).toBeVisible();
@@ -53,7 +55,9 @@ test("E2E-08: save → new collection → rename → delete; the post stays in A
 
   await expect(page).toHaveURL(/\/saved$/);
   await expect(page.getByRole("link", { name: /Crochet favourites/ })).toHaveCount(0);
-  await expect(allSaved(page).locator(`a[href="/p/${id}"]`)).toBeVisible();
+  await expect(
+    allSaved(page).locator(`a[href="/p/${id}"]`).filter({ visible: true }),
+  ).toBeVisible();
 });
 
 async function otherUser(browser: Browser): Promise<Page> {
@@ -93,7 +97,7 @@ test("unsaving shows Undo, which puts the post back in its collections", async (
   await page.goto("/saved");
   const card = allSaved(page)
     .locator("article")
-    .filter({ has: page.locator(`a[href="/p/${id}"]`) });
+    .filter({ has: page.locator(`a[href="/p/${id}"]`), visible: true });
   const restored = page.waitForResponse(
     (response) => response.url().includes(`/items/${id}`) && response.ok(),
   );

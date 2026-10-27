@@ -12,7 +12,9 @@ export function PostGrid({ posts }: { posts: PostCardData[] }) {
       items={posts}
       getKey={(post) => post.id}
       getHeight={(post) => cardHeight(post.coverMedia.width, post.coverMedia.height)}
-      renderItem={(post) => <PostCard post={post} isSignedIn />}
+      renderItem={(post, { isAboveFold }) => (
+        <PostCard post={post} isSignedIn isAboveFold={isAboveFold} />
+      )}
     />
   );
 }

@@ -2,6 +2,8 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 
+import { MEDIA_ORIGIN } from "@/lib/constants/media";
+
 import type { DeliveryOptions, MediaProvider, ProviderAsset, ResourceType } from "./types";
 
 // Cloudinary over its REST APIs (no SDK): signed uploads straight from the browser
@@ -9,7 +11,7 @@ import type { DeliveryOptions, MediaProvider, ProviderAsset, ResourceType } from
 // the server for the seed importer, the Admin API to read and delete assets. Only signed uploads are possible; unsigned presets stay disabled.
 
 const API_BASE = "https://api.cloudinary.com/v1_1";
-const DELIVERY_BASE = "https://res.cloudinary.com";
+const DELIVERY_BASE = MEDIA_ORIGIN;
 const REQUEST_TIMEOUT_MS = 10_000;
 /** Server uploads send the whole file (videos up to 50 MB). */
 const UPLOAD_TIMEOUT_MS = 120_000;

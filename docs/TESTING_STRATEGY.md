@@ -128,8 +128,9 @@ Defined now so it is not forgotten; implemented in P4.
   | Landing `/` | 0.82 s (h1) | 0.003 | 66 ms | 240 KB |
   | Post detail (1 image, 1200px original) | 0.90 s (cover image, served at 960px) | 0.001 | 61 ms | 271 KB |
   | Sign in | 0.82 s | 0.000 | 60 ms | 245 KB |
+  | Feed (signed in, 1 card) | 0.85 s (first card image) | 0 | 70 ms (PO Lighthouse) | — |
 
-  Feed needs a signed-in account: PO measures it with Lighthouse (mobile, production build). Images were sent at full upload size before P1-31; every content image now has a Cloudinary `srcSet` (320–1920px, `c_limit`) and `sizes` for its slot; avatars are delivered at 256px.
+  Feed history: 8.1 s on the dev server (skeleton until hydration, lazy image) → PO Lighthouse on a production build: 3.9 s estimated, ~1.04 s observed (load delay 200 ms, load 120 ms, render delay 700 ms) → render delay fixed (the server's cards no longer fade in from opacity 0, which Chrome does not count as painted) and `Link: rel=preconnect` to Cloudinary: 0.42 s unthrottled, 0.85 s throttled. React still holds the swap from skeleton to content ~300 ms after the skeleton's first paint (its reveal throttle); that is React's design and is left alone. Images were sent at full upload size before P1-31; every content image now has a Cloudinary `srcSet` (320–1920px, `c_limit`) and `sizes` for its slot; avatars are delivered at 256px.
 
 ## 8b. Accessibility Checks (P1-31)
 

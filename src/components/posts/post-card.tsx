@@ -25,10 +25,13 @@ export function PostCard({
   post,
   isSignedIn,
   menu,
+  isAboveFold = false,
   className,
 }: {
   post: PostCardData;
   isSignedIn: boolean;
+  /** Among the first cards on screen: its image loads straight away with high priority (LCP). */
+  isAboveFold?: boolean;
   /** The "⋯" menu at the end of the byline (feed only). */
   menu?: ReactNode;
   className?: string;
@@ -49,7 +52,7 @@ export function PostCard({
           className="relative overflow-hidden rounded-card bg-muted transition-shadow duration-150 group-hover:shadow-hover"
           style={{ aspectRatio: ratio }}
         >
-          <CardImage media={cover} fallback={accent} />
+          <CardImage media={cover} fallback={accent} isAboveFold={isAboveFold} />
           <span className="absolute top-2.5 left-2.5 max-w-[calc(100%-3.5rem)] truncate rounded-full bg-background px-2.5 py-1 text-badge tracking-normal text-foreground">
             {postTypeLabel(post.type, post.estimatedMinutes)}
           </span>

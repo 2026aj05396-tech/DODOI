@@ -193,10 +193,11 @@ export function CollectionView({ initialPage }: { initialPage: CollectionPage })
           items={posts}
           getKey={(post) => post.id}
           getHeight={(post) => cardHeight(post.coverMedia.width, post.coverMedia.height)}
-          renderItem={(post) => (
+          renderItem={(post, { isAboveFold }) => (
             <PostCard
               post={post}
               isSignedIn
+              isAboveFold={isAboveFold}
               menu={
                 isOwner ? (
                   <DropdownMenu.Root>

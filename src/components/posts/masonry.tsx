@@ -2,50 +2,75 @@
 
 import type { ReactNode } from "react";
 
-import { MasonrySkeleton } from "./masonry-skeleton";
 import { useColumnCount } from "./use-column-count";
 
 // Masonry grid (FEED-01, UI_UX_GUIDELINES §3): 2 columns, 3 from 1280px. Each item goes into the
 // shortest column so far, using its known height, so items added later never move earlier ones.
-// Shows the skeleton until the browser knows the width.
+//
+// The server can't know the width, so until the browser takes over both layouts are rendered and
+// CSS shows the right one: the cards and their images are in the first HTML instead of appearing
+// only after the JavaScript has run (LCP, P1-31). Afterwards only the matching layout keeps its
+// cards; it stays at the same place in the tree, so nothing is mounted twice.
 
-export function Masonry<T>({
+/** How many leading items load their images straight away (above the fold on every width). */
+const EAGER_ITEMS = 4;
+
+type ColumnsProps<T> = {
+  items: T[];
+  getKey: (item: T) => string;
+  getHeight: (item: T) => number;
+  renderItem: (item: T, options: { isAboveFold: boolean }) => ReactNode;
+};
+
+function Columns<T>({
+  count,
   items,
   getKey,
   getHeight,
   renderItem,
-  columns: fixedColumns,
-}: {
-  items: T[];
-  getKey: (item: T) => string;
-  /** Relative height (1 = as tall as the column is wide). */
-  getHeight: (item: T) => number;
-  renderItem: (item: T) => ReactNode;
-  /** Overrides the responsive count (e.g. the feed drops the in-feed suggestion at 3). */
-  columns?: number;
-}) {
-  const responsive = useColumnCount();
-  const count = fixedColumns ?? responsive;
-  if (count === null) return <MasonrySkeleton />;
-
-  const columns: T[][] = Array.from({ length: count }, () => []);
+}: ColumnsProps<T> & { count: number }) {
+  const columns: { item: T; index: number }[][] = Array.from({ length: count }, () => []);
   const heights = new Array<number>(count).fill(0);
-  for (const item of items) {
+  items.forEach((item, index) => {
     const shortest = heights.indexOf(Math.min(...heights));
-    columns[shortest]?.push(item);
+    columns[shortest]?.push({ item, index });
     heights[shortest] = (heights[shortest] ?? 0) + getHeight(item);
-  }
+  });
 
   return (
     <div className="flex items-start gap-3 md:gap-4">
-      {columns.map((column, index) => (
-        <div key={index} className="flex min-w-0 flex-1 flex-col gap-5">
-          {column.map((item) => (
-            <div key={getKey(item)}>{renderItem(item)}</div>
+      {columns.map((column, columnIndex) => (
+        <div key={columnIndex} className="flex min-w-0 flex-1 flex-col gap-5">
+          {column.map(({ item, index }) => (
+            <div key={getKey(item)}>{renderItem(item, { isAboveFold: index < EAGER_ITEMS })}</div>
           ))}
         </div>
       ))}
     </div>
+  );
+}
+
+export function Masonry<T>({
+  items,
+  include,
+  ...props
+}: ColumnsProps<T> & {
+  /** Leaves an item out of one layout (the feed's suggestion moves to the rail at 3 columns). */
+  include?: (item: T, columns: 2 | 3) => boolean;
+}) {
+  const count = useColumnCount();
+  const itemsFor = (columns: 2 | 3) =>
+    include ? items.filter((item) => include(item, columns)) : items;
+
+  return (
+    <>
+      <div className="xl:hidden">
+        {count !== 3 ? <Columns count={2} items={itemsFor(2)} {...props} /> : null}
+      </div>
+      <div className="hidden xl:block">
+        {count !== 2 ? <Columns count={3} items={itemsFor(3)} {...props} /> : null}
+      </div>
+    </>
   );
 }
 
