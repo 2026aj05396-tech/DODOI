@@ -5,11 +5,19 @@ import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 import { LandingCraftTiles, WelcomeCraftTiles } from "@/components/marketing/craft-tiles";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/ui/wordmark";
+import { OPEN_GRAPH_DEFAULTS, TWITTER_DEFAULTS } from "@/lib/constants/share-metadata";
 
+const TITLE = "dodoi · For the things you love making";
+const DESCRIPTION =
+  "Find ideas, try new crafts and share what you make. Beginners welcome. No experience needed.";
+
+// The share image comes from opengraph-image.tsx in this folder.
 export const metadata: Metadata = {
-  title: "dodoi · For the things you love making",
-  description:
-    "Find ideas, try new crafts and share what you make. Beginners welcome. No experience needed.",
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: { ...OPEN_GRAPH_DEFAULTS, title: TITLE, description: DESCRIPTION, url: "/" },
+  twitter: { ...TWITTER_DEFAULTS, title: TITLE, description: DESCRIPTION },
 };
 
 const HEADLINE = "For the things you love making, and all the things you haven't tried yet.";
@@ -18,6 +26,13 @@ const HIGHLIGHTS = [
   { title: "Discover", detail: "Ideas across 40+ crafts" },
   { title: "Create", detail: "Share progress, not perfection" },
   { title: "Connect", detail: "Ask, help, make together" },
+];
+
+const PRODUCT_AREAS: { label: string; href?: string }[] = [
+  { label: "Discover", href: "/explore" },
+  { label: "Learn" },
+  { label: "Community" },
+  { label: "Companion" },
 ];
 
 // Signed-out entry: Welcome (design 1a) below 1024px, Landing (design 2a) from 1024px. Each
@@ -64,15 +79,23 @@ function WebLanding() {
     <div className="hidden min-h-dvh flex-col lg:flex">
       <header className="mx-auto flex h-19 w-full max-w-screen-2xl items-center justify-between px-14">
         <Wordmark />
-        {/* Design 2a shows these product areas as plain labels; they become links as they ship. */}
+        {/* Design 2a's product areas; each becomes a link once it ships (Discover = Explore,
+            which asks a signed-out visitor to sign in first, OD-29). */}
         <ul
           aria-label="What you can do on dodoi"
           className="flex gap-8 text-body-lg text-foreground"
         >
-          <li>Discover</li>
-          <li>Learn</li>
-          <li>Community</li>
-          <li>Companion</li>
+          {PRODUCT_AREAS.map((area) => (
+            <li key={area.label}>
+              {area.href ? (
+                <Link href={area.href} className="rounded-sm hover:underline">
+                  {area.label}
+                </Link>
+              ) : (
+                area.label
+              )}
+            </li>
+          ))}
         </ul>
         <div className="flex gap-2.5">
           <Button asChild variant="outline">

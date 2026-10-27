@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { PostDetail } from "@/components/posts/post-detail";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OPEN_GRAPH_DEFAULTS, TWITTER_DEFAULTS } from "@/lib/constants/share-metadata";
 import { getActor } from "@/server/auth";
 import { NotFoundError } from "@/server/lib/errors";
 import { orNotFound } from "@/server/lib/not-found";
@@ -16,13 +17,21 @@ export async function generateMetadata({ params }: PageProps<"/p/[id]">): Promis
   try {
     const post = await getPostDetail(null, id);
     const cover = post.coverMedia;
+    const description = post.description?.slice(0, 160) ?? undefined;
+    const images = [{ url: cover.posterUrl ?? cover.url, alt: cover.altText ?? undefined }];
     return {
       title: `${post.title} · dodoi`,
-      description: post.description?.slice(0, 160) ?? undefined,
+      description,
+      alternates: { canonical: `/p/${id}` },
       openGraph: {
+        ...OPEN_GRAPH_DEFAULTS,
+        type: "article",
+        url: `/p/${id}`,
         title: post.title,
-        images: [{ url: cover.posterUrl ?? cover.url, alt: cover.altText ?? undefined }],
+        description,
+        images,
       },
+      twitter: { ...TWITTER_DEFAULTS, title: post.title, description, images },
     };
   } catch (error) {
     if (error instanceof NotFoundError) return { title: "Post not found · dodoi" };

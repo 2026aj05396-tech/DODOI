@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import WelcomePage from "./page";
@@ -22,5 +22,17 @@ describe("WelcomePage", () => {
       expect(link).toHaveAttribute("href", "/sign-in");
     }
     expect(screen.getByRole("link", { name: "Join free" })).toHaveAttribute("href", "/sign-up");
+  });
+
+  it("links the product areas that have shipped and leaves the others as labels", () => {
+    render(<WelcomePage />);
+
+    const areas = screen.getByRole("list", { name: "What you can do on dodoi" });
+    expect(within(areas).getByRole("link", { name: "Discover" })).toHaveAttribute(
+      "href",
+      "/explore",
+    );
+    expect(within(areas).getAllByRole("link")).toHaveLength(1);
+    expect(within(areas).getByText("Companion")).toBeVisible();
   });
 });
