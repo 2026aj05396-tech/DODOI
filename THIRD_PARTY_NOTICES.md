@@ -12,5 +12,5 @@
 - Source: Google Fonts DM Sans v1.200 static instances, via the `@expo-google-fonts/dm-sans@0.2.3` package on jsDelivr (retrieved 2026-10-27)
 - Copyright 2014-2017 Indian Type Foundry, with Reserved Font Name 'Poppins'; Copyright 2019 Google LLC (DM Sans)
 - License: SIL Open Font License 1.1, https://openfontlicense.org
-- Used in: `assets/fonts/DMSans_400Regular.ttf` and `DMSans_700Bold.ttf`, read at build time by `src/app/(marketing)/opengraph-image.tsx` to draw the landing page's share image (the app itself loads DM Sans through `next/font`).
+- Used in: `assets/fonts/DMSans_400Regular.ttf` and `DMSans_700Bold.ttf`, read at build time by `src/app/(marketing)/opengraph-image.tsx` to draw the landing page's share image (the app itself loads DM Sans through `next/font`); `assets/fonts/DMSans_800ExtraBold.ttf` (current Google Fonts DM Sans, via `@expo-google-fonts/dm-sans@0.4.2`, retrieved 2026-10-27), read by `scripts/generate-icons.ts` to draw the app icon.
 - Changes: none.

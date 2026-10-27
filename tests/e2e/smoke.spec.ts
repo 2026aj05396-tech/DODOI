@@ -63,6 +63,37 @@ test("the welcome page has share metadata with a working image", async ({ page, 
   expect(await (await request.get("/robots.txt")).text()).toContain("Disallow: /");
 });
 
+// P1-27: the manifest and every icon it names are served, and the page links to them.
+test("the app can be installed: manifest, icons and Apple touch icon", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    "/manifest.webmanifest",
+  );
+  const appleIcon = await page.locator('link[rel="apple-touch-icon"]').getAttribute("href");
+
+  const manifest = (await (await request.get("/manifest.webmanifest")).json()) as {
+    start_url: string;
+    display: string;
+    icons: { src: string; sizes: string; purpose: string }[];
+  };
+  expect(manifest).toMatchObject({ start_url: "/", display: "standalone" });
+  expect(manifest.icons.map((icon) => `${icon.sizes} ${icon.purpose}`)).toEqual([
+    "192x192 any",
+    "512x512 any",
+    "512x512 maskable",
+  ]);
+
+  for (const src of [...manifest.icons.map((icon) => icon.src), appleIcon ?? "", "/favicon.ico"]) {
+    const response = await request.get(src);
+    expect(response.status(), src).toBe(200);
+    expect(response.headers()["content-type"], src).toMatch(/^image\//);
+  }
+});
+
 test("Discover in the desktop header leads to Explore after signing in", async ({
   page,
   isMobile,

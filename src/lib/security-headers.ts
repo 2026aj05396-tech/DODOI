@@ -1,6 +1,8 @@
 // Security headers sent on every response (SECURITY_AND_PRIVACY §4, SYSTEM_ARCHITECTURE §13).
 // Pure module: next.config.ts imports it at build/start time, so it must not import server-only code.
 
+import { MEDIA_ORIGIN } from "./constants/media";
+
 export type AppEnv = "local" | "test" | "production";
 
 export type HeaderEntry = { key: string; value: string };
@@ -22,7 +24,7 @@ const PERMISSIONS_POLICY = [
 
 const TWO_YEARS_IN_SECONDS = 63_072_000;
 
-const CLOUDINARY_DELIVERY = "https://res.cloudinary.com";
+const CLOUDINARY_DELIVERY = MEDIA_ORIGIN;
 const CLOUDINARY_UPLOAD = "https://api.cloudinary.com";
 const GOOGLE_SIGN_IN = "https://accounts.google.com";
 
