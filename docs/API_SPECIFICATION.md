@@ -266,24 +266,24 @@ Save (idempotent). → `200 { "saved": true, "saveId": "…" }`. Post must be PU
 ### DELETE /api/saves/{postId} — User
 Unsave (idempotent); removes from all collections. → `204`.
 ### GET /api/saves — User
-Paginated `PostCard[]` newest first ("All saved").
+Paginated `PostCard[]` most recently saved first ("All saved"); unpublished posts are left out.
 
 ### GET /api/collections — User
-Own collections: `{ items: [{ id, name, visibility, itemCount, coverMedia: Media|null }] }`.
+Own collections, most recently changed (renamed, added to or removed from) first (PO decision, P1-24): `{ items: [{ id, name, visibility, itemCount, coverMedia: Media|null }] }`. `itemCount` counts published posts; `coverMedia` is the cover of the most recently added one.
 ### POST /api/collections — User
-`{ "name": "Crochet ideas to try", "visibility": "PRIVATE" }` (visibility optional, defaults PRIVATE) → `201`.
+`{ "name": "Crochet ideas to try", "visibility": "PRIVATE" }` (visibility optional, defaults PRIVATE) → `201` collection. `409 COLLECTION_NAME_TAKEN` (case- and space-insensitive) · `422 COLLECTION_LIMIT_REACHED` (100) · `403 EMAIL_NOT_VERIFIED` for `PUBLIC` (OD-08).
 ### GET /api/collections/{id} — Owner, or User* if PUBLIC
-Collection + paginated `PostCard[]`. Private and not owner → **404**.
+`{ collection: { …summary, isOwner, owner: { username, displayName } | null }, items: PostCard[], nextCursor }`, posts most recently added first. Private and not owner → **404**; public but the owner's profile is private, hidden or deactivated (OD-10) → **404**.
 ### PATCH /api/collections/{id} — Owner
-`{ "name"?, "visibility"? }` → `200`.
+`{ "name"?, "visibility"? }` → `200` collection summary (same errors as create).
 ### DELETE /api/collections/{id} — Owner
 Deletes collection only; saves remain (CONFIRMED). → `204`.
 ### PUT /api/collections/{id}/items/{postId} — Owner
-Adds post to collection. If the post is not yet saved, it is saved first (PROPOSED). → `204`.
+Adds post to collection (idempotent). If the post is not yet saved, it is saved first (CONFIRMED, P1-24). → `204`. `404` for unpublished posts · `422 COLLECTION_FULL` (1,000).
 ### DELETE /api/collections/{id}/items/{postId} — Owner
 Removes from this collection only; save remains. → `204`.
 ### GET /api/posts/{postId}/collections — User
-IDs of actor's collections containing the post (for the picker).
+`{ ids }` of the actor's collections containing the post (for the picker).
 
 ---
 

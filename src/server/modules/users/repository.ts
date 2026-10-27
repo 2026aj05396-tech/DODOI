@@ -331,6 +331,7 @@ export async function findCreatorRows(userIds: string[]) {
           username: true,
           displayName: true,
           isHidden: true,
+          visibility: true,
           avatar: { select: { publicId: true } },
         },
       },

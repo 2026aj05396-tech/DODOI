@@ -28,6 +28,19 @@ export async function getCreatorProfiles(userIds: string[]): Promise<Map<string,
   return creators;
 }
 
+/**
+ * The owner shown on a public collection, or null when others may not see their public content:
+ * private profile (OD-10), hidden after a report, or deactivated.
+ */
+export async function getPublicProfile(
+  userId: string,
+): Promise<{ username: string; displayName: string } | null> {
+  const [row] = await findCreatorRows([userId]);
+  if (!row?.profile || row.deletionRequestedAt) return null;
+  if (row.profile.isHidden || row.profile.visibility !== "PUBLIC") return null;
+  return { username: row.profile.username, displayName: row.profile.displayName };
+}
+
 /** User id for a username (usernames are stored lowercase), or null. For the admin post editor. */
 export async function getUserIdByUsername(username: string): Promise<string | null> {
   const [row] = await findUsersByUsernames([username.trim().toLowerCase()]);

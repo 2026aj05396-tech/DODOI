@@ -115,6 +115,7 @@ src/
 │   │   ├── skills/                     # skills, custom interests, normalization
 │   │   ├── content/                    # posts, media assets, themes
 │   │   ├── feed/                       # ranking, feedback, sessions
+│   │   ├── library/                    # saves and collections as post cards (above content + collections)
 │   │   ├── search/
 │   │   ├── collections/                # saves, collections
 │   │   ├── admin/                      # audit log, admin ops
