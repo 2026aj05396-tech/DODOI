@@ -4,6 +4,7 @@ import { preconnect } from "react-dom";
 import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import { AppShell } from "@/components/layout/app-shell";
 import { PublicHeader } from "@/components/layout/public-header";
+import { InstallBanner } from "@/components/pwa/install-banner";
 import { MEDIA_ORIGIN } from "@/lib/constants/media";
 import { getActor } from "@/server/auth";
 
@@ -37,7 +38,12 @@ async function PostFrame({ children }: { children: React.ReactNode }) {
     <AppShell
       username={null}
       fullScreenOnMobile
-      notice={actor.isEmailVerified ? null : <VerifyEmailBanner />}
+      notice={
+        <>
+          {actor.isEmailVerified ? null : <VerifyEmailBanner />}
+          <InstallBanner />
+        </>
+      }
     >
       {children}
     </AppShell>

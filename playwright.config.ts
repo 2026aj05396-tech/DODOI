@@ -7,6 +7,10 @@ const PORT = 3100;
 const BASE_URL = `http://localhost:${PORT}`;
 const MOCK_GOOGLE_ISSUER = "http://localhost:3199";
 const MOCK_CLOUDINARY_API = "http://localhost:3198/v1_1";
+// WebKit (Safari) and Firefox run a smoke subset (tests tagged @smoke, TESTING_STRATEGY §5) in CI,
+// or locally with `pnpm test:e2e:browsers`. Plain local runs stay Chromium-only: WebKit needs
+// system libraries (`sudo pnpm exec playwright install-deps webkit`).
+const ALL_BROWSERS = Boolean(process.env.CI) || process.env.E2E_BROWSERS === "all";
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ??
   "postgresql://dodoi:dodoi@localhost:5433/dodoi_test?schema=public";
@@ -28,6 +32,12 @@ export default defineConfig({
       name: "desktop",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 860 } },
     },
+    ...(ALL_BROWSERS
+      ? [
+          { name: "webkit", use: { ...devices["iPhone 15"] }, grep: /@smoke/ },
+          { name: "firefox", use: { ...devices["Desktop Firefox"] }, grep: /@smoke/ },
+        ]
+      : []),
   ],
   webServer: [
     {

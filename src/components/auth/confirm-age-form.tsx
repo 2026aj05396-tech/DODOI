@@ -10,6 +10,7 @@ import { Input, Label } from "@/components/ui/input";
 import { confirmAge } from "@/lib/api-client/account";
 import { ApiRequestError } from "@/lib/api-client/request";
 import { confirmAgeSchema } from "@/lib/schemas/auth";
+import { clearOfflineData } from "@/lib/utils/clear-offline-data";
 
 type ConfirmAgeFormProps = { returnTo: string };
 
@@ -39,6 +40,7 @@ export function ConfirmAgeForm({ returnTo }: ConfirmAgeFormProps) {
     } catch (error) {
       setPending(false);
       if (error instanceof ApiRequestError && error.code === "UNDER_MINIMUM_AGE") {
+        await clearOfflineData();
         await signOut({ redirect: false });
         setBlocked(error.message);
         return;
@@ -60,7 +62,7 @@ export function ConfirmAgeForm({ returnTo }: ConfirmAgeFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form method="post" noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
       {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="confirm-age-dob">Date of birth</Label>

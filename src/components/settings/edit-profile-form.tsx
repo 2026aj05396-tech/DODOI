@@ -115,7 +115,7 @@ export function EditProfileForm({ profile }: { profile: MyProfile }) {
     [errors[field] ? `${id}-${field}-error` : null, hint].filter(Boolean).join(" ") || undefined;
 
   return (
-    <form onSubmit={save} noValidate className="flex flex-col gap-6">
+    <form method="post" onSubmit={save} noValidate className="flex flex-col gap-6">
       {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
 
       <fieldset className="flex flex-col gap-3">

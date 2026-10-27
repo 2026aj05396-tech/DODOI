@@ -81,8 +81,9 @@ jobs:
       - name: Unit, component and integration tests
         run: pnpm test
 
-      - name: Install Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
+      # Chromium runs every E2E test; WebKit and Firefox run the @smoke subset.
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium webkit firefox
 
       - name: Build and run end-to-end tests
         run: pnpm test:e2e

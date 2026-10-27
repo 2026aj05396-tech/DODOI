@@ -95,7 +95,9 @@ Phase 1 (required before MVP exit):
 
 Later phases add the master doc scenarios: create/edit post, comment, join community, send message, help request, schedule session, AI guidance, report/block.
 
-**Viewports:** every E2E runs on a mobile profile (e.g. Pixel/iPhone emulation) and desktop Chromium. WebKit and Firefox run on a smaller smoke subset (PROPOSED).
+**Viewports and browsers:** every E2E runs on a mobile profile (Pixel 7) and desktop Chromium (1280×860). WebKit (iPhone 15 profile) and Firefox (desktop) run the smoke subset, the tests tagged `@smoke`: welcome page, sign-up, sign-in and sign-out, feed paging (E2E-06), a shared post and tutorial progress (E2E-07/17), collections (E2E-08), search (E2E-09) and offline (E2E-13). CI runs all browsers; locally `pnpm test:e2e` is Chromium only and `pnpm test:e2e:browsers` runs the WebKit and Firefox smoke (WebKit needs `sudo pnpm exec playwright install-deps webkit` once). E2E-13 is skipped on Firefox: Playwright's offline switch doesn't reach Firefox's service worker (checked 2026-10-27).
+
+Every Phase 1 scenario above has a test whose title starts with its ID (`grep -rn "E2E-04" tests/e2e`).
 
 ## 6. Accessibility Testing
 

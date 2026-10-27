@@ -94,7 +94,7 @@ export function SignInForm({ returnTo, initialError }: SignInFormProps) {
         <span aria-hidden className="h-px flex-1 bg-border" />
       </div>
 
-      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form method="post" noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="sign-in-email">Email</Label>
           <Input

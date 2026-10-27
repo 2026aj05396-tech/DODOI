@@ -46,7 +46,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor={`${id}-current`}>Current password</Label>
         <Input

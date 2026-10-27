@@ -1,9 +1,11 @@
+import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 
 import "@/styles/globals.css";
 
 import { CollectionPickerHost } from "@/components/collections/collection-picker";
+import { OfflineBanner } from "@/components/layout/offline-banner";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/toast";
 import { OPEN_GRAPH_DEFAULTS, TWITTER_DEFAULTS } from "@/lib/constants/share-metadata";
@@ -33,11 +35,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={dmSans.variable}>
       <body>
-        <QueryProvider>
-          {children}
-          <CollectionPickerHost />
-        </QueryProvider>
-        <Toaster />
+        {/* Service worker (P1-27). Off in development so pages aren't served from a cache while
+            editing. Reconnecting doesn't reload the page: the offline banner says "Back online". */}
+        <SerwistProvider
+          swUrl="/serwist/sw.js"
+          disable={process.env.NODE_ENV === "development"}
+          reloadOnOnline={false}
+        >
+          <QueryProvider>
+            {children}
+            <CollectionPickerHost />
+          </QueryProvider>
+          <OfflineBanner />
+          <Toaster />
+        </SerwistProvider>
       </body>
     </html>
   );

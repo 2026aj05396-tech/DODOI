@@ -29,33 +29,37 @@ function feedbackResponse(page: Page, method: "POST" | "DELETE") {
 const feed = (page: Page) => page.getByRole("region", { name: "Your feed" });
 const cardLinks = (page: Page) => feed(page).locator('a[href^="/p/"]');
 
-test("E2E-06: pages load without repeats until the end of the feed", async ({ page }) => {
-  const craft = createFeedPosts(30);
-  await signInWithInterests(page, [craft.skillSlug]);
+test(
+  "E2E-06: pages load without repeats until the end of the feed",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    const craft = createFeedPosts(30);
+    await signInWithInterests(page, [craft.skillSlug]);
 
-  await page.getByRole("button", { name: craft.skillName }).click();
-  // Newest first: the last post created is on the first page of the chip's session.
-  await expect(
-    feed(page)
-      .locator(`a[href="/p/${craft.ids.at(-1)}"]`)
-      .filter({ visible: true }),
-  ).toBeVisible();
-  await expect(cardLinks(page)).toHaveCount(20);
+    await page.getByRole("button", { name: craft.skillName }).click();
+    // Newest first: the last post created is on the first page of the chip's session.
+    await expect(
+      feed(page)
+        .locator(`a[href="/p/${craft.ids.at(-1)}"]`)
+        .filter({ visible: true }),
+    ).toBeVisible();
+    await expect(cardLinks(page)).toHaveCount(20);
 
-  // The next page loads on scroll ("Load more" is the keyboard fallback, tested below).
-  const nextPage = page.waitForResponse(
-    (response) => response.url().includes("/api/feed?") && response.url().includes("cursor="),
-  );
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await nextPage;
+    // The next page loads on scroll ("Load more" is the keyboard fallback, tested below).
+    const nextPage = page.waitForResponse(
+      (response) => response.url().includes("/api/feed?") && response.url().includes("cursor="),
+    );
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await nextPage;
 
-  await expect(cardLinks(page)).toHaveCount(30);
-  await expect(page.getByText("You're all caught up", { exact: false })).toBeVisible();
-  const hrefs = await cardLinks(page).evaluateAll((links) =>
-    links.map((link) => link.getAttribute("href")),
-  );
-  expect(new Set(hrefs).size).toBe(30);
-});
+    await expect(cardLinks(page)).toHaveCount(30);
+    await expect(page.getByText("You're all caught up", { exact: false })).toBeVisible();
+    const hrefs = await cardLinks(page).evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")),
+    );
+    expect(new Set(hrefs).size).toBe(30);
+  },
+);
 
 test("E2E-06: Not interested hides a post, Undo brings it back, and it stays hidden", async ({
   page,
@@ -109,6 +113,31 @@ test("E2E-15: an interest chip shows only that skill; New to you only other skil
   }
   // `other` is outside the interests, so it may appear; nothing from `mine` may.
   expect(other.ids).toHaveLength(2);
+});
+
+test("E2E-04: interests changed in settings change the feed", async ({ page }) => {
+  const before = createFeedPosts(1);
+  const after = createFeedPosts(1);
+  // Settings keeps at least 3 interests, so two seeded crafts stay throughout.
+  await signInWithInterests(page, [before.skillSlug, "crochet", "knitting"]);
+  const chips = page.getByRole("group", { name: "Filter the feed" });
+  await expect(chips.getByRole("button", { name: before.skillName })).toBeVisible();
+  await expect(chips.getByRole("button", { name: after.skillName })).toHaveCount(0);
+
+  await page.goto("/settings/skills");
+  const interests = page.getByRole("region", { name: "Interests" });
+  await interests.getByRole("button", { name: before.skillName, exact: true }).click();
+  await interests.getByLabel("Search interests").fill(after.skillName);
+  await interests.getByRole("button", { name: after.skillName, exact: true }).click();
+  await page.getByRole("button", { name: "Save skills" }).click();
+  await expect(page.getByText("Skills saved", { exact: false }).first()).toBeVisible();
+
+  await page.goto("/feed");
+  await expect(chips.getByRole("button", { name: before.skillName })).toHaveCount(0);
+  await chips.getByRole("button", { name: after.skillName }).click();
+  await expect(
+    feed(page).locator(`a[href="/p/${after.ids[0]}"]`).filter({ visible: true }),
+  ).toBeVisible();
 });
 
 test("saving from a card sticks after a reload", async ({ page }) => {

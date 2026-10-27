@@ -174,6 +174,7 @@ function AddOwnSkill({ initialName, canAddOwn, onAdded, onCancel }: AddOwnSkillP
 
   return (
     <form
+      method="post"
       onSubmit={handleSubmit}
       className="flex flex-col gap-3 rounded-card border border-border-faint bg-card p-4"
     >

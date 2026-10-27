@@ -71,7 +71,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form method="post" noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
       {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="reset-new-password">New password</Label>

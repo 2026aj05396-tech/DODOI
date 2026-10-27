@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { SearchField } from "@/components/ui/search-field";
+import { useIsOnline } from "@/hooks/use-is-online";
 import { searchSkills } from "@/lib/api-client/skills";
 import type { SkillSummary } from "@/lib/types/skills";
 import { cn } from "@/lib/utils/cn";
 
 // Search box (Explore `1d`, feed header `2b`, search page): Enter opens the results page; from 2
 // characters it suggests matching skills underneath (APPROVED behaviour, roadmap §open decisions).
+// Search needs the network (offline matrix): offline, the field is disabled and says so.
 
 const MIN_SUGGEST = 2;
 const SUGGESTIONS = 5;
@@ -27,6 +29,7 @@ export function SearchBox({
   className?: string;
 }) {
   const router = useRouter();
+  const isOnline = useIsOnline();
   const [value, setValue] = useState(defaultValue);
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<SkillSummary[]>([]);
@@ -70,7 +73,8 @@ export function SearchBox({
       <SearchField
         label="Search skills, projects and makers"
         appearance={appearance}
-        placeholder={placeholder}
+        placeholder={isOnline ? placeholder : "Search needs a connection"}
+        disabled={!isOnline}
         value={value}
         enterKeyHint="search"
         onChange={(event) => setValue(event.target.value)}

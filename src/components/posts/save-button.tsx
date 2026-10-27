@@ -5,7 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { openCollectionPicker } from "@/components/collections/collection-picker";
 import { setSaved, useIsSaved } from "@/components/collections/saved-store";
+import { recordSave } from "@/components/pwa/install-store";
 import { showToast } from "@/components/ui/toast";
+import { useIsOnline } from "@/hooks/use-is-online";
 import { addToCollection, getCollectionIdsForPost } from "@/lib/api-client/collections";
 import { ApiRequestError } from "@/lib/api-client/request";
 import { savePost, unsavePost } from "@/lib/api-client/saves";
@@ -15,7 +17,10 @@ import { cn } from "@/lib/utils/cn";
 // bookmark; saved = coral fill with a pop. Optimistic: shows at once and goes back with a toast if
 // the request fails. After saving, the toast offers "Add to collection"; after unsaving (which
 // also empties it from every collection) it offers Undo, which restores both (PO decision, P1-25).
-// Signed-out visitors go to sign-in and come back here (OD-29).
+// Signed-out visitors go to sign-in and come back here (OD-29). Offline, nothing is queued
+// (offline matrix): the button looks disabled, says why on hover, and explains in a toast if tapped.
+
+const OFFLINE_HINT = "Saving needs a connection";
 
 function failed(error: unknown): void {
   showToast({
@@ -42,11 +47,15 @@ export function SaveButton({
   const router = useRouter();
   const pathname = usePathname();
   const isSaved = useIsSaved(postId, initialSaved);
+  const isOnline = useIsOnline();
+  const isUnavailable = isSignedIn && !isOnline;
 
   async function save() {
     setSaved(postId, true);
     try {
       await savePost(postId);
+      // The first save is enough engagement to offer installing the app (USER_FLOWS F-12).
+      recordSave();
       showToast({
         message: "Saved",
         action: {
@@ -91,6 +100,10 @@ export function SaveButton({
       router.push(`/sign-in?returnTo=${encodeURIComponent(pathname)}`);
       return;
     }
+    if (isUnavailable) {
+      showToast({ message: `You're offline. ${OFFLINE_HINT}.` });
+      return;
+    }
     void (isSaved ? unsave() : save());
   }
 
@@ -99,9 +112,12 @@ export function SaveButton({
       type="button"
       aria-pressed={isSaved}
       aria-label={`Save ${postTitle}`}
+      // Stays focusable while offline, so keyboard and screen reader users can hear why.
+      aria-disabled={isUnavailable || undefined}
+      title={isUnavailable ? OFFLINE_HINT : undefined}
       onClick={toggle}
       className={cn(
-        "flex size-9 items-center justify-center rounded-full bg-background text-foreground transition-transform active:scale-96",
+        "flex size-9 items-center justify-center rounded-full bg-background text-foreground transition-transform active:scale-96 aria-disabled:opacity-60 aria-disabled:active:scale-100",
         className,
       )}
     >

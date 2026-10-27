@@ -23,29 +23,31 @@ async function searchFor(page: Page, term: string) {
   await expect(page).toHaveURL(new RegExp(`/search\\?q=`));
 }
 
-test("E2E-09: part of a word finds the skill and its posts; nonsense shows the no-results state", async ({
-  page,
-}) => {
-  const craft = createFeedPosts(2);
-  await signIn(page);
-  const partial = craft.skillName.slice(0, -3);
+test(
+  "E2E-09: part of a word finds the skill and its posts; nonsense shows the no-results state",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    const craft = createFeedPosts(2);
+    await signIn(page);
+    const partial = craft.skillName.slice(0, -3);
 
-  await searchFor(page, partial);
+    await searchFor(page, partial);
 
-  const skills = page.getByRole("region", { name: "Skills" });
-  await expect(skills.getByRole("link", { name: new RegExp(craft.skillName) })).toBeVisible();
-  const posts = page.getByRole("region", { name: "Posts" });
-  await expect(
-    posts.locator(`a[href="/p/${craft.ids[0]}"]`).filter({ visible: true }),
-  ).toBeVisible();
+    const skills = page.getByRole("region", { name: "Skills" });
+    await expect(skills.getByRole("link", { name: new RegExp(craft.skillName) })).toBeVisible();
+    const posts = page.getByRole("region", { name: "Posts" });
+    await expect(
+      posts.locator(`a[href="/p/${craft.ids[0]}"]`).filter({ visible: true }),
+    ).toBeVisible();
 
-  await page.getByRole("link", { name: "Skills", exact: true }).click();
-  await expect(page).toHaveURL(/type=skills/);
-  await expect(page.getByRole("link", { name: new RegExp(craft.skillName) })).toBeVisible();
+    await page.getByRole("link", { name: "Skills", exact: true }).click();
+    await expect(page).toHaveURL(/type=skills/);
+    await expect(page.getByRole("link", { name: new RegExp(craft.skillName) })).toBeVisible();
 
-  await searchFor(page, `zq${randomUUID().slice(0, 6)}xv`);
-  await expect(page.getByRole("heading", { name: /No results for/ })).toBeVisible();
-});
+    await searchFor(page, `zq${randomUUID().slice(0, 6)}xv`);
+    await expect(page.getByRole("heading", { name: /No results for/ })).toBeVisible();
+  },
+);
 
 test("E2E-05: a custom interest added by one user is found by another and has a skill page", async ({
   page,

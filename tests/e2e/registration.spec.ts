@@ -33,22 +33,26 @@ test.beforeEach(() => {
   resetRateLimits();
 });
 
-test("signing up creates an account, signs in and asks to check email", async ({ page }) => {
-  await page.goto("/sign-up");
-  await expectNoSeriousA11yViolations(page);
+test(
+  "signing up creates an account, signs in and asks to check email",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    await page.goto("/sign-up");
+    await expectNoSeriousA11yViolations(page);
 
-  await page.getByLabel("Email").fill(uniqueEmail());
-  await page.getByLabel("Password").fill("a long enough password");
-  await page.getByLabel("Date of birth").fill("1998-04-17");
-  await page.getByRole("button", { name: "Create account" }).click();
+    await page.getByLabel("Email").fill(uniqueEmail());
+    await page.getByLabel("Password").fill("a long enough password");
+    await page.getByLabel("Date of birth").fill("1998-04-17");
+    await page.getByRole("button", { name: "Create account" }).click();
 
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-  await page.getByRole("button", { name: "Resend email" }).click();
-  await expect(page.getByText("We've sent a new link.")).toBeVisible();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.goto("/sign-in");
-  await expect(page.getByText("You're signed in.")).toBeVisible();
-});
+    await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+    await page.getByRole("button", { name: "Resend email" }).click();
+    await expect(page.getByText("We've sent a new link.")).toBeVisible();
+    await page.getByRole("button", { name: "Continue" }).click();
+    await page.goto("/sign-in");
+    await expect(page.getByText("You're signed in.")).toBeVisible();
+  },
+);
 
 test("signing up with a registered email says so on the email field", async ({ page }) => {
   const { email } = createPasswordAccount();

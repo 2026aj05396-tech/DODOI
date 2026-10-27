@@ -60,6 +60,7 @@ export function ThemeList({ themes }: { themes: AdminTheme[] }) {
       <h1 className="text-title text-foreground md:text-title-web">Themes</h1>
 
       <form
+        method="post"
         onSubmit={handleCreate}
         className="flex flex-col gap-3 rounded-card border border-border-faint bg-card p-4 md:flex-row md:items-end md:p-6"
       >

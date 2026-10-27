@@ -30,36 +30,40 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/feed$/);
 }
 
-test("a signed-out visitor can read a shared post and open a related one", async ({ page }) => {
-  const { id, relatedId } = createPost();
+test(
+  "a signed-out visitor can read a shared post and open a related one",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    const { id, relatedId } = createPost();
 
-  await page.goto(`/p/${id}`);
+    await page.goto(`/p/${id}`);
 
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Granny square/);
-  await expect(page.getByText("via dodoi editors", { exact: true })).toBeVisible();
-  await expect(page.getByText("Beginner", { exact: true })).toBeVisible();
-  await expect(page.getByText("45 min", { exact: true })).toBeVisible();
-  await expect(page.getByText("Cotton yarn")).toBeVisible();
-  await expect(
-    page.getByRole("listitem").filter({ hasText: "Work the first round." }),
-  ).toBeVisible();
-  const source = page.getByRole("region", { name: "Source" });
-  await expect(source).toContainText("License: CC BY 4.0 · Added by dodoi editors");
-  await expect(source.getByRole("link", { name: /commons\.wikimedia\.org/ })).toHaveAttribute(
-    "href",
-    "https://commons.wikimedia.org/wiki/File:Granny_square.jpg",
-  );
-  await expect(page.getByRole("link", { name: "Log in" })).toHaveAttribute(
-    "href",
-    `/sign-in?returnTo=${encodeURIComponent(`/p/${id}`)}`,
-  );
-  await expectNoSeriousViolations(page);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^Granny square/);
+    await expect(page.getByText("via dodoi editors", { exact: true })).toBeVisible();
+    await expect(page.getByText("Beginner", { exact: true })).toBeVisible();
+    await expect(page.getByText("45 min", { exact: true })).toBeVisible();
+    await expect(page.getByText("Cotton yarn")).toBeVisible();
+    await expect(
+      page.getByRole("listitem").filter({ hasText: "Work the first round." }),
+    ).toBeVisible();
+    const source = page.getByRole("region", { name: "Source" });
+    await expect(source).toContainText("License: CC BY 4.0 · Added by dodoi editors");
+    await expect(source.getByRole("link", { name: /commons\.wikimedia\.org/ })).toHaveAttribute(
+      "href",
+      "https://commons.wikimedia.org/wiki/File:Granny_square.jpg",
+    );
+    await expect(page.getByRole("link", { name: "Log in" })).toHaveAttribute(
+      "href",
+      `/sign-in?returnTo=${encodeURIComponent(`/p/${id}`)}`,
+    );
+    await expectNoSeriousViolations(page);
 
-  // Other runs' posts share the skill, so pick this run's related post by its link.
-  await page.locator(`a[href="/p/${relatedId}"]`).click();
-  await expect(page).toHaveURL(`/p/${relatedId}`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^First amigurumi/);
-});
+    // Other runs' posts share the skill, so pick this run's related post by its link.
+    await page.locator(`a[href="/p/${relatedId}"]`).click();
+    await expect(page).toHaveURL(`/p/${relatedId}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/^First amigurumi/);
+  },
+);
 
 test("the gallery steps through photos and plays a video when tapped", async ({
   page,
@@ -137,59 +141,60 @@ test("drafts are not found for visitors", async ({ page }) => {
   expect(await page.locator('meta[name="robots"][content="noindex"]').count()).toBeGreaterThan(0);
 });
 
-test("E2E-17: ticks and done steps are saved and come back on reload and another device", async ({
-  page,
-  browser,
-}) => {
-  const { email, password } = createPasswordAccount();
-  await signIn(page, email, password);
-  const { id } = createPost();
-  await page.goto(`/p/${id}`);
+test(
+  "E2E-17: ticks and done steps are saved and come back on reload and another device",
+  { tag: "@smoke" },
+  async ({ page, browser }) => {
+    const { email, password } = createPasswordAccount();
+    await signIn(page, email, password);
+    const { id } = createPost();
+    await page.goto(`/p/${id}`);
 
-  const material = page.getByRole("checkbox", { name: /Cotton yarn/ });
-  await material.check();
-  await expect(page.getByText("1 of 1 · saved to your account")).toBeVisible();
-  const firstStep = page.getByRole("button", { name: "Step 1 done" });
-  // The request carrying the done step (the material's own save may still be finishing first).
-  const saved = page.waitForResponse(
-    (response) =>
-      response.url().endsWith(`/api/posts/${id}/progress`) &&
-      response.ok() &&
-      (response.request().postData() ?? "").includes('"completedStepPositions":[0]'),
-  );
-  await firstStep.click();
-  await saved;
-  await expect(firstStep).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByRole("heading", { name: "Step 1 of 2 · progress saved" })).toBeVisible();
+    const material = page.getByRole("checkbox", { name: /Cotton yarn/ });
+    await material.check();
+    await expect(page.getByText("1 of 1 · saved to your account")).toBeVisible();
+    const firstStep = page.getByRole("button", { name: "Step 1 done" });
+    // The request carrying the done step (the material's own save may still be finishing first).
+    const saved = page.waitForResponse(
+      (response) =>
+        response.url().endsWith(`/api/posts/${id}/progress`) &&
+        response.ok() &&
+        (response.request().postData() ?? "").includes('"completedStepPositions":[0]'),
+    );
+    await firstStep.click();
+    await saved;
+    await expect(firstStep).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("heading", { name: "Step 1 of 2 · progress saved" })).toBeVisible();
 
-  await page.reload();
-  await expect(page.getByRole("checkbox", { name: /Cotton yarn/ })).toBeChecked();
-  await expect(page.getByRole("button", { name: "Step 1 done" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+    await page.reload();
+    await expect(page.getByRole("checkbox", { name: /Cotton yarn/ })).toBeChecked();
+    await expect(page.getByRole("button", { name: "Step 1 done" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
-  // Undo on a second device, then the first device sees it after a reload.
-  const otherDevice = await browser.newContext();
-  const otherPage = await otherDevice.newPage();
-  await signIn(otherPage, email, password);
-  await otherPage.goto(`/p/${id}`);
-  const otherStep = otherPage.getByRole("button", { name: "Step 1 done" });
-  await expect(otherStep).toHaveAttribute("aria-pressed", "true");
-  const undone = otherPage.waitForResponse(
-    (response) => response.url().endsWith(`/api/posts/${id}/progress`) && response.ok(),
-  );
-  await otherStep.click();
-  await undone;
-  await otherDevice.close();
+    // Undo on a second device, then the first device sees it after a reload.
+    const otherDevice = await browser.newContext();
+    const otherPage = await otherDevice.newPage();
+    await signIn(otherPage, email, password);
+    await otherPage.goto(`/p/${id}`);
+    const otherStep = otherPage.getByRole("button", { name: "Step 1 done" });
+    await expect(otherStep).toHaveAttribute("aria-pressed", "true");
+    const undone = otherPage.waitForResponse(
+      (response) => response.url().endsWith(`/api/posts/${id}/progress`) && response.ok(),
+    );
+    await otherStep.click();
+    await undone;
+    await otherDevice.close();
 
-  await page.reload();
-  await expect(page.getByRole("button", { name: "Step 1 done" })).toHaveAttribute(
-    "aria-pressed",
-    "false",
-  );
-  await expect(page.getByRole("checkbox", { name: /Cotton yarn/ })).toBeChecked();
-});
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Step 1 done" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    await expect(page.getByRole("checkbox", { name: /Cotton yarn/ })).toBeChecked();
+  },
+);
 
 test("Next step scrolls to the first unfinished step", async ({ page }) => {
   const { email, password } = createPasswordAccount();

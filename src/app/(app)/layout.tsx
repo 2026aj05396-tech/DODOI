@@ -3,6 +3,7 @@ import { preconnect } from "react-dom";
 
 import { VerifyEmailBanner } from "@/components/auth/verify-email-banner";
 import { AppShell } from "@/components/layout/app-shell";
+import { InstallBanner } from "@/components/pwa/install-banner";
 import { MEDIA_ORIGIN } from "@/lib/constants/media";
 import { getActor } from "@/server/auth";
 
@@ -16,9 +17,12 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
     <AppShell
       username={null}
       notice={
-        <Suspense fallback={null}>
-          <AccountNotice />
-        </Suspense>
+        <>
+          <Suspense fallback={null}>
+            <AccountNotice />
+          </Suspense>
+          <InstallBanner />
+        </>
       }
     >
       {children}

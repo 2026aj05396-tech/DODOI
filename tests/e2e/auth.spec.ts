@@ -56,26 +56,28 @@ test("an account without a password is told to continue with Google", async ({ p
   ).toBeVisible();
 });
 
-test("signing in returns to the requested page, and signing out ends the session", async ({
-  page,
-}) => {
-  const { email, password } = createPasswordAccount();
-  await page.goto("/sign-in?returnTo=%2Fp%2Fmissing%3Fwelcome%3D1");
+test(
+  "signing in returns to the requested page, and signing out ends the session",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    const { email, password } = createPasswordAccount();
+    await page.goto("/sign-in?returnTo=%2Fp%2Fmissing%3Fwelcome%3D1");
 
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByLabel("Email").fill(email);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveURL(/\/p\/missing\?welcome=1$/);
+    await expect(page).toHaveURL(/\/p\/missing\?welcome=1$/);
 
-  await page.goto("/sign-in");
-  await expect(page.getByText("You're signed in.")).toBeVisible();
-  await page.getByRole("button", { name: "Sign out" }).click();
+    await page.goto("/sign-in");
+    await expect(page.getByText("You're signed in.")).toBeVisible();
+    await page.getByRole("button", { name: "Sign out" }).click();
 
-  await expect(page).toHaveURL(/\/$/);
-  await page.goto("/saved");
-  await expect(page).toHaveURL(/\/sign-in\?returnTo=%2Fsaved$/);
-});
+    await expect(page).toHaveURL(/\/$/);
+    await page.goto("/saved");
+    await expect(page).toHaveURL(/\/sign-in\?returnTo=%2Fsaved$/);
+  },
+);
 
 test("an unsafe returnTo is ignored", async ({ page }) => {
   const { email, password } = createPasswordAccount();

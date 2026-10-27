@@ -49,7 +49,10 @@ describe("buildContentSecurityPolicy", () => {
 
     expect(policy["default-src"]).toBe("'self'");
     expect(policy["img-src"]).toContain("https://res.cloudinary.com");
-    expect(policy["connect-src"]).toBe("'self' https://api.cloudinary.com");
+    // Uploads, and the service worker caching delivered images (P1-27).
+    expect(policy["connect-src"]).toBe(
+      "'self' https://api.cloudinary.com https://res.cloudinary.com",
+    );
     expect(policy["form-action"]).toBe("'self' https://accounts.google.com");
     expect(policy["frame-ancestors"]).toBe("'none'");
     expect(policy["object-src"]).toBe("'none'");

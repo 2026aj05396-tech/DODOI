@@ -196,7 +196,7 @@ function PickerBody({ postId, postTitle }: Target) {
       )}
 
       {isCreating ? (
-        <form onSubmit={onCreate} className="flex flex-col gap-2" noValidate>
+        <form method="post" onSubmit={onCreate} className="flex flex-col gap-2" noValidate>
           <Label htmlFor={nameId}>Collection name</Label>
           <Input
             id={nameId}

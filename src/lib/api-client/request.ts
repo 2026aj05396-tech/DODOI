@@ -4,6 +4,8 @@ import type { ApiErrorBody } from "@/lib/types/api";
 // (API_SPECIFICATION §1.2) and are thrown as ApiRequestError with a message safe to show.
 
 const NETWORK_ERROR_MESSAGE = "We couldn't reach dodoi. Check your connection and try again.";
+// Offline matrix (SYSTEM_ARCHITECTURE §9): nothing is queued while offline, so say so plainly.
+const OFFLINE_MESSAGE = "You're offline. Try again when you reconnect.";
 
 export class ApiRequestError extends Error {
   readonly status: number;
@@ -31,6 +33,9 @@ export async function requestJson<TResponse = undefined>(
   path: string,
   body?: unknown,
 ): Promise<TResponse> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    throw new ApiRequestError(0, "OFFLINE", OFFLINE_MESSAGE);
+  }
   let response: Response;
   try {
     response = await fetch(path, {

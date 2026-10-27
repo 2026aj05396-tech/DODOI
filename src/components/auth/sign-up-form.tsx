@@ -113,7 +113,7 @@ export function SignUpForm({ returnTo }: SignUpFormProps) {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-title text-balance text-foreground">Create your account</h1>
-      <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form method="post" noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
         {formError ? <ErrorBanner>{formError}</ErrorBanner> : null}
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="sign-up-email">Email</Label>

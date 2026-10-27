@@ -1,19 +1,23 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-test("welcome page renders and has no serious accessibility violations", async ({ page }) => {
-  await page.goto("/");
+test(
+  "welcome page renders and has no serious accessibility violations",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    await page.goto("/");
 
-  await expect(
-    page.getByRole("heading", { level: 1, name: /For the things you love making/ }),
-  ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: /For the things you love making/ }),
+    ).toBeVisible();
 
-  const results = await new AxeBuilder({ page }).analyze();
-  const blocking = results.violations.filter(
-    (violation) => violation.impact === "serious" || violation.impact === "critical",
-  );
-  expect(blocking).toEqual([]);
-});
+    const results = await new AxeBuilder({ page }).analyze();
+    const blocking = results.violations.filter(
+      (violation) => violation.impact === "serious" || violation.impact === "critical",
+    );
+    expect(blocking).toEqual([]);
+  },
+);
 
 test("the welcome page shows design 1a on mobile and the 2a landing on desktop", async ({
   page,

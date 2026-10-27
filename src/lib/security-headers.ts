@@ -50,7 +50,13 @@ export function buildContentSecurityPolicy(
     "img-src": ["'self'", "data:", "blob:", CLOUDINARY_DELIVERY],
     "media-src": ["'self'", "blob:", CLOUDINARY_DELIVERY],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", CLOUDINARY_UPLOAD, ...(isDevServer ? ["ws:"] : [])],
+    // Delivery too: the service worker fetches Cloudinary images to cache them (P1-27).
+    "connect-src": [
+      "'self'",
+      CLOUDINARY_UPLOAD,
+      CLOUDINARY_DELIVERY,
+      ...(isDevServer ? ["ws:"] : []),
+    ],
     "form-action": ["'self'", GOOGLE_SIGN_IN],
     "frame-ancestors": ["'none'"],
     "base-uri": ["'self'"],

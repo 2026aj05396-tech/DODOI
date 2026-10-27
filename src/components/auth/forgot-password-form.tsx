@@ -60,7 +60,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form method="post" noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-body text-foreground-secondary">
         Enter your email and we&apos;ll send you a link to choose a new password. If you signed up
         with Google, this lets you add a password too.

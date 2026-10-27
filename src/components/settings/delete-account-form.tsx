@@ -10,6 +10,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { Input, Label } from "@/components/ui/input";
 import { deleteAccount } from "@/lib/api-client/account";
 import { ApiRequestError } from "@/lib/api-client/request";
+import { clearOfflineData } from "@/lib/utils/clear-offline-data";
 import { formatLongDate } from "@/lib/utils/dates";
 
 // Account deletion (F-14, P1-28). Accounts with a password confirm with it; Google-only accounts
@@ -46,6 +47,7 @@ export function DeleteAccountForm({
     setErrors({});
     try {
       const result = await deleteAccount(hasPassword ? { password } : {});
+      await clearOfflineData();
       await signOut({ redirect: false });
       setScheduledFor(result.deletionScheduledFor);
     } catch (error) {
@@ -96,7 +98,7 @@ export function DeleteAccountForm({
       </Button>
     </div>
   ) : (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+    <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-4">
       {errors.form ? <ErrorBanner>{errors.form}</ErrorBanner> : null}
       {hasPassword ? (
         <div className="flex flex-col gap-2">

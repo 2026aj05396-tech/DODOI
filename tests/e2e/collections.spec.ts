@@ -27,38 +27,40 @@ async function newCollectionFromPost(page: Page, postId: string, name: string) {
 
 const allSaved = (page: Page) => page.getByRole("region", { name: "All saved" });
 
-test("E2E-08: save → new collection → rename → delete; the post stays in All saved", async ({
-  page,
-}) => {
-  await signIn(page);
-  const { id } = createPost();
+test(
+  "E2E-08: save → new collection → rename → delete; the post stays in All saved",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    await signIn(page);
+    const { id } = createPost();
 
-  await newCollectionFromPost(page, id, "Crochet ideas");
+    await newCollectionFromPost(page, id, "Crochet ideas");
 
-  await page.goto("/saved");
-  const tile = page.getByRole("link", { name: /Crochet ideas/ });
-  await expect(tile).toContainText("1 saved · Private");
-  await expect(
-    allSaved(page).locator(`a[href="/p/${id}"]`).filter({ visible: true }),
-  ).toBeVisible();
+    await page.goto("/saved");
+    const tile = page.getByRole("link", { name: /Crochet ideas/ });
+    await expect(tile).toContainText("1 saved · Private");
+    await expect(
+      allSaved(page).locator(`a[href="/p/${id}"]`).filter({ visible: true }),
+    ).toBeVisible();
 
-  await tile.click();
-  await expect(page.getByRole("heading", { level: 1, name: "Crochet ideas" })).toBeVisible();
-  await page.getByRole("button", { name: "Rename" }).click();
-  await page.getByLabel("Collection name").fill("Crochet favourites");
-  await page.getByRole("button", { name: "Save name" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Crochet favourites" })).toBeVisible();
+    await tile.click();
+    await expect(page.getByRole("heading", { level: 1, name: "Crochet ideas" })).toBeVisible();
+    await page.getByRole("button", { name: "Rename" }).click();
+    await page.getByLabel("Collection name").fill("Crochet favourites");
+    await page.getByRole("button", { name: "Save name" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Crochet favourites" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Delete" }).click();
-  await expect(page.getByText("Saved posts will stay in All saved.")).toBeVisible();
-  await page.getByRole("button", { name: "Delete collection" }).click();
+    await page.getByRole("button", { name: "Delete" }).click();
+    await expect(page.getByText("Saved posts will stay in All saved.")).toBeVisible();
+    await page.getByRole("button", { name: "Delete collection" }).click();
 
-  await expect(page).toHaveURL(/\/saved$/);
-  await expect(page.getByRole("link", { name: /Crochet favourites/ })).toHaveCount(0);
-  await expect(
-    allSaved(page).locator(`a[href="/p/${id}"]`).filter({ visible: true }),
-  ).toBeVisible();
-});
+    await expect(page).toHaveURL(/\/saved$/);
+    await expect(page.getByRole("link", { name: /Crochet favourites/ })).toHaveCount(0);
+    await expect(
+      allSaved(page).locator(`a[href="/p/${id}"]`).filter({ visible: true }),
+    ).toBeVisible();
+  },
+);
 
 async function otherUser(browser: Browser): Promise<Page> {
   const context = await browser.newContext();

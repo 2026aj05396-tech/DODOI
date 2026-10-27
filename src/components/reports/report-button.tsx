@@ -101,7 +101,7 @@ export function ReportButton({
               <DialogDescription>
                 Reports are private. We&apos;ll review it and act if it breaks our guidelines.
               </DialogDescription>
-              <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+              <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-4">
                 <fieldset className="flex flex-col gap-2">
                   <legend className="mb-1 text-control-sm font-bold text-foreground">
                     What&apos;s wrong?

@@ -128,17 +128,17 @@ Routing (P1-11): after sign-in or sign-up, `/` and every signed-in page send a u
 
 ### F-12 Install the PWA (PWA-02, PWA-04)
 
-1. Install guidance appears only after meaningful engagement (PROPOSED: after first save or second visit), as a dismissible banner.
+1. Install guidance appears only after meaningful engagement (APPROVED 2026-10-27: after first save or second visit), as a dismissible banner.
 2. Chromium browsers: native `beforeinstallprompt` → "Install app".
 3. iOS Safari: instructional sheet ("Share → Add to Home Screen").
-4. Dismissed → not shown again for a period (PROPOSED: 30 days).
+4. Dismissed → not shown again for a period (APPROVED 2026-10-27: 30 days).
 5. Installed app opens to `/feed` (or `/` if signed out).
 
 ### F-13 Offline behavior
 
 1. Connection lost → persistent banner "You're offline. Some things won't work until you reconnect."
 2. Navigation to a non-cached page → `[Offline fallback]`.
-3. Save/unsave while offline → **not queued in Phase 1** (PROPOSED); button disabled with tooltip.
+3. Save/unsave while offline → **not queued in Phase 1** (APPROVED 2026-10-27); button disabled with tooltip.
 4. Reconnect → banner changes to "Back online", auto-dismiss, retry failed loads.
 
 ### F-14 Account deletion (AUTH-08)

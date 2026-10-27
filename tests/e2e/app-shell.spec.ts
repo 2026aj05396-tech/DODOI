@@ -54,8 +54,12 @@ test.describe("app shell layout", () => {
   });
 });
 
-test("coming-soon items show a tooltip and make no network requests", async ({ page }) => {
+test("E2E-16: coming-soon items show a tooltip and make no network requests", async ({ page }) => {
   await page.goto("/shell-preview");
+  // The service worker registers after load and precaches the app (P1-27); let it finish first.
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
   await page.waitForLoadState("networkidle");
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));

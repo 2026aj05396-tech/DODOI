@@ -73,7 +73,7 @@ function NameForm({
     <>
       <DialogTitle>{title}</DialogTitle>
       {description ? <DialogDescription className="-mt-2">{description}</DialogDescription> : null}
-      <form onSubmit={submit} className="flex flex-col gap-2" noValidate>
+      <form method="post" onSubmit={submit} className="flex flex-col gap-2" noValidate>
         <Label htmlFor={id}>Collection name</Label>
         <Input
           id={id}
