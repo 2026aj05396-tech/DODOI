@@ -98,7 +98,7 @@ export async function findCollectionSummaries(where: { userId: string } | { id: 
       items: {
         where: { save: PUBLISHED_POST },
         orderBy: [{ addedAt: "desc" }, { saveId: "desc" }],
-        take: 1,
+        take: 3,
         select: { save: { select: { postId: true } } },
       },
     },

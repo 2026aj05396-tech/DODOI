@@ -33,14 +33,14 @@ async function toSummaries(
   rows: CollectionRow[],
   provider: MediaProvider,
 ): Promise<CollectionSummary[]> {
-  const coverIds = rows.flatMap((row) => row.coverPostId ?? []);
+  const previewIds = [...new Set(rows.flatMap((row) => row.previewPostIds))];
   const covers = new Map(
-    (await getPostCards(actor, coverIds, { provider })).map((card) => [card.id, card.coverMedia]),
+    (await getPostCards(actor, previewIds, { provider })).map((card) => [card.id, card.coverMedia]),
   );
-  return rows.map(({ coverPostId, ...row }) => ({
-    ...row,
-    coverMedia: coverPostId ? (covers.get(coverPostId) ?? null) : null,
-  }));
+  return rows.map(({ previewPostIds, ...row }) => {
+    const previewMedia = previewPostIds.flatMap((id) => covers.get(id) ?? []);
+    return { ...row, coverMedia: previewMedia[0] ?? null, previewMedia };
+  });
 }
 
 /** PUT /api/saves/{postId}. */
@@ -74,8 +74,8 @@ export async function createCollection(
   actor: Actor,
   input: CreateCollectionInput,
 ): Promise<CollectionSummary> {
-  const { coverPostId: _cover, ...row } = await insertCollection(actor, input);
-  return { ...row, coverMedia: null };
+  const { previewPostIds: _previews, ...row } = await insertCollection(actor, input);
+  return { ...row, coverMedia: null, previewMedia: [] };
 }
 
 /** PATCH /api/collections/{id}. */

@@ -14,6 +14,7 @@ import { ComingSoonAction } from "./coming-soon-action";
 import { CreatorRow } from "./creator-row";
 import { PostCard } from "./post-card";
 import { PostGallery } from "./post-gallery";
+import { SaveToCollectionButton } from "./save-to-collection-button";
 import { ShareButton } from "./share-button";
 import { TutorialSections } from "./tutorial-sections";
 
@@ -86,9 +87,10 @@ export function PostDetail({
           </header>
 
           <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2.5 md:grid">
-            <ComingSoonAction
-              label="Save to collection"
-              shape="filled"
+            <SaveToCollectionButton
+              postId={post.id}
+              postTitle={post.title}
+              isSignedIn={progress !== null}
               className={WRAPPING_ACTION}
             />
             <ComingSoonAction
@@ -145,10 +147,10 @@ export function PostDetail({
           icon={<Sparkles aria-hidden className="size-4" />}
           className="h-13 px-3"
         />
-        <ComingSoonAction
-          label="Save to collection"
-          shape="filled"
-          badge="dot"
+        <SaveToCollectionButton
+          postId={post.id}
+          postTitle={post.title}
+          isSignedIn={progress !== null}
           className="h-13 px-3"
         />
       </div>

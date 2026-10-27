@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 
 import "@/styles/globals.css";
 
+import { CollectionPickerHost } from "@/components/collections/collection-picker";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/toast";
 
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={dmSans.variable}>
       <body>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          {children}
+          <CollectionPickerHost />
+        </QueryProvider>
         <Toaster />
       </body>
     </html>

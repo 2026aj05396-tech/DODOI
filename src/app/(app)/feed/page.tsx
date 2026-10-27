@@ -4,9 +4,9 @@ import { Suspense } from "react";
 
 import { FeedHeader } from "@/components/feed/feed-header";
 import { FeedRail } from "@/components/feed/feed-rail";
-import { FeedSkeleton } from "@/components/feed/feed-skeleton";
 import { HomeFeed } from "@/components/feed/home-feed";
 import { PageWithRail } from "@/components/layout/page-with-rail";
+import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { feedGreeting, firstName } from "@/lib/utils/greeting";
 import { getActor } from "@/server/auth";
@@ -61,7 +61,7 @@ function FeedPageSkeleton() {
         <Skeleton className="h-9 w-24 rounded-full" />
         <Skeleton className="h-9 w-24 rounded-full" />
       </div>
-      <FeedSkeleton />
+      <MasonrySkeleton />
     </div>
   );
 }

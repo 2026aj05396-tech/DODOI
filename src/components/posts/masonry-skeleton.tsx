@@ -7,8 +7,8 @@ const COLUMN_HEIGHTS = [
   ["h-56", "h-44", "h-52"],
 ];
 
-/** Placeholder cards while the feed loads: 2 columns, 3 from 1280px. */
-export function FeedSkeleton({ label = "Loading your feed" }: { label?: string }) {
+/** Placeholder cards while a post grid loads: 2 columns, 3 from 1280px. */
+export function MasonrySkeleton({ label = "Loading posts" }: { label?: string }) {
   return (
     <div role="status" aria-label={label} className="flex gap-3 md:gap-4">
       {COLUMN_HEIGHTS.map((heights, column) => (

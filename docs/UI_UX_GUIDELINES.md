@@ -230,7 +230,7 @@ Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-
 | **IconRail** | 2c, 3c | 76px column, 48×48 items radius 12, active = blush bg, Create = coral circle |
 | **PostMetaHeader** | 1e, 2c | Chips row (skill, level, time), title, creator row (avatar, name · "helps with …", Follow) |
 | **StickyActionBar** | 1e, 1g | Paper bar with top border; outline + primary buttons |
-| **CollectionTile** | 1i | 120px mosaic cover (2fr/1fr grid of 3 images), name, "18 saved · Private"; "+ New collection" dashed tile |
+| **CollectionTile** | 1i | 120px mosaic cover (2fr/1fr grid of 3 images), name, "18 saved · Private"; "+ New collection" dashed tile. **Built (P1-25):** `components/collections/collection-tile.tsx`; empty slots show craft patterns; the API returns `previewMedia` (3 newest covers) |
 | **ProfileHeader** | 1i | 72px avatar, display name, `@username · N following`, bio |
 | **SkillGroups** | 1i | Overline groups with chips: Interests (with level) · Can help with · Want to learn |
 | **Tabs** | 1h, 1i | Text tabs, active = brick bold + 2px brick underline |
@@ -290,7 +290,7 @@ Error messages: what happened + what to do next. No blame, jargon or codes in th
 | Post / tutorial detail | `1e`, `2c` | Attribution block, persisted materials/steps (DC-07, DC-10) |
 | Home (tablet) | `3c` | |
 | Error, focus, coming-soon patterns | `3b` | |
-| Saved / collections | `1i` (profile tab) | Collection detail, picker not designed |
+| Saved / collections | `1i` (profile tab) | Collection detail, picker not designed. **Built (P1-25, PO review):** `/saved` = collections row (sideways on mobile, grid from 768px) then All saved masonry; `/saved/{id}` collection page; picker = `sheet` dialog (checkbox per collection, "New collection" inline, Done) |
 | Public profile | `1i` | |
 | Edit profile, Settings, Account deletion | — | Not designed |
 | Admin posts/themes/skills | — | Not designed — built from system in P1-17 (`/admin`, top bar + sections in cards, sticky action bar); PO review pending |

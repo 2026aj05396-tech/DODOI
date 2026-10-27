@@ -39,9 +39,25 @@ function RailLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-/** 76px icon rail for tablets (`3c`) and, from Phase 4, detail pages with the docked companion (`2c`). */
+/**
+ * 76px icon rail for tablets (`3c`) and, from Phase 4, detail pages with the docked companion
+ * (`2c`). Reads the current path to highlight the active item. On pages whose address isn't known
+ * while prerendering (dynamic routes), the app shell shows `IconRailView` with nothing highlighted
+ * until the browser knows it (Next.js Cache Components needs a Suspense boundary there).
+ */
 export function IconRail({ username, className }: { username: string | null; className?: string }) {
-  const pathname = usePathname();
+  return <IconRailView username={username} className={className} pathname={usePathname()} />;
+}
+
+export function IconRailView({
+  username,
+  className,
+  pathname,
+}: {
+  username: string | null;
+  className?: string;
+  pathname: string;
+}) {
   const CommunityIcon = COMMUNITY.icon;
   const CreateIcon = CREATE.icon;
 

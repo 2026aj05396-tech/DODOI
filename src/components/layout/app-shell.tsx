@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
 import { AskDodoiPill } from "./ask-dodoi";
-import { BottomTabBar } from "./bottom-tab-bar";
-import { IconRail } from "./icon-rail";
+import { BottomTabBar, BottomTabBarView } from "./bottom-tab-bar";
+import { IconRail, IconRailView } from "./icon-rail";
 import { MobileHeader } from "./mobile-header";
-import { Sidebar } from "./sidebar";
+import { Sidebar, SidebarView } from "./sidebar";
 
 export type AppShellProps = {
   /** Username of the signed-in user for the Profile link; null until the profile UI (P1-14). */
@@ -40,8 +40,19 @@ export function AppShell({
         Skip to content
       </a>
       {fullScreenOnMobile ? null : <MobileHeader />}
-      <IconRail username={username} className="hidden md:flex xl:hidden" />
-      <Sidebar username={username} className="hidden xl:flex" />
+      {/* Each nav highlights the current page; on dynamic routes that waits for the browser. */}
+      <Suspense
+        fallback={
+          <IconRailView username={username} pathname="" className="hidden md:flex xl:hidden" />
+        }
+      >
+        <IconRail username={username} className="hidden md:flex xl:hidden" />
+      </Suspense>
+      <Suspense
+        fallback={<SidebarView username={username} pathname="" className="hidden xl:flex" />}
+      >
+        <Sidebar username={username} className="hidden xl:flex" />
+      </Suspense>
       <main
         id="main-content"
         tabIndex={-1}
@@ -56,7 +67,11 @@ export function AppShell({
           fullScreenOnMobile && "max-md:hidden",
         )}
       />
-      {fullScreenOnMobile ? null : <BottomTabBar username={username} />}
+      {fullScreenOnMobile ? null : (
+        <Suspense fallback={<BottomTabBarView username={username} pathname="" />}>
+          <BottomTabBar username={username} />
+        </Suspense>
+      )}
     </div>
   );
 }

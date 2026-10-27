@@ -153,8 +153,8 @@ export type CollectionRow = {
   name: string;
   visibility: CollectionVisibility;
   itemCount: number;
-  /** The most recently added published post, for the cover. */
-  coverPostId: string | null;
+  /** Up to 3 most recently added published posts, newest first, for the cover mosaic (`1i`). */
+  previewPostIds: string[];
 };
 
 function toRow(row: Awaited<ReturnType<typeof findCollectionSummaries>>[number]): CollectionRow {
@@ -163,7 +163,7 @@ function toRow(row: Awaited<ReturnType<typeof findCollectionSummaries>>[number])
     name: row.name,
     visibility: row.visibility,
     itemCount: row._count.items,
-    coverPostId: row.items[0]?.save.postId ?? null,
+    previewPostIds: row.items.map((item) => item.save.postId),
   };
 }
 
@@ -192,7 +192,7 @@ export async function createCollection(
       nameNormalized: normalizeCollectionName(input.name),
       visibility: input.visibility,
     });
-    return { id, name: input.name, visibility: input.visibility, itemCount: 0, coverPostId: null };
+    return { id, name: input.name, visibility: input.visibility, itemCount: 0, previewPostIds: [] };
   } catch (error) {
     if (isUniqueViolation(error)) throw nameTaken();
     throw error;

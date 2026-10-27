@@ -50,9 +50,23 @@ function ComingSoonTab({ item }: { item: NavItem }) {
   );
 }
 
-/** Mobile bottom navigation (`1c`): Home · Explore · Create · Community · Profile. */
+/**
+ * Mobile bottom navigation (`1c`): Home · Explore · Create · Community · Profile. Reads the current
+ * path to highlight the active item. On pages whose address isn't known while prerendering (dynamic
+ * routes), the app shell shows `BottomTabBarView` with nothing highlighted until the browser knows
+ * it (Next.js Cache Components needs a Suspense boundary there).
+ */
 export function BottomTabBar({ username }: { username: string | null }) {
-  const pathname = usePathname();
+  return <BottomTabBarView username={username} pathname={usePathname()} />;
+}
+
+export function BottomTabBarView({
+  username,
+  pathname,
+}: {
+  username: string | null;
+  pathname: string;
+}) {
   const CreateIcon = CREATE.icon;
 
   return (

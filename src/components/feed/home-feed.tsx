@@ -3,7 +3,10 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { PostCard, coverRatio } from "@/components/posts/post-card";
+import { Masonry, cardHeight } from "@/components/posts/masonry";
+import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
+import { PostCard } from "@/components/posts/post-card";
+import { useColumnCount } from "@/components/posts/use-column-count";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
@@ -13,12 +16,10 @@ import { ApiRequestError } from "@/lib/api-client/request";
 import type { FeedFilter } from "@/lib/schemas/feed";
 import type { FeedFilterChip, FeedItem, FeedPage } from "@/lib/types/feed";
 
-import { FeedSkeleton } from "./feed-skeleton";
 import { FilterBar } from "./filter-bar";
 import { HiddenCard } from "./hidden-card";
 import { PostMenu } from "./post-menu";
 import { SkillSuggestionCard } from "./skill-suggestion-card";
-import { useColumnCount } from "./use-column-count";
 
 // Home feed (P1-22; FEED-01…14; `1c`, `2b`, `3c`). The first For you page comes from the server;
 // later pages load when the end comes near (with a "Load more" button for keyboard and screen
@@ -32,22 +33,10 @@ function itemKey(item: FeedItem): string {
   return item.kind === "post" ? item.post.id : `suggestion-${item.skill.id}`;
 }
 
-/** Relative height of an item, for picking the shortest column (card text ≈ 0.3 of the width). */
+/** Relative height of an item, for picking the shortest column. */
 function itemHeight(item: FeedItem): number {
   if (item.kind !== "post") return 0.9;
-  const { width, height } = item.post.coverMedia;
-  return 1 / coverRatio(width, height) + 0.3;
-}
-
-function toColumns(items: FeedItem[], count: number): FeedItem[][] {
-  const columns: FeedItem[][] = Array.from({ length: count }, () => []);
-  const heights = new Array<number>(count).fill(0);
-  for (const item of items) {
-    const shortest = heights.indexOf(Math.min(...heights));
-    columns[shortest]?.push(item);
-    heights[shortest] = (heights[shortest] ?? 0) + itemHeight(item);
-  }
-  return columns;
+  return cardHeight(item.post.coverMedia.width, item.post.coverMedia.height);
 }
 
 function emptyMessage(filter: string, chips: FeedFilterChip[]) {
@@ -181,7 +170,7 @@ export function HomeFeed({
 
   let body: React.ReactNode;
   if (feed.isPending || columnCount === null) {
-    body = <FeedSkeleton />;
+    body = <MasonrySkeleton />;
   } else if (feed.isError && !isFetchNextPageError) {
     body = <ErrorState message="We couldn't load your feed." onRetry={() => void feed.refetch()} />;
   } else if (items.length === 0) {
@@ -190,39 +179,36 @@ export function HomeFeed({
   } else {
     body = (
       <>
-        <div className="flex items-start gap-3 md:gap-4">
-          {toColumns(items, columnCount).map((column, index) => (
-            <div key={index} className="flex min-w-0 flex-1 flex-col gap-5">
-              {column.map((item) => {
-                if (item.kind === "skill_suggestion") {
-                  return <SkillSuggestionCard key={itemKey(item)} suggestion={item} />;
-                }
-                const { post } = item;
-                if (hidden.has(post.id)) {
-                  return <HiddenCard key={post.id} onUndo={() => undoHide(post.id)} />;
-                }
-                return (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    isSignedIn
-                    className="animate-dd-up"
-                    menu={
-                      <PostMenu
-                        postId={post.id}
-                        postTitle={post.title}
-                        onNotInterested={() => notInterested(post.id)}
-                      />
-                    }
+        <Masonry
+          items={items}
+          columns={columnCount}
+          getKey={itemKey}
+          getHeight={itemHeight}
+          renderItem={(item) => {
+            if (item.kind === "skill_suggestion") return <SkillSuggestionCard suggestion={item} />;
+            const { post } = item;
+            if (hidden.has(post.id)) {
+              return <HiddenCard onUndo={() => undoHide(post.id)} />;
+            }
+            return (
+              <PostCard
+                post={post}
+                isSignedIn
+                className="animate-dd-up"
+                menu={
+                  <PostMenu
+                    postId={post.id}
+                    postTitle={post.title}
+                    onNotInterested={() => notInterested(post.id)}
                   />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+                }
+              />
+            );
+          }}
+        />
         <div ref={sentinel} />
         <div className="flex flex-col items-center gap-3 pt-6 pb-4">
-          {isFetchingNextPage ? <FeedSkeleton label="Loading more posts" /> : null}
+          {isFetchingNextPage ? <MasonrySkeleton label="Loading more posts" /> : null}
           {isExpired ? (
             <ErrorState
               message="This feed has expired."

@@ -59,9 +59,25 @@ function SidebarComingSoon({ item }: { item: NavItem }) {
   );
 }
 
-/** Full desktop sidebar (`2b`), 232px. */
+/**
+ * Full desktop sidebar (`2b`), 232px. Reads the current path to highlight the active item. On pages
+ * whose address isn't known while prerendering (dynamic routes), the app shell shows `SidebarView`
+ * with nothing highlighted until the browser knows it (Next.js Cache Components needs a Suspense
+ * boundary there).
+ */
 export function Sidebar({ username, className }: { username: string | null; className?: string }) {
-  const pathname = usePathname();
+  return <SidebarView username={username} className={className} pathname={usePathname()} />;
+}
+
+export function SidebarView({
+  username,
+  className,
+  pathname,
+}: {
+  username: string | null;
+  className?: string;
+  pathname: string;
+}) {
   const CreateIcon = CREATE.icon;
 
   return (

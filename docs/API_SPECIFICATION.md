@@ -269,7 +269,7 @@ Unsave (idempotent); removes from all collections. → `204`.
 Paginated `PostCard[]` most recently saved first ("All saved"); unpublished posts are left out.
 
 ### GET /api/collections — User
-Own collections, most recently changed (renamed, added to or removed from) first (PO decision, P1-24): `{ items: [{ id, name, visibility, itemCount, coverMedia: Media|null }] }`. `itemCount` counts published posts; `coverMedia` is the cover of the most recently added one.
+Own collections, most recently changed (renamed, added to or removed from) first (PO decision, P1-24): `{ items: [{ id, name, visibility, itemCount, coverMedia: Media|null, previewMedia: Media[] }] }` (`previewMedia`: covers of the 3 newest posts, for the mosaic tile, P1-25). `itemCount` counts published posts; `coverMedia` is the cover of the most recently added one.
 ### POST /api/collections — User
 `{ "name": "Crochet ideas to try", "visibility": "PRIVATE" }` (visibility optional, defaults PRIVATE) → `201` collection. `409 COLLECTION_NAME_TAKEN` (case- and space-insensitive) · `422 COLLECTION_LIMIT_REACHED` (100) · `403 EMAIL_NOT_VERIFIED` for `PUBLIC` (OD-08).
 ### GET /api/collections/{id} — Owner, or User* if PUBLIC

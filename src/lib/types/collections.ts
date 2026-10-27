@@ -13,6 +13,8 @@ export type CollectionSummary = {
   itemCount: number;
   /** Cover of the most recently added published post. */
   coverMedia: Media | null;
+  /** Covers of up to 3 most recently added published posts, newest first (mosaic tile, `1i`). */
+  previewMedia: Media[];
 };
 
 export type CollectionPage = {

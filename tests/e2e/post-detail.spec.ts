@@ -94,11 +94,16 @@ test("Share copies the link and coming-soon actions don't act", async ({ page, c
 
   // aria-disabled controls stay tappable for real users; Playwright needs `force` to click them.
   await page
-    .getByRole("button", { name: /Save to collection\s*, coming soon/ })
+    .getByRole("button", { name: /Ask about this\s*, coming soon/ })
+    .or(page.getByRole("button", { name: /Start as my project\s*, coming soon/ }))
     .filter({ visible: true })
     .click({ force: true });
   await expect(page.getByRole("tooltip")).toHaveText("Coming soon");
   await expect(page).toHaveURL(`/p/${id}`);
+
+  // Saving needs an account: signed-out visitors go to sign-in and come back.
+  await page.getByRole("button", { name: "Save to collection" }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(`/sign-in?returnTo=${encodeURIComponent(`/p/${id}`)}`);
 });
 
 test("signed-in users get the app shell; on mobile the post is full screen", async ({
@@ -145,8 +150,12 @@ test("E2E-17: ticks and done steps are saved and come back on reload and another
   await material.check();
   await expect(page.getByText("1 of 1 · saved to your account")).toBeVisible();
   const firstStep = page.getByRole("button", { name: "Step 1 done" });
+  // The request carrying the done step (the material's own save may still be finishing first).
   const saved = page.waitForResponse(
-    (response) => response.url().endsWith(`/api/posts/${id}/progress`) && response.ok(),
+    (response) =>
+      response.url().endsWith(`/api/posts/${id}/progress`) &&
+      response.ok() &&
+      (response.request().postData() ?? "").includes('"completedStepPositions":[0]'),
   );
   await firstStep.click();
   await saved;
