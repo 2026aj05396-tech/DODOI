@@ -1,6 +1,8 @@
 // Public API of the content module (CODE_QUALITY §3.2): media, posts and themes.
 export {
+  avatarUrl,
   deleteOrphanedMedia,
+  getOwnAvatar,
   getMedia,
   MEDIA_SIGN_RATE_LIMIT,
   mediaFolder,

@@ -9,6 +9,7 @@ export {
   getRecentlySavedSkillIds,
   getSavedPostIds,
   listMyCollections,
+  listPublicCollections,
   listSavedPostIds,
   removeFromCollection,
   savePost,

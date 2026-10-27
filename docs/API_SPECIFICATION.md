@@ -185,17 +185,17 @@ Rules: skill must exist and be ACTIVE (else `400 SKILL_NOT_AVAILABLE`, field `it
 Marks onboarding complete. Precondition: at least 3 active interests (OD-14), else `422 NOT_ENOUGH_INTERESTS`. → `204` (idempotent; the first completion time is kept).
 
 ### GET /api/me/profile — User
-Own full profile (incl. visibility).
+Own full profile: `{ username, displayName, bio, avatar: Media|null, visibility, usernameChangeAvailableAt: string|null }` (`usernameChangeAvailableAt` = when the username may change again; null = now).
 
 ### PATCH /api/me/profile — User
 ```json
 { "username": "…", "displayName": "…", "bio": "…", "avatarMediaId": "…|null", "visibility": "PUBLIC|PRIVATE" }
 ```
-`409 USERNAME_TAKEN` · `400` invalid/reserved username · `422 USERNAME_CHANGE_TOO_SOON` (within 30 days of last change) · `avatarMediaId` must be owned by actor and of type IMAGE.
+`409 USERNAME_TAKEN` · `400` invalid/reserved username · `422 USERNAME_CHANGE_TOO_SOON` (within 30 days of last change; sending the current username is not a change) · `avatarMediaId` must be the actor's own uploaded avatar (IMAGE in `avatars/`), else `400` on the field · usernames and display names with offensive words → `400` (OD-36 list, PO decision P1-13) · display name 1–50, bio ≤ 300 (empty clears it). Unverified users may edit everything (PO decision).
 
 ### GET /api/profiles/{username} — User*
 Public profile: `{ username, displayName, bio, avatarUrl, skills: { interests[], canHelp[], wantsToLearn[] } (with levels), publicCollections: CollectionSummary[] }`.
-Private profile (OD-10) → `{ username, displayName, avatarUrl, isPrivate: true }` only. **Never** includes email, DOB, role, internal IDs beyond what is needed.
+Full view also has `isPrivate: false`, `isOwner` and `visibility`; skills are active skills only; `publicCollections` are most recently changed first. Private profile (OD-10) → `{ username, displayName, avatarUrl, isPrivate: true }` only (the owner always gets the full view). Unknown, deactivated or hidden-after-report profiles → `404` (owners still see their own). **Never** includes email, DOB, role, internal IDs beyond what is needed.
 
 ---
 
@@ -306,7 +306,7 @@ Validates against MEDIA-01…03 (`413 PAYLOAD_TOO_LARGE`, `400 UNSUPPORTED_MEDIA
 ### PATCH /api/media/{id} — Owner/Admin
 `{ "altText": "…" }`.
 
-Avatar uploads for regular users in P1 (profile editing) **require user access to media signing** for type IMAGE with folder `avatars/`. PROPOSED: allow `User` for `purpose: "avatar"` only.
+Avatar uploads for regular users (P1-12): any signed-in user may sign and register uploads for `purpose: "avatar"` only (IMAGE, MEDIA-02, folder `avatars/`, the same 30/hour limit) — CONFIRMED 2026-10-27. Other purposes stay admin-only (`404`).
 
 ---
 

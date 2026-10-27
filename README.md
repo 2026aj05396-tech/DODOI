@@ -89,6 +89,7 @@ Read the documents in this order before writing any code.
 | Saves & collections (P1-24) | Adding a post to a collection saves it first; collections listed most recently changed first, posts most recently added first, cover = newest post | CONFIRMED |
 | Feed screen (P1-22) | TanStack Query installed for client data; greeting "What will you make today/tonight, {first name}?" (5 pm India time; first word of the display name, dot/underscore/number tail dropped); search field, bell and avatar "coming soon" until search (P1-26) and profiles (P1-14) | CONFIRMED |
 | Saved screens (P1-25) | `/saved`: collections on top, All saved below; collection pages at `/saved/{id}` (public ones open for other signed-in users); unsave Undo restores the save and its collections; profile Collections tab moves to P1-14 | CONFIRMED |
+| Profiles (P1-13/P1-12) | Any signed-in user may upload their own avatar (purpose `avatar` only; posts/covers stay admin-only); usernames and display names are checked against the offensive-word list (bios left to reports); unverified users may edit their whole profile; profiles hidden after a report or deactivated are not found for others | CONFIRMED |
 | Admin skill create/rename/delete | Requested by PO (2026-10-26), **on hold**: needs delete rule for skills in use, editable fields (name/slug/accent) and type of new skills. Today admin can edit editorial fields, hide/show and set related skills | OPEN |
 | Admin onboarding | Admins skip onboarding: `/` and `/onboarding` redirect them to `/admin` (age check still applies) | CONFIRMED |
 | Post lists | Related posts: 12, most shared skills → same primary → newest; skill pages newest first; hidden/deactivated creators: post stays, creator row not shown | CONFIRMED |
@@ -96,7 +97,7 @@ Read the documents in this order before writing any code.
 | Google sign-in tests | Dev-only `oauth2-mock-server` 9.3.0 as a local stand-in for Google in E2E | CONFIRMED |
 | Onboarding data | Up to 50 skills per user; resume step stored per user; skipped familiarity stores no level | CONFIRMED |
 | Age check date | Age computed on today's date in India (IST) | PROPOSED (P1-05) |
-| Reserved usernames and fallback | Full list in `src/server/modules/users/username.ts` (OD-11 names + every top-level route); usernames fall back to `maker-NNNN` when neither name nor email gives 3 usable characters | PROPOSED (P1-04) |
+| Reserved usernames and fallback | Full list in `src/server/modules/users/username.ts` (OD-11 names + every top-level route); usernames fall back to `maker-NNNN` when neither name nor email gives 3 usable characters; the same list applies to username changes | CONFIRMED (2026-10-27) |
 | Rate-limit store | PostgreSQL table | CONFIRMED |
 | Media limits | Images JPEG/PNG/WebP/HEIC ≤ 10 MB, ≥ 600 px, ≤ 10/post; video MP4/MOV/WebM ≤ 60 s, ≤ 50 MB, no feed autoplay | CONFIRMED |
 | Collections | ≤ 100 per user, ≤ 1,000 items, unique names | CONFIRMED |

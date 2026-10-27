@@ -31,6 +31,10 @@ export async function findMediaByPublicId(publicId: string): Promise<MediaRow | 
   return db.mediaAsset.findUnique({ where: { publicId }, select: mediaSelect });
 }
 
+export async function findMediaWithOwner(id: string) {
+  return db.mediaAsset.findUnique({ where: { id }, select: { ...mediaSelect, ownerId: true } });
+}
+
 export async function mediaExistsForPublicId(publicId: string): Promise<boolean> {
   return (await db.mediaAsset.count({ where: { publicId } })) > 0;
 }

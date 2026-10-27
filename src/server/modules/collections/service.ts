@@ -173,6 +173,14 @@ export async function listMyCollections(actor: Actor): Promise<CollectionRow[]> 
   return (await findCollectionSummaries({ userId: user.id })).map(toRow);
 }
 
+/**
+ * A user's public collections, most recently changed first, for their profile (PRF-07). The
+ * caller decides whether the profile may be seen (private profiles hide them, OD-10).
+ */
+export async function listPublicCollections(ownerId: string): Promise<CollectionRow[]> {
+  return (await findCollectionSummaries({ userId: ownerId, visibility: "PUBLIC" })).map(toRow);
+}
+
 /** POST /api/collections (max 100 per user, unique names). */
 export async function createCollection(
   actor: Actor,

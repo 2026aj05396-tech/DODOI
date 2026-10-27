@@ -7,6 +7,7 @@ export {
   type AdminSkillListItem,
 } from "./admin";
 export {
+  containsOffensiveWords,
   CUSTOM_SKILL_RATE_LIMIT,
   getActiveSkillSummaries,
   getSkillBySlug,

@@ -361,7 +361,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-08 | ~~Unverified user permissions~~ — **RESOLVED: private features allowed; public actions need verification; delete after 30 days** | — | — |
 | OD-09 | ~~Google ↔ password linking~~ — **RESOLVED: auto-link; remove password if existing account was unverified** | — | — |
 | OD-10 | ~~Private profile~~ — **RESOLVED: only avatar, name, username visible; excluded from search** | — | — |
-| OD-11 | ~~Username rules~~ — **RESOLVED: 3–20 chars, lowercase a–z, 0–9, `_`, `-`; must start with a letter; reserved list (admin, dodoi, api, support, help, settings, explore, …); change at most once per 30 days**. Full list (OD-11 names + every top-level route) in `src/server/modules/users/username.ts` — PROPOSED in P1-04 | — | — |
+| OD-11 | ~~Username rules~~ — **RESOLVED: 3–20 chars, lowercase a–z, 0–9, `_`, `-`; must start with a letter; reserved list (admin, dodoi, api, support, help, settings, explore, …); change at most once per 30 days**. Full list (OD-11 names + every top-level route) in `src/server/modules/users/username.ts` — CONFIRMED 2026-10-27 | — | — |
 | OD-12 | ~~Minimal P1 reporting~~ — **RESOLVED: yes, for custom skills and profiles (§5.11)** | — | — |
 | OD-13 | ~~Custom interest limits~~ — **RESOLVED: 2–40 chars, Unicode letters, blocklist, verified email** | — | — |
 | OD-14 | ~~Minimum interests~~ — **RESOLVED: 3** | — | — |

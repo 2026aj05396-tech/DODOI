@@ -238,3 +238,11 @@ export async function getSuggestionCandidates(
     isRelated: row.relatedFrom.some((relation) => interests.has(relation.toSkillId)),
   }));
 }
+
+/**
+ * True when the text contains an offensive word (LDNOOBW + Hinglish, OD-36), matched on whole
+ * words. Also used for usernames and display names (PO decision, P1-13).
+ */
+export function containsOffensiveWords(text: string): boolean {
+  return isBlockedByDefault(text);
+}

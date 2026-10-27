@@ -3,8 +3,11 @@ export {
   addToCollection,
   createCollection,
   getCollection,
+  getMyProfile,
+  getProfile,
   listCollections,
   listSavedPosts,
   savePost,
   updateCollection,
+  updateMyProfile,
 } from "./service";

@@ -9,6 +9,15 @@ export {
   type CreatorProfile,
 } from "./creators";
 export { completeOnboarding, getOnboardingState, setOnboardingStep } from "./onboarding";
+export {
+  getOwnProfile,
+  getProfileForView,
+  getProfileSkills,
+  updateOwnProfile,
+  usernameChangeAvailableAt,
+  type OwnProfileRow,
+  type ProfileForView,
+} from "./profile";
 export { getInterestProfile, getMySkills, replaceMySkills } from "./user-skills";
 export {
   changePassword,

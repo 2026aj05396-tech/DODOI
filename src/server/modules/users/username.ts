@@ -1,5 +1,7 @@
 import { randomInt } from "node:crypto";
 
+import { USERNAME_RULES } from "@/lib/schemas/me";
+
 // Username rules (OD-11): 3–20 characters, lowercase a–z, 0–9, `_` and `-`, starting with a letter,
 // unique (stored lowercase, so case-insensitive), reserved names blocked. At sign-up a username is
 // generated from the display name or the email local-part, with 4 random digits added if it is
@@ -13,7 +15,8 @@ const SUFFIXED_BASE_MAX_LENGTH = USERNAME_MAX_LENGTH - SUFFIX_DIGITS - 1;
 /** Used when neither the name nor the email gives at least 3 usable characters. */
 const FALLBACK_BASE = "maker";
 
-export const USERNAME_PATTERN = /^[a-z][a-z0-9_-]{2,19}$/;
+/** Shared with the API schema (`@/lib/schemas/me`), so sign-up and edits follow one rule. */
+export const USERNAME_PATTERN = USERNAME_RULES;
 
 /**
  * Names that would collide with routes or could impersonate the team (OD-11 lists admin, dodoi,

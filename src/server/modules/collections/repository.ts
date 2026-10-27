@@ -86,7 +86,9 @@ export async function findCollection(id: string) {
 }
 
 /** One collection or all of a user's, most recently changed first, with published-post counts. */
-export async function findCollectionSummaries(where: { userId: string } | { id: string }) {
+export async function findCollectionSummaries(
+  where: { userId: string; visibility?: "PUBLIC" } | { id: string },
+) {
   return db.collection.findMany({
     where,
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],

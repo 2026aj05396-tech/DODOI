@@ -27,6 +27,7 @@ import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import {
   deleteMediaRow,
   findMediaById,
+  findMediaWithOwner,
   findOrphanedMedia,
   insertMedia,
   mediaExistsForPublicId,
@@ -39,7 +40,7 @@ import {
   limitsFor,
   type MediaProblem,
 } from "./media-rules";
-import { canManageMedia } from "./policies";
+import { canManageMedia, canUploadMedia } from "./policies";
 
 // Media pipeline (SYSTEM_ARCHITECTURE §8, SECURITY_AND_PRIVACY §5): sign → the browser uploads
 // straight to Cloudinary → register, which re-checks Cloudinary's metadata and deletes files that
@@ -78,6 +79,12 @@ function requireMediaManager(actor: Actor): AuthenticatedActor {
   return actor;
 }
 
+/** Avatars: any signed-in user (P1-12); everything else: admins (others get 404, §3). */
+function requireUploader(actor: Actor, purpose: MediaPurpose): AuthenticatedActor {
+  if (!actor || !canUploadMedia(actor, purpose)) throw new NotFoundError();
+  return actor;
+}
+
 function toError(problem: MediaProblem): AppError {
   if (problem.kind === "size") return new PayloadTooLargeError(problem.message);
   if (problem.kind === "type") {
@@ -109,7 +116,7 @@ export async function signMediaUpload(
   input: SignMediaInput,
   { provider = defaultProvider }: ProviderOption = {},
 ): Promise<SignedUpload> {
-  const manager = requireMediaManager(actor);
+  const manager = requireUploader(actor, input.purpose);
   await enforceRateLimit(MEDIA_SIGN_RATE_LIMIT, manager.id);
 
   const problem = checkDeclaredUpload(input.purpose, input.type, input);
@@ -132,7 +139,7 @@ export async function registerMedia(
   input: RegisterMediaInput,
   { provider = defaultProvider }: ProviderOption = {},
 ): Promise<Media> {
-  const manager = requireMediaManager(actor);
+  const manager = requireUploader(actor, input.purpose);
   const resourceType = resourceTypeOf(input.type);
 
   // Only files in the folder we signed for can be registered (not other uploads in the account).
@@ -211,4 +218,32 @@ export async function getMedia(
 ): Promise<Media | null> {
   const row = await findMediaById(id);
   return row ? toMedia(row, provider) : null;
+}
+
+/**
+ * The actor's own uploaded avatar, for setting it on their profile (P1-12): it must exist, belong
+ * to them, be an image and sit in the avatars folder. Throws a field error otherwise.
+ */
+export async function getOwnAvatar(
+  actor: AuthenticatedActor,
+  mediaId: string,
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<Media> {
+  const row = await findMediaWithOwner(mediaId);
+  const isOwnAvatar =
+    row &&
+    row.ownerId === actor.id &&
+    row.type === "IMAGE" &&
+    row.publicId.startsWith(`${mediaFolder("avatar")}/`);
+  if (!isOwnAvatar) {
+    throw new ValidationError(undefined, {
+      fields: { avatarMediaId: "That photo isn't available. Upload it again." },
+    });
+  }
+  return toMedia(row, provider);
+}
+
+/** Delivery URL for a stored avatar (profiles and creator rows). */
+export function avatarUrl(publicId: string, { provider = defaultProvider }: ProviderOption = {}) {
+  return provider.deliveryUrl(publicId, "image");
 }

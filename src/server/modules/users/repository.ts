@@ -357,3 +357,37 @@ export async function findDisplayName(userId: string): Promise<string | null> {
   const profile = await db.profile.findUnique({ where: { userId }, select: { displayName: true } });
   return profile?.displayName ?? null;
 }
+
+const ownProfileSelect = {
+  username: true,
+  displayName: true,
+  bio: true,
+  avatarMediaId: true,
+  visibility: true,
+  usernameChangedAt: true,
+} as const;
+
+export async function findOwnProfile(userId: string) {
+  return db.profile.findUnique({ where: { userId }, select: ownProfileSelect });
+}
+
+export async function updateProfileRow(userId: string, data: Prisma.ProfileUncheckedUpdateInput) {
+  return db.profile.update({ where: { userId }, data, select: ownProfileSelect });
+}
+
+/** A profile by username (stored lowercase) with what decides who may see it. */
+export async function findProfileByUsername(username: string) {
+  return db.profile.findUnique({
+    where: { username },
+    select: {
+      userId: true,
+      username: true,
+      displayName: true,
+      bio: true,
+      visibility: true,
+      isHidden: true,
+      avatar: { select: { publicId: true } },
+      user: { select: { deletionRequestedAt: true } },
+    },
+  });
+}
