@@ -5,6 +5,7 @@ import {
   findDisplayName,
   findUsernamesByIds,
   findUsersByUsernames,
+  searchPublicProfiles,
 } from "./repository";
 
 export type CreatorProfile = {
@@ -62,4 +63,12 @@ export async function getUsernames(userIds: string[]): Promise<Map<string, strin
 /** The user's own display name (feed greeting, P1-22); null without a profile. */
 export async function getDisplayName(userId: string): Promise<string | null> {
   return findDisplayName(userId);
+}
+
+/** Makers for search, best match first; avatars as storage ids (content builds the URLs). */
+export async function searchCreators(
+  term: string,
+  page: { offset: number; take: number },
+): Promise<{ username: string; displayName: string; avatarPublicId: string | null }[]> {
+  return searchPublicProfiles({ term: term.toLowerCase(), ...page });
 }

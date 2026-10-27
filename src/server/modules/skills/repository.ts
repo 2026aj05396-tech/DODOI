@@ -193,3 +193,22 @@ export async function findAllSkillsForAdmin() {
     select: { id: true, name: true, slug: true, origin: true, status: true },
   });
 }
+
+/** Most recently added active skills (Explore "New skills"). */
+export async function findNewestActiveSkills(take: number): Promise<SkillSummaryRow[]> {
+  return db.skill.findMany({
+    where: { status: "ACTIVE" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take,
+    select: summarySelect,
+  });
+}
+
+/** Active skills with an editor's hint, except `excludeIds`, with their related skills. */
+export async function findHintedSkills(excludeIds: string[]) {
+  return db.skill.findMany({
+    where: { status: "ACTIVE", hint: { not: null }, id: { notIn: excludeIds } },
+    orderBy: { name: "asc" },
+    select: { ...summarySelect, hint: true, relatedFrom: { select: { toSkillId: true } } },
+  });
+}

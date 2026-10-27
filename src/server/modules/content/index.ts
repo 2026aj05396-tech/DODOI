@@ -14,13 +14,16 @@ export {
 } from "./media-service";
 export { checkDeclaredUpload, checkUploadedAsset, limitsFor } from "./media-rules";
 export {
+  getBeginnerPostIds,
   getBeginnerProjectCounts,
+  getPublishedPostCountsBySkill,
   getFeedCandidates,
   getPostCards,
   getPostDetail,
   getRelatedPosts,
   getTheme,
   isPostPublished,
+  searchPostIds,
   listSkillPosts,
   listThemes,
   refreshPostSearchIndex,

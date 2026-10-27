@@ -10,6 +10,8 @@ export {
   containsOffensiveWords,
   CUSTOM_SKILL_RATE_LIMIT,
   getActiveSkillSummaries,
+  getNewestSkills,
+  getSkillsToTry,
   getSkillBySlug,
   getSkillsBySlugs,
   getSkillStatuses,

@@ -159,6 +159,7 @@ const themeSelect = {
   title: true,
   description: true,
   coverMedia: { select: mediaSelect },
+  _count: { select: { posts: { where: { post: PUBLISHED } } } },
 } as const;
 
 export async function findPublishedThemes() {
@@ -201,4 +202,58 @@ export async function updatePostSearchVector(postId: string): Promise<void> {
       ), '')), 'C')
     WHERE post.id = ${postId}
   `;
+}
+
+/**
+ * Full-text and typo-tolerant post search (SRCH-01/02, OD-32 `simple`): every word as a prefix
+ * ("croch" finds "Crochet") over title, description and skill names, or a title that is similar
+ * enough (pg_trgm). Published posts with media, best match first.
+ */
+export async function searchPublishedPostIds(options: {
+  words: string[];
+  term: string;
+  offset: number;
+  take: number;
+}): Promise<string[]> {
+  const { words, term, offset, take } = options;
+  // Words are letters and digits only, so the tsquery syntax can't be injected.
+  const prefixQuery = words.map((word) => `${word}:*`).join(" & ");
+  const rows = await db.$queryRaw<{ id: string }[]>`
+    SELECT post.id
+    FROM post
+    WHERE post.status = 'PUBLISHED'
+      AND EXISTS (SELECT 1 FROM post_media WHERE post_media.post_id = post.id)
+      AND (
+        (${prefixQuery} <> '' AND post.search_vector @@ to_tsquery('simple', ${prefixQuery}))
+        OR post.title % ${term}
+      )
+    ORDER BY
+      CASE WHEN ${prefixQuery} <> '' THEN ts_rank(post.search_vector, to_tsquery('simple', ${prefixQuery})) ELSE 0 END DESC,
+      similarity(post.title, ${term}) DESC,
+      post.published_at DESC,
+      post.id DESC
+    OFFSET ${offset}
+    LIMIT ${take}
+  `;
+  return rows.map((row) => row.id);
+}
+
+/** Newest published Curious/Beginner posts with media (Explore, SRCH-05). */
+export async function findBeginnerPostIds(take: number): Promise<string[]> {
+  const rows = await db.post.findMany({
+    where: { ...PUBLISHED, difficulty: { in: ["CURIOUS", "BEGINNER"] }, media: { some: {} } },
+    orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
+    take,
+    select: { id: true },
+  });
+  return rows.map((row) => row.id);
+}
+
+/** Published posts per skill (Explore's "popular" top-up). */
+export async function countPublishedPostsBySkill() {
+  return db.postSkill.groupBy({
+    by: ["skillId"],
+    where: { post: PUBLISHED },
+    _count: { _all: true },
+  });
 }

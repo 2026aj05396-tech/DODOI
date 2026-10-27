@@ -393,3 +393,39 @@ export async function findProfileByUsername(username: string) {
     },
   });
 }
+
+/**
+ * Makers matching a search (SRCH-01/02): username or a word of the display name starting with the
+ * term, or similar enough (pg_trgm). Only public, visible, active profiles (OD-10).
+ */
+export async function searchPublicProfiles(options: {
+  term: string;
+  offset: number;
+  take: number;
+}) {
+  const { term, offset, take } = options;
+  const prefix = `${term.replace(/[\\%_]/g, "\\$&")}%`;
+  return db.$queryRaw<{ username: string; displayName: string; avatarPublicId: string | null }[]>`
+    SELECT profile.username, profile.display_name AS "displayName",
+           media_asset.public_id AS "avatarPublicId"
+    FROM profile
+    JOIN "user" ON "user".id = profile.user_id
+    LEFT JOIN media_asset ON media_asset.id = profile.avatar_media_id
+    WHERE profile.visibility = 'PUBLIC'
+      AND profile.is_hidden = false
+      AND "user".deletion_requested_at IS NULL
+      AND (
+        profile.username LIKE ${prefix}
+        OR lower(profile.display_name) LIKE ${prefix}
+        OR lower(profile.display_name) LIKE ${`% ${prefix}`}
+        OR profile.username % ${term}
+        OR profile.display_name % ${term}
+      )
+    ORDER BY
+      (profile.username LIKE ${prefix} OR lower(profile.display_name) LIKE ${prefix}) DESC,
+      greatest(similarity(profile.username, ${term}), similarity(profile.display_name, ${term})) DESC,
+      profile.username ASC
+    OFFSET ${offset}
+    LIMIT ${take}
+  `;
+}

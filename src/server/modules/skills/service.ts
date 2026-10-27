@@ -32,6 +32,8 @@ import { canCreateCustomSkill } from "./policies";
 import {
   findActiveSkillDetailBySlug,
   findActiveSkillsByIds,
+  findHintedSkills,
+  findNewestActiveSkills,
   findPitchedSkills,
   findSkillsBySlugs,
   findSkillStatuses,
@@ -258,4 +260,30 @@ export async function getSuggestionCandidates(
  */
 export function containsOffensiveWords(text: string): boolean {
   return isBlockedByDefault(text);
+}
+
+/** Most recently added active skills, newest first (Explore). */
+export async function getNewestSkills(take: number): Promise<SkillSummary[]> {
+  return (await findNewestActiveSkills(take)).map(toSummary);
+}
+
+/**
+ * "Skills to try" (Explore, SRCH-05/08): active skills with an editor's hint that aren't among
+ * `interestIds`; those related to an interest first, then by name.
+ */
+export async function getSkillsToTry(
+  interestIds: string[],
+  take: number,
+): Promise<{ skill: SkillSummary; hint: string }[]> {
+  const interests = new Set(interestIds);
+  const rows = await findHintedSkills(interestIds);
+  return rows
+    .map((row) => ({
+      skill: toSummary(row),
+      hint: row.hint ?? "",
+      isRelated: row.relatedFrom.some((relation) => interests.has(relation.toSkillId)),
+    }))
+    .sort((a, b) => Number(b.isRelated) - Number(a.isRelated))
+    .slice(0, take)
+    .map(({ skill, hint }) => ({ skill, hint }));
 }

@@ -17,6 +17,8 @@ import { getCreatorProfiles } from "@/server/modules/users";
 import { toMedia } from "./media-service";
 import {
   countBeginnerPosts,
+  countPublishedPostsBySkill,
+  findBeginnerPostIds,
   findFeedCandidates,
   findPostDetail,
   findPublishedCards,
@@ -26,6 +28,7 @@ import {
   findRelatedCandidates,
   findThemePostIds,
   isPublishedPost,
+  searchPublishedPostIds,
   updatePostSearchVector,
   type PostCardRow,
 } from "./post-repository";
@@ -200,6 +203,7 @@ function toThemeSummary(
     title: row.title,
     description: row.description,
     coverMedia: row.coverMedia ? toMedia(row.coverMedia, provider) : null,
+    postCount: row._count.posts,
   };
 }
 
@@ -296,4 +300,26 @@ export async function getBeginnerProjectCounts(
 
 export async function isPostPublished(id: string): Promise<boolean> {
   return isPublishedPost(id);
+}
+
+// --- For search and Explore (P1-23) ------------------------------------------------------------
+
+/** Post ids matching a search, best first (the caller builds cards with `getPostCards`). */
+export async function searchPostIds(
+  words: string[],
+  term: string,
+  page: { offset: number; take: number },
+): Promise<string[]> {
+  return searchPublishedPostIds({ words, term, ...page });
+}
+
+/** The newest beginner-friendly posts (Curious or Beginner difficulty). */
+export async function getBeginnerPostIds(take: number): Promise<string[]> {
+  return findBeginnerPostIds(take);
+}
+
+/** Published posts per skill, keyed by skill id. */
+export async function getPublishedPostCountsBySkill(): Promise<Map<string, number>> {
+  const rows = await countPublishedPostsBySkill();
+  return new Map(rows.map((row) => [row.skillId, row._count._all]));
 }

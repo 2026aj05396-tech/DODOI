@@ -245,14 +245,15 @@ Published themes in curated order: `{ items: [{ id, slug, title, description, co
 {
   "popularSkills": [SkillSummary],
   "newSkills": [SkillSummary],
+  "skillsToTry": [{ "skill": SkillSummary, "hint": "Pairs with drawing" }],
   "themes": [ThemeSummary],
   "beginnerFriendly": [PostCard]
 }
 ```
-"Popular" definition PROPOSED: most saves in last 30 days; "new": most recently created ACTIVE skills.
+CONFIRMED (PO, P1-23): "popular" = most saves of the skill's posts in the last 30 days, topped up with the skills that have the most published posts (never empty), 8; "new" = most recently created ACTIVE skills, 8; "skills to try" = ACTIVE skills with an editor's hint outside the actor's interests, related to an interest first, 8; themes = all published, curated order, each with `postCount`; "beginner-friendly" = the 12 newest published Curious/Beginner posts.
 
 ### GET /api/search — User*
-Query: `q` (required, 1–100 chars, trimmed), `type` = `all|posts|skills|creators` (default `all`), `cursor`, `limit`. Rate limit: 60 / minute / user (PROPOSED).
+Query: `q` (required, 1–100 chars, trimmed), `type` = `all|posts|skills|creators` (default `all`), `cursor`, `limit`. Rate limit: 60 / minute / user (SECURITY §6, `429`). Matching (P1-23): posts by every word as a prefix over title, description and skill names (`simple` FTS) or a similar title (pg_trgm); skills as `GET /api/skills?q=` (prefix + trigram, custom skills included); makers by username or a word of the display name starting with the term, or a similar one.
 - `type=all`: `{ posts: PostCard[] (≤ 8), skills: SkillSummary[] (≤ 8), creators: CreatorSummary[] (≤ 8) }` — no pagination.
 - Specific type: `{ items, nextCursor }`.
 - Private and hidden profiles excluded from creator results (OD-10).

@@ -4,6 +4,7 @@ export {
   getCreatorProfiles,
   getDisplayName,
   getPublicProfile,
+  searchCreators,
   getUserIdByUsername,
   getUsernames,
   type CreatorProfile,

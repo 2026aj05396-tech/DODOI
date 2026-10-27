@@ -7,6 +7,7 @@ export {
   getCollectionIdsForPost,
   getCollectionPage,
   getRecentlySavedSkillIds,
+  getSaveCountsBySkill,
   getSavedPostIds,
   listMyCollections,
   listPublicCollections,

@@ -49,6 +49,8 @@ export type ThemeSummary = {
   title: string;
   description: string | null;
   coverMedia: Media | null;
+  /** Published posts in the theme ("12 ideas", SRCH-05). */
+  postCount: number;
 };
 
 /** A signed-in user's ticks on a post (POST-11/12); private to them. */

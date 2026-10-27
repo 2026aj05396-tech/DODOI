@@ -25,6 +25,7 @@ import { getPublicProfile } from "@/server/modules/users";
 import {
   countCollections,
   countItems,
+  countSavesBySkillSince,
   deleteCollectionRow,
   deleteItem,
   deleteSave,
@@ -324,4 +325,10 @@ export async function removeFromCollection(
 export async function getCollectionIdsForPost(actor: Actor, postId: string): Promise<string[]> {
   const user = requireSignedIn(actor);
   return findCollectionIdsWithPost(user.id, postId);
+}
+
+/** How often each skill's posts were saved since `since` (Explore's "popular", P1-23). */
+export async function getSaveCountsBySkill(since: Date): Promise<Map<string, number>> {
+  const rows = await countSavesBySkillSince(since);
+  return new Map(rows.map((row) => [row.skillId, Number(row.saves)]));
 }

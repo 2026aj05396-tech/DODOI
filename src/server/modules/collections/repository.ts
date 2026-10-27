@@ -171,3 +171,15 @@ export async function findCollectionIdsWithPost(userId: string, postId: string):
   });
   return rows.map((row) => row.collectionId);
 }
+
+/** Saves of published posts since `since`, counted per skill of the saved post. */
+export async function countSavesBySkillSince(since: Date) {
+  return db.$queryRaw<{ skillId: string; saves: bigint }[]>`
+    SELECT post_skill.skill_id AS "skillId", count(*) AS saves
+    FROM save
+    JOIN post ON post.id = save.post_id AND post.status = 'PUBLISHED'
+    JOIN post_skill ON post_skill.post_id = save.post_id
+    WHERE save.created_at >= ${since}
+    GROUP BY post_skill.skill_id
+  `;
+}

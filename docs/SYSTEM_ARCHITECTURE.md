@@ -116,6 +116,7 @@ src/
 │   │   ├── content/                    # posts, media assets, themes
 │   │   ├── feed/                       # ranking, feedback, sessions
 │   │   ├── library/                    # saves and collections as post cards (above content + collections)
+│   │   ├── search/                     # search + explore; no tables, combines the owning modules
 │   │   ├── search/
 │   │   ├── collections/                # saves, collections
 │   │   ├── admin/                      # audit log, admin ops
