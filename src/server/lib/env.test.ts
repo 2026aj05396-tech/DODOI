@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { parseServerEnv } from "@/server/lib/env";
 
+const CRON_SECRET = "cron-secret-for-tests-at-least-32-characters";
+
 const validEnv = {
   APP_ENV: "local",
   DATABASE_URL: "postgresql://dodoi:dodoi@localhost:5433/dodoi",
@@ -41,8 +43,21 @@ describe("parseServerEnv", () => {
   it("requires RESEND_API_KEY outside local development", () => {
     expect(() => parseServerEnv({ ...validEnv, APP_ENV: "production" })).toThrow(/RESEND_API_KEY/);
     expect(
-      parseServerEnv({ ...validEnv, APP_ENV: "production", RESEND_API_KEY: "re_key" }),
+      parseServerEnv({
+        ...validEnv,
+        APP_ENV: "production",
+        RESEND_API_KEY: "re_key",
+        CRON_SECRET: CRON_SECRET,
+      }),
     ).toMatchObject({ RESEND_API_KEY: "re_key" });
+  });
+
+  it("requires a long CRON_SECRET outside local development (P1-35)", () => {
+    const hosted = { ...validEnv, APP_ENV: "test", RESEND_API_KEY: "re_key" };
+    expect(() => parseServerEnv(hosted)).toThrow(/CRON_SECRET/);
+    expect(() => parseServerEnv({ ...hosted, CRON_SECRET: "short" })).toThrow(/CRON_SECRET/);
+    expect(parseServerEnv({ ...hosted, CRON_SECRET: CRON_SECRET })).toMatchObject({ CRON_SECRET });
+    expect(parseServerEnv(validEnv).CRON_SECRET).toBeUndefined();
   });
 
   it("allows the mock Cloudinary API only for local test runs", () => {

@@ -44,7 +44,7 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Package manager | pnpm | CONFIRMED |
 | Tests | Vitest + Testing Library, Playwright + axe | CONFIRMED |
 | Local infra | Docker Compose (PostgreSQL) | CONFIRMED |
-| Hosting | Local only for now | CONFIRMED; deployment OPEN (OD-01) |
+| Hosting | Test: Vercel Hobby + Neon (DEPLOYMENT.md) | Test DECIDED 2026-10-27; production OPEN (OD-01) |
 | Messaging transport (P3) | Polling | CONFIRMED |
 | AI provider (P4) | — | OPEN (OD-02) |
 
@@ -238,7 +238,7 @@ Required on: register, sign-in, password reset request, resend verification, med
 
 ## 12b. Scheduled Jobs
 
-Daily maintenance, `pnpm jobs:daily` (built in P1-33, `src/server/modules/jobs`): delete accounts past the 14-day grace period and unverified accounts older than 30 days; purge spent auth tokens, feed sessions 7 days after expiry, rate-limit buckets older than the longest window; delete orphaned media. Every job is idempotent and runs even if an earlier one failed; the command exits 1 if any failed. Trigger on hosted environments: OPEN with hosting (OD-01) — e.g. the host's cron running the command, or a GitHub Actions schedule calling a protected endpoint.
+Daily maintenance, `pnpm jobs:daily` (built in P1-33, `src/server/modules/jobs`): delete accounts past the 14-day grace period and unverified accounts older than 30 days; purge spent auth tokens, feed sessions 7 days after expiry, rate-limit buckets older than the longest window; delete orphaned media. Every job is idempotent and runs even if an earlier one failed; the command exits 1 if any failed. Trigger on hosted environments (P1-35): Vercel Cron calls `GET /api/cron/daily` once a day with `Authorization: Bearer <CRON_SECRET>` (`vercel.json`); without the secret the route answers 404. `CRON_SECRET` is required outside local.
 
 ## 13. Environments
 
@@ -247,7 +247,7 @@ Three application environments (CONFIRMED) plus automated test runs:
 | Environment | `APP_ENV` | Purpose | Where | Data |
 |---|---|---|---|---|
 | **Local development** | `local` | Developers run the app on their machine | Docker PostgreSQL (`dodoi`), `pnpm dev` | Disposable dev data |
-| **Test** (hosted QA) | `test` | PO and testers try features before production | Hosting OPEN (OD-01) | Own database; seed + test accounts only, never real user data |
+| **Test** (hosted QA) | `test` | PO and testers try features before production | Vercel Hobby (`sin1`) + Neon Postgres (Singapore), OD-01 decided for test 2026-10-27; setup in [DEPLOYMENT.md](DEPLOYMENT.md) | Own database; seed + test accounts only, never real user data |
 | **Production** | `production` | Real users | Hosting OPEN (OD-01) | Real user data |
 | *Automated test runs* | *(not an app environment)* | Vitest / Playwright locally and in CI | Local `dodoi_test` DB; CI Postgres service container (OD-24) | Created and wiped by the tests |
 

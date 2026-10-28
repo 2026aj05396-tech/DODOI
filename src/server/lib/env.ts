@@ -27,6 +27,15 @@ const serverEnvSchema = z.object({
     .email()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  /**
+   * Hosted environments (P1-35): Vercel Cron sends it as `Authorization: Bearer <CRON_SECRET>` when
+   * it calls /api/cron/daily. Required outside local; at least 32 random characters.
+   */
+  CRON_SECRET: z
+    .string()
+    .min(32, "CRON_SECRET must be at least 32 characters")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   /** Optional: this account becomes ADMIN after its first sign-in with a verified email. */
   SEED_ADMIN_EMAIL: z
     .email()
@@ -67,6 +76,13 @@ const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
       code: "custom",
       path: ["AUTH_GOOGLE_ISSUER"],
       message: "AUTH_GOOGLE_ISSUER is for automated local tests only",
+    });
+  }
+  if (env.APP_ENV !== "local" && !env.CRON_SECRET) {
+    context.addIssue({
+      code: "custom",
+      path: ["CRON_SECRET"],
+      message: "CRON_SECRET is required outside local development (daily jobs)",
     });
   }
   if (env.APP_ENV !== "local" && !env.RESEND_API_KEY) {

@@ -14,6 +14,8 @@ export default defineConfig({
     seed: "tsx --conditions=react-server prisma/seed/index.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    // Migrations need a direct connection; hosted databases behind a pooler (Neon, P1-35) give a
+    // separate direct URL. The app itself always uses DATABASE_URL.
+    url: process.env.DIRECT_DATABASE_URL || env("DATABASE_URL"),
   },
 });

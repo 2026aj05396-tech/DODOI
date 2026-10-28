@@ -1,0 +1,56 @@
+# Deployment — hosted test environment (P1-35)
+
+How the **test** site (`APP_ENV=test`, SYSTEM_ARCHITECTURE §13) is hosted and set up. Hosting decision OD-01 for test (PO, 2026-10-27): **Vercel Hobby + Neon Postgres**, both free. Production hosting is decided before launch: Vercel Hobby is for non-commercial use, so production likely needs Vercel Pro or another host.
+
+## How it works
+
+| Piece | Where | Notes |
+|---|---|---|
+| App | Vercel project, region `sin1` (Singapore) | `vercel.json`: only `main` deploys; build runs `pnpm build:vercel` = `prisma migrate deploy && next build` |
+| Database | Neon project, region Singapore (AWS `ap-southeast-1`) | App uses the **pooled** URL (`DATABASE_URL`); migrations use the **direct** URL (`DIRECT_DATABASE_URL`) |
+| Daily jobs | Vercel Cron → `GET /api/cron/daily` at 21:00 UTC (≈ 02:30 IST, ±59 min on Hobby) | Vercel sends `Authorization: Bearer <CRON_SECRET>`; anyone else gets 404 |
+| Search engines | `APP_ENV=test` | `robots.txt` disallows all and every response has `X-Robots-Tag: noindex` |
+| TEST badge | Top-left corner of every page when `APP_ENV=test` | |
+| Skills seed | Run once by hand (below) | Not on every deploy: it would undo skill edits made in the test admin |
+
+## One-time setup
+
+Each environment has its own accounts and keys; nothing is shared with local or production (SYSTEM_ARCHITECTURE §13).
+
+1. **Neon** (neon.tech): create a project `dodoi-test`, region **AWS Asia Pacific (Singapore)**, Postgres 16+. From *Connect*, copy two connection strings: **pooled** (host contains `-pooler`) → `DATABASE_URL`, and **direct** (pooling off) → `DIRECT_DATABASE_URL`. Both end with `?sslmode=require`.
+2. **Google OAuth** (Google Cloud console → APIs & Services → Credentials): a new *Web application* client `dodoi test`. Authorized redirect URI: `https://<your-project>.vercel.app/api/auth/callback/google` (fill in after step 5 gives the address, then redeploy). → `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
+3. **Cloudinary**: a separate product environment (or account) for test → `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Uploads go to `dodoi/test/…`.
+4. **Resend**: a separate API key → `RESEND_API_KEY`; `EMAIL_FROM="dodoi <onboarding@resend.dev>"`. Until a sending domain is verified, Resend only delivers to the Resend account owner's address, so other testers won't get verification emails.
+5. **Vercel** (vercel.com, sign in with GitHub): *Add New → Project*, import the dodoi repository. Framework: Next.js (detected); leave build and install commands as they are (`vercel.json` sets the build). Node.js version: **24.x** (Settings → Build and Deployment). Before the first deploy, add the environment variables below for the **Production** environment (on this project, Vercel's "Production" is our test site).
+6. **Deploy, then seed the skills once.** The first deploy creates the tables (`prisma migrate deploy` in the build). Then, from your machine, load the predefined skills into the test database using its **direct** URL; your `.env.local` supplies the other values the script checks, and only the database changes:
+   ```bash
+   DATABASE_URL="<Neon direct URL>" pnpm db:seed
+   ```
+   Safe to repeat; it refuses only production.
+7. **Admin**: set `SEED_ADMIN_EMAIL` to your address; sign up on the test site and verify the email, and the account becomes admin.
+
+## Environment variables (Vercel → Settings → Environment Variables → Production)
+
+| Variable | Value |
+|---|---|
+| `APP_ENV` | `test` |
+| `DATABASE_URL` | Neon **pooled** URL |
+| `DIRECT_DATABASE_URL` | Neon **direct** URL |
+| `AUTH_SECRET` | New random value: `npx auth secret` (never reuse local's) |
+| `AUTH_URL` | `https://<your-project>.vercel.app` |
+| `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Test OAuth client |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Test Resend key; `dodoi <onboarding@resend.dev>` |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Test Cloudinary |
+| `CRON_SECRET` | New random value, 32+ characters: `openssl rand -base64 32` |
+| `SEED_ADMIN_EMAIL` | Your email |
+| `SUPPORT_EMAIL` | Optional |
+
+Never set `AUTH_GOOGLE_ISSUER` or `CLOUDINARY_API_BASE` here: they are for automated local tests, and the app refuses to start with them outside `APP_ENV=local`.
+
+## Checking a deploy
+
+- Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`.
+- The site shows the **TEST** badge; `/robots.txt` says `Disallow: /`.
+- Sign up, verify (with the Resend owner's address), onboard, open the feed, save a post, sign out.
+- On a phone over HTTPS: the install banner after a save, and offline mode (visit the feed, turn on airplane mode, reopen).
+- Vercel → Settings → Cron Jobs lists `/api/cron/daily`; "Run" triggers it, and the function log shows each job's count.
