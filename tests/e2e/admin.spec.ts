@@ -147,3 +147,27 @@ test("publishing an incomplete post shows what is missing on each field", async 
   // Saved as a draft, so the editor now has its own address.
   await expect(page).toHaveURL(/\/admin\/posts\/(?!new$)[a-z0-9]+$/);
 });
+
+test("P1-19: an admin sees seed coverage against the launch minimums", async ({ page }) => {
+  await signIn(page, { admin: true });
+  await page
+    .getByRole("navigation", { name: "Admin" })
+    .getByRole("link", { name: "Coverage" })
+    .click();
+
+  await expect(page.getByRole("heading", { level: 1, name: "Coverage" })).toBeVisible();
+  // The summary names the gaps (text, not colour alone).
+  await expect(
+    page.getByRole("status").filter({ hasText: /gaps? before launch|minimum is met/ }),
+  ).toBeVisible();
+  for (const section of ["Skills", "Post types", "Themes"]) {
+    await expect(
+      page.getByRole("heading", { level: 2, name: new RegExp(`^${section}`) }),
+    ).toBeVisible();
+  }
+
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(
+    results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+  ).toEqual([]);
+});

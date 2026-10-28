@@ -162,6 +162,21 @@ const themeSelect = {
   _count: { select: { posts: { where: { post: PUBLISHED } } } },
 } as const;
 
+/** Every published post's type, skill slugs and published theme slugs (seed coverage, OD-31). */
+export async function findPublishedPostsForCoverage() {
+  return db.post.findMany({
+    where: PUBLISHED,
+    select: {
+      type: true,
+      skills: { select: { skill: { select: { slug: true } } } },
+      themePosts: {
+        where: { theme: { isPublished: true } },
+        select: { theme: { select: { slug: true } } },
+      },
+    },
+  });
+}
+
 export async function findPublishedThemes() {
   return db.theme.findMany({
     where: { isPublished: true },

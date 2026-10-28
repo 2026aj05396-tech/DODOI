@@ -1,0 +1,39 @@
+{
+  "seedKey": "granny-square-first",
+  "publish": true,
+  "type": "TUTORIAL",
+  "title": "Your first granny square",
+  "description": "Four rounds, one colour, about 45 minutes. If you can make a chain and a double crochet, you can make this.",
+  "skills": ["crochet"],
+  "primarySkill": "crochet",
+  "mediaFiles": [
+    {
+      "path": "media/granny-square-first/cover.jpg",
+      "altText": "A finished cream granny square on a wooden table"
+    }
+  ],
+  "difficulty": "BEGINNER",
+  "estimatedMinutes": 45,
+  "materials": [
+    { "name": "Cotton yarn", "note": "Worsted weight, a light colour so you can see the stitches" },
+    { "name": "4 mm crochet hook", "note": null },
+    { "name": "Scissors", "note": null }
+  ],
+  "steps": [
+    { "text": "Make a magic ring and chain 3. This counts as your first double crochet." },
+    {
+      "text": "Work 2 double crochet into the ring, chain 2, then (3 double crochet, chain 2) three more times. Pull the ring closed.",
+      "mediaFile": {
+        "path": "media/granny-square-first/round-1.jpg",
+        "altText": "Round 1: four clusters of three stitches around a closed ring"
+      }
+    },
+    { "text": "Slip stitch into the top of the first chain 3 to join. Round 1 done." }
+  ],
+  "attribution": {
+    "sourceType": "TEAM_ORIGINAL",
+    "license": "Owned by dodoi",
+    "attributionText": "Made by the dodoi team"
+  },
+  "authorUsername": null
+}

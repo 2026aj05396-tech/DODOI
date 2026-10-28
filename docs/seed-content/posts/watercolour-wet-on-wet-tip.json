@@ -1,0 +1,23 @@
+{
+  "seedKey": "watercolour-wet-on-wet-tip",
+  "publish": true,
+  "type": "TIP",
+  "title": "Wet the paper first for soft skies",
+  "description": "Brush clean water over the sky, wait until the shine just fades, then drop in blue. The edges melt on their own.",
+  "skills": ["watercolor"],
+  "primarySkill": "watercolor",
+  "mediaFiles": [
+    {
+      "path": "media/watercolour-wet-on-wet-tip/sky.jpg",
+      "altText": "A soft blue watercolour sky fading into white paper"
+    }
+  ],
+  "difficulty": "CURIOUS",
+  "attribution": {
+    "sourceType": "STOCK_LICENSED",
+    "license": "Unsplash License",
+    "attributionText": "Photo on Unsplash",
+    "originalUrl": "https://unsplash.com/photos/example-photo-id"
+  },
+  "authorUsername": null
+}

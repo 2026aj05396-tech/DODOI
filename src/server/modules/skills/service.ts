@@ -212,6 +212,19 @@ export async function listPredefinedSkills(actor: Actor): Promise<SkillSummary[]
   return skills;
 }
 
+/** Every active predefined skill, by name (system use: the seed coverage report, OD-31). */
+export async function getActivePredefinedSkills(): Promise<SkillSummary[]> {
+  const skills: SkillSummary[] = [];
+  let after: { name: string; id: string } | undefined;
+  for (;;) {
+    const rows = await listActiveSkills({ origin: "PREDEFINED", after, take: MAX_PAGE_SIZE });
+    skills.push(...rows.map(toSummary));
+    const last = rows.at(-1);
+    if (!last || rows.length < MAX_PAGE_SIZE) return skills;
+    after = { name: last.name, id: last.id };
+  }
+}
+
 /**
  * Active skills among `ids`, keyed by id (for other modules, e.g. a user's skill list). Hidden
  * or unknown ids are simply absent.

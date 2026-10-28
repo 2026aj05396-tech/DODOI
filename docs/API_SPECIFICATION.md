@@ -382,6 +382,8 @@ Rules (P1-16, PO decisions): a post holds up to **10** media, images and videos 
 ```
 Import rules: each file is fully checked (shape, skill slugs, creator account, attribution and licence rules — on every import, draft or not — and each file's type and size against MEDIA-01/03) before anything is uploaded or saved. The file is the source of truth: re-running updates the post to match it (edits made in `/admin` to seeded posts are overwritten). `publish: true` publishes (the publish rules must pass, else nothing is saved); `publish: false` keeps a draft, or unpublishes a published post. Media public ids are `dodoi/<APP_ENV>/posts/seed-<seedKey>-<sha256 prefix>`, so unchanged files are never uploaded twice; media the post no longer uses are deleted.
 
+**Coverage (P1-19, OD-31).** Every run ends with a report of the valid files that publish against the launch minimums (skills and post types; failed files are not counted). The admin page `/admin/coverage` shows the same from **published posts in the database**, plus published themes; it is a server-rendered page calling `getSeedCoverage(actor)` (admin only, 404 otherwise), with no API route. A post counts toward every skill it is tagged with; only active predefined skills and published themes are checked.
+
 ---
 
 ## 9. Later Phases (to be specified)

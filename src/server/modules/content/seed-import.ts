@@ -49,14 +49,18 @@ export type SeedImportOptions = ProviderOption & {
   check?: boolean;
 };
 
+/** What a valid file holds, for the coverage report (OD-31). */
+export type SeedPostSummary = { type: SeedPostFile["type"]; skills: string[]; publish: boolean };
+
 export type SeedImportOutcome =
   | {
       file: string;
       result: "created" | "updated";
       status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED";
       uploaded: number;
+      post: SeedPostSummary;
     }
-  | { file: string; result: "checked" }
+  | { file: string; result: "checked"; post: SeedPostSummary }
   | { file: string; result: "failed"; problems: string[] };
 
 const FILE_TYPES: Record<string, { type: MediaTypeName; mimeType: string }> = {
@@ -264,7 +268,8 @@ async function importFile(
   const local = await readLocalMedia(root, file);
   const problems = [...references.problems, ...local.problems];
   if (problems.length > 0) throw new SeedFileProblems(problems);
-  if (check) return { file: fileName, result: "checked" };
+  const summary = { type: file.type, skills: file.skills, publish: file.publish };
+  if (check) return { file: fileName, result: "checked", post: summary };
 
   const mediaIds = new Map<string, string>();
   let uploaded = 0;
@@ -350,6 +355,7 @@ async function importFile(
     result: saved.created ? "created" : "updated",
     status: saved.status,
     uploaded,
+    post: summary,
   };
 }
 

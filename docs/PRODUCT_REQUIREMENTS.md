@@ -381,7 +381,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-28 | ~~Minimum age 13+ vs India's DPDP Act~~ — **RESOLVED: minimum age raised to 18+** (adults only) | — | — |
 | OD-29 | ~~Signed-out browsing~~ — **RESOLVED:** signed-out visitors can see the **landing page** and **published post detail pages** (with related posts) read-only, so shared links work; feed, explore, search, skill/theme pages, profiles, saves and everything else require sign-in | — | — |
 | OD-30 | ~~Predefined skill list~~ — **RESOLVED (2026-10-23):** the 51 skills in `prisma/seed/skills.json` are approved; the PO may edit the file later (the seed test validates every entry) | — | — |
-| OD-31 | Minimum seed content per skill / post type for launch | Seed production, launch gate | P1-19 |
+| OD-31 | ~~Minimum seed content per skill / post type for launch~~ — **RESOLVED (2026-10-28):** every active predefined skill ≥ 2 published posts; 15 launch-focus skills (Drawing, Sketching, Doodling, Watercolor, Acrylic painting, Calligraphy, Crochet, Amigurumi, Knitting, Embroidery, Punch needle, Pottery, Polymer clay, Origami, Journaling) ≥ 6 incl. ≥ 2 tutorials; every post type ≥ 5; every published theme ≥ 6. A post counts toward every skill it is tagged with; hidden and custom skills excluded. Values in `src/lib/constants/seed-coverage.ts` | — | — |
 | OD-32 | ~~Text-search config~~ — **RESOLVED: `simple`** (language-neutral) | — | — |
 | OD-33 | ~~Icon set~~ — **RESOLVED: Lucide** (`lucide-react`) | — | — |
 | OD-34 | ~~Branch protection / secret scanning~~ — **RESOLVED: stay on free GitHub for now**; rely on agent rules and checking CI before merging; revisit before adding contributors | — | — |

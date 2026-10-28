@@ -178,7 +178,7 @@ export function HomeFeed({
     body = <MasonrySkeleton />;
   } else if (feed.isError && !isFetchNextPageError) {
     body = <ErrorState message="We couldn't load your feed." onRetry={() => void feed.refetch()} />;
-  } else if (items.length > 0) {
+  } else if (items.length === 0) {
     const message = emptyMessage(filter, chips);
     body = (
       <EmptyState

@@ -1,0 +1,24 @@
+{
+  "seedKey": "first-punch-needle-coaster",
+  "publish": false,
+  "type": "FIRST_ATTEMPT",
+  "title": "My first punch needle coaster (wobbly, and I love it)",
+  "description": "Took me an evening. The loops in the middle are uneven but it holds my mug.",
+  "skills": ["punch-needle", "embroidery"],
+  "primarySkill": "punch-needle",
+  "mediaFiles": [
+    {
+      "path": "media/first-punch-needle-coaster/coaster.jpg",
+      "altText": "A round punch needle coaster in mustard and teal with uneven loops"
+    }
+  ],
+  "difficulty": "BEGINNER",
+  "estimatedMinutes": 120,
+  "attribution": {
+    "sourceType": "INVITED_CREATOR",
+    "license": "Used with permission",
+    "attributionText": "Shared by the maker for dodoi",
+    "permissionRef": "Email from the maker, 2026-10-28, kept in the team drive"
+  },
+  "authorUsername": "invited-maker"
+}

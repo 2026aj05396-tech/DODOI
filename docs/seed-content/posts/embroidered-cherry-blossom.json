@@ -1,0 +1,24 @@
+{
+  "seedKey": "embroidered-cherry-blossom",
+  "publish": true,
+  "type": "FINISHED",
+  "title": "A cherry blossom branch in a little oval hoop",
+  "description": "Satin stitch petals, French knot centres and a split-stitch branch.",
+  "skills": ["embroidery"],
+  "primarySkill": "embroidery",
+  "mediaFiles": [
+    {
+      "path": "media/embroidered-cherry-blossom/hoop.jpg",
+      "altText": "Hands holding an oval hoop embroidered with a pink cherry blossom branch"
+    }
+  ],
+  "difficulty": "INTERMEDIATE",
+  "attribution": {
+    "sourceType": "CREATIVE_COMMONS",
+    "license": "CC BY 4.0",
+    "attributionText": "Photo by Example Maker on Wikimedia Commons",
+    "originalAuthor": "Example Maker",
+    "originalUrl": "https://commons.wikimedia.org/wiki/File:Example.jpg"
+  },
+  "authorUsername": null
+}

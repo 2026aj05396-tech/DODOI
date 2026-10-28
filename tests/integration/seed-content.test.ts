@@ -91,6 +91,7 @@ describe("seed content import", () => {
       result: "created",
       status: "PUBLISHED",
       uploaded: 2,
+      post: { type: "TUTORIAL", skills: ["crochet"], publish: true },
     });
     const post = await db.post.findUniqueOrThrow({
       where: { seedKey: "granny-square" },
@@ -260,7 +261,11 @@ describe("seed content import", () => {
     await writePost(postFile());
 
     expect(await importAll({ check: true })).toEqual([
-      { file: "granny-square.json", result: "checked" },
+      {
+        file: "granny-square.json",
+        result: "checked",
+        post: { type: "TUTORIAL", skills: ["crochet"], publish: true },
+      },
     ]);
     expect(await db.post.count()).toBe(0);
     expect(provider.uploaded).toHaveLength(0);

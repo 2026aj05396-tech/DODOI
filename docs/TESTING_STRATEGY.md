@@ -85,7 +85,7 @@ Phase 1 (required before MVP exit):
 | E2E-09 | Search partial keyword; no-results state |
 | E2E-10 | Edit profile; public profile shows changes; private fields absent |
 | E2E-11 | Unauthorized user attempts to open another user's private collection URL → not found |
-| E2E-12 | Admin creates, publishes and unpublishes a post; non-admin cannot reach `/admin` |
+| E2E-12 | Admin creates, publishes and unpublishes a post; non-admin cannot reach `/admin`. Also (P1-19, `admin.spec.ts`): an admin opens Coverage and sees the summary and the three sections, axe clean |
 | E2E-13 | PWA: manifest present, service worker registered, offline fallback page shown when offline |
 | E2E-14 | Expired session redirects to sign-in and returns to original page |
 | E2E-15 | Feed filter chips: switching to an interest chip shows only that skill; "New to you" shows only non-interest skills; "Try it →" on suggestion card opens skill page |

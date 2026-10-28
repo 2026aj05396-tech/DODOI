@@ -33,7 +33,7 @@ Phase-wise, dependency-ordered plan from an empty repository to a public MVP and
 |---|---|---|---|
 | OD-29 | ~~Signed-out browsing~~ — **RESOLVED:** landing + published post detail public; rest requires sign-in | — | — |
 | OD-30 | ~~Skill list~~ — **RESOLVED:** `prisma/seed/skills.json` approved | — | — |
-| OD-31 | Minimum seed content per skill (and per post type) for launch | Seed production, launch gate | P1-19 |
+| OD-31 | ~~Minimum seed content~~ — **RESOLVED (2026-10-28):** tiered — every skill ≥ 2, 15 launch-focus skills ≥ 6 incl. 2 tutorials, every post type ≥ 5, every published theme ≥ 6 (README §2) | — | — |
 | OD-32 | ~~Text-search configuration~~ — **RESOLVED: `simple`** | — | — |
 
 **B. PROPOSED items to approve as a batch** (agents may not build on them until approved)
@@ -171,7 +171,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | P1-17 | Admin UI at `/admin` (proxy 404 for non-admins + database re-check in the layout): posts list (status filter, load more) and editor (basics, skills + main skill, up to 10 photos/videos with upload progress, alt text and reorder, materials, steps with optional photo, source/licence incl. invited creator; Save / Save and publish / Unpublish / Delete; publish problems on their fields), themes (list, create, edit, cover, publish, ordered posts), skills (all incl. hidden, edit, hide/show, related); `GET /api/admin/skills`; mobile, tablet and desktop | L | P1-16, P1-26b | Admin publishes an image post and a video post end-to-end (E2E-12, local Cloudinary Admin API mock). **PO: review screens (390/834/1280)** | ◐ |
 | P1-18 | Seed importer: `seed-content/posts/*.json` + media → Cloudinary, idempotent by `seedKey`, validates attribution and licenses. Built as `importSeedContent()` (content module) + `pnpm seed:content [folder] [--check]`: skills by slug, per-file `publish`, file = source of truth on re-runs, media keyed by content hash (no re-uploads, replaced media deleted), server-side signed Cloudinary upload, `post.seed_import` audit; seed content git-ignored (PO decisions 2026-10-26) | M | P1-16 | Re-run creates no duplicates; invalid license rejected (integration tests) | ☑ |
 | P1-28b | Reporting: `POST /api/reports`, admin reports list + hide/dismiss, `Profile.isHidden`, report UI on custom skills and profiles. Built: `reports` module (above admin/skills/users), `POST /api/reports` (username for profiles), admin Reports page grouped by target with Hide/Dismiss and Show again (Resolved), report dialog on profiles and custom skill pages, owner notice on hidden profiles with optional `SUPPORT_EMAIL` (PO decisions 2026-10-27) | M | P1-16, P1-13 | RPT-01…05; actions audited (integration + `reports.spec.ts`). **PO: review screens; set `SUPPORT_EMAIL` before launch** | ◐ |
-| P1-19 | **Seed content set** (PO-led): team originals, invited creators (with written permission + accounts), stock/CC filler; every item has attribution | L | OD-31, P1-18 | Meets OD-31 minimums; import passes | ☐ (start now) |
+| P1-19 | **Seed content set** (PO-led): team originals, invited creators (with written permission + accounts), stock/CC filler; every item has attribution. Built (support, 2026-10-28): OD-31 minimums + launch-focus list in `src/lib/constants/seed-coverage.ts`; coverage report at the end of `pnpm seed:content` (with `--check` too); admin **Coverage** page `/admin/coverage` (skills, post types, themes from published posts); template + field guide + 4 example posts in `docs/seed-content/` (checked by `seed-template.test.ts`). **PO: produce the content** | L | OD-31, P1-18 | Meets OD-31 minimums (`/admin/coverage` shows 0 gaps on the test site); import passes | ◐ |
 
 **Exit (M3):** seed content loaded locally; admin and report flows pass integration + E2E-12.
 
@@ -287,7 +287,7 @@ Recommendation improvements, cross-interest discovery, offline mutation queue, p
 - [ ] Google OAuth consent screen published with production redirect URIs
 - [ ] Database backups configured
 - [ ] Free-tier quotas reviewed (Cloudinary, Resend, Gmail SMTP ~500/day on test, DB, host)
-- [ ] OD-31 seed content minimums met
+- [ ] OD-31 seed content minimums met — `/admin/coverage` on production shows 0 gaps
 - [ ] Error monitoring decided (OD-21) or explicitly deferred
 
 ## 9. Tracking

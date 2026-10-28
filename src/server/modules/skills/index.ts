@@ -9,6 +9,7 @@ export {
 export {
   containsOffensiveWords,
   CUSTOM_SKILL_RATE_LIMIT,
+  getActivePredefinedSkills,
   getActiveSkillSummaries,
   getSkillsForModeration,
   setSkillHidden,
