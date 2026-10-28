@@ -1,6 +1,7 @@
-import { EyeOff, Lock, Settings } from "lucide-react";
+import { ChevronRight, EyeOff, Lock, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 
+import { LogOutDialog } from "@/components/auth/log-out-dialog";
 import { CollectionTile } from "@/components/collections/collection-tile";
 import { ComingSoonTrigger } from "@/components/layout/coming-soon-trigger";
 import { ReportButton } from "@/components/reports/report-button";
@@ -101,6 +102,44 @@ function Header({
         </div>
       ) : null}
     </header>
+  );
+}
+
+/**
+ * Settings and Log out at the end of your own profile (`1i`). From 1280px the sidebar has Log out,
+ * and the header's Settings button covers the rest.
+ */
+function AccountActions() {
+  const row = "flex min-h-13 w-full items-center gap-3 px-4 text-left text-body";
+  return (
+    <nav
+      aria-label="Account"
+      className="flex flex-col rounded-card border border-border bg-background xl:hidden"
+    >
+      <Link
+        href="/settings"
+        className={cn(
+          row,
+          "rounded-t-card border-b border-border-faint text-foreground hover:bg-muted",
+        )}
+      >
+        <Settings aria-hidden className="size-5" strokeWidth={1.7} />
+        Settings and privacy
+        <ChevronRight aria-hidden className="ml-auto size-4.5 text-muted-foreground" />
+      </Link>
+      <LogOutDialog>
+        <button
+          type="button"
+          className={cn(
+            row,
+            "rounded-b-card font-bold text-destructive hover:bg-destructive-surface",
+          )}
+        >
+          <LogOut aria-hidden className="size-5" strokeWidth={1.8} />
+          Log out
+        </button>
+      </LogOutDialog>
+    </nav>
   );
 }
 
@@ -236,6 +275,7 @@ export function ProfileView({
           <p className="text-body text-foreground-secondary">No public collections yet.</p>
         )}
       </section>
+      {profile.isOwner ? <AccountActions /> : null}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { ReportButton } from "@/components/reports/report-button";
 import { InterestToggle } from "@/components/skills/interest-toggle";
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { SkillPosts } from "@/components/skills/skill-posts";
+import { BackButton } from "@/components/ui/back-button";
 import { PatternTile, type PatternAccent } from "@/components/ui/pattern-tile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
@@ -46,6 +47,7 @@ async function SkillContent({ params }: { params: Params }) {
 
   return (
     <>
+      <BackButton fallbackHref="/explore" />
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
         <PatternTile
           accent={skill.accent.toLowerCase() as PatternAccent}

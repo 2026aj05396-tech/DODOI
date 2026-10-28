@@ -14,6 +14,7 @@ const buttonVariants = cva(
         primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
         outline: "border-control border-foreground bg-transparent text-foreground",
         inverse: "bg-inverse text-inverse-foreground",
+        destructive: "bg-destructive text-inverse-foreground hover:bg-destructive/90",
         text: "rounded-sm bg-transparent px-0 text-link hover:underline",
       },
       size: {

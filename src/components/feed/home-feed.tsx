@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Masonry, cardHeight } from "@/components/posts/masonry";
@@ -15,6 +16,7 @@ import { ApiRequestError } from "@/lib/api-client/request";
 import type { FeedFilter } from "@/lib/schemas/feed";
 import type { FeedFilterChip, FeedItem, FeedPage } from "@/lib/types/feed";
 
+import { EmptyFeedArt } from "./empty-feed-art";
 import { FilterBar } from "./filter-bar";
 import { HiddenCard } from "./hidden-card";
 import { PostMenu } from "./post-menu";
@@ -176,9 +178,21 @@ export function HomeFeed({
     body = <MasonrySkeleton />;
   } else if (feed.isError && !isFetchNextPageError) {
     body = <ErrorState message="We couldn't load your feed." onRetry={() => void feed.refetch()} />;
-  } else if (items.length === 0) {
+  } else if (items.length > 0) {
     const message = emptyMessage(filter, chips);
-    body = <EmptyState title={message.title} titleAs="h2" description={message.description} />;
+    body = (
+      <EmptyState
+        icon={<EmptyFeedArt />}
+        title={message.title}
+        titleAs="h2"
+        description={message.description}
+        action={
+          <Button asChild>
+            <Link href="/explore">Explore crafts</Link>
+          </Button>
+        }
+      />
+    );
   } else {
     body = (
       <>

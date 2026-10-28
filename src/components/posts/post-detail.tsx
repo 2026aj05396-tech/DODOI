@@ -1,6 +1,7 @@
 import { Sparkles } from "lucide-react";
 
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
+import { BackButton } from "@/components/ui/back-button";
 import { Tag } from "@/components/ui/chip";
 import type {
   PostCard as PostCardData,
@@ -10,7 +11,6 @@ import type {
 import { formatMinutes, levelLabel } from "@/lib/utils/post-labels";
 
 import { AttributionBlock } from "./attribution-block";
-import { BackButton } from "./back-button";
 import { ComingSoonAction } from "./coming-soon-action";
 import { CreatorRow } from "./creator-row";
 import { PostCard } from "./post-card";
@@ -45,14 +45,18 @@ export function PostDetail({
 
   return (
     <div className="pb-28 md:pb-14">
-      <article className="md:mx-auto md:max-w-2xl md:px-7 md:pt-8 lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-start lg:gap-9 xl:gap-12 xl:px-10 xl:pt-10">
+      {/* From 768px Back sits above the post; phones have the round one over the photo. */}
+      <div className="hidden md:mx-auto md:flex md:max-w-2xl md:px-7 md:pt-4 lg:max-w-6xl xl:px-10">
+        <BackButton fallbackHref="/" />
+      </div>
+      <article className="md:mx-auto md:max-w-2xl md:px-7 md:pt-2 lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-start lg:gap-9 xl:gap-12 xl:px-10 xl:pt-2">
         <div className="relative lg:sticky lg:top-8">
           <PostGallery
             media={post.media}
             frameClassName="max-h-[56svh] md:rounded-card lg:max-h-none"
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between p-4 md:hidden">
-            <BackButton fallbackHref="/" className="pointer-events-auto" />
+            <BackButton fallbackHref="/" appearance="overlay" className="pointer-events-auto" />
             <ShareButton
               title={post.title}
               path={path}

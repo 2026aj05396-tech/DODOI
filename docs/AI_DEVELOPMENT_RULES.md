@@ -40,7 +40,7 @@ For each task:
 7. Add validation, error handling, loading/empty/error states.
 8. Write or update tests (TESTING_STRATEGY).
 9. Run `pnpm lint`, `pnpm typecheck`, `pnpm test` (and `pnpm test:e2e` when UI flows change).
-10. Update documentation affected by the change.
+10. Update documentation affected by the change, in the same change (§13).
 11. Finish with a session summary (§9), including changed files and a suggested commit message. Do not stage, commit or push (§11).
 
 ## 4. Architecture Rules
@@ -138,3 +138,28 @@ A task is done only when:
 ## 12. When Docs and Code Disagree
 
 Stop and ask. Do not "fix" either side silently. The docs are the source of truth until the product owner says otherwise.
+
+## 13. Keep the Docs in Sync — Every Change, Same Change
+
+**Product owner instruction (2026-10-28):** documentation is updated **in the same change** as the code, never "later". This covers every request, flow change, copy change, design update and decision the product owner mentions in a session — even a small one-line request.
+
+1. **Record what the PO said.** A PO request or decision becomes a README §2 row (what, where, date, status). A changed or new journey goes into USER_FLOWS; a changed requirement into PRODUCT_REQUIREMENTS.
+2. **Use the map below** to find every document the change touches; then `grep -ri` the docs for the feature's names (screen, component, route, copy) to catch mentions the map misses.
+3. **Design updates:** when the PO updates the Claude Design project, refresh `docs/design/dodoi-app-v3.dc.html` from it (the source file, without the preview runtime the served copy injects) and record what changed.
+4. **Deviations from the design** are written down where the screen is described (UI_UX_GUIDELINES §4/§8) and flagged as "PO to confirm" in README §2 — never left only in chat.
+5. The session summary's **Docs updated** line lists each file, or says why none was needed. A change is not done (§10) until it is filled in.
+
+| Change | Update |
+|---|---|
+| PO request or decision (anything the PO asks for) | README §2 (+ the documents below that it touches) |
+| New or changed user journey, entry point, copy in a flow | USER_FLOWS (+ PRODUCT_REQUIREMENTS IDs) |
+| Screen, component, layout, token, animation, empty/error state | UI_UX_GUIDELINES §3/§4/§8 (+ `/dev/ui` preview when it is a reusable component) |
+| Requirement added, changed or clarified | PRODUCT_REQUIREMENTS |
+| Task built, extended or re-scoped | IMPLEMENTATION_ROADMAP (task row "Built:" notes) |
+| API route, request/response, error code | API_SPECIFICATION |
+| Prisma schema / migration | DATABASE_SCHEMA (§7) |
+| Architecture, caching, PWA/offline, integrations, env vars | SYSTEM_ARCHITECTURE, DEPLOYMENT, `.env.example` |
+| Auth, privacy, data retention, headers/CSP | SECURITY_AND_PRIVACY |
+| Tests added or test approach changed | TESTING_STRATEGY |
+| Third-party code, fonts, images or data added | THIRD_PARTY_NOTICES (source, license, where used, changes) |
+| Design file changed in Claude Design | `docs/design/` + the UI_UX_GUIDELINES rows it affects |

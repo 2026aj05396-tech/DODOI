@@ -96,7 +96,7 @@ Each requirement has an ID used by the roadmap, API spec and tests.
 | AUTH-03 | Sign in / register with Google |
 | AUTH-04 | Email verification for email/password accounts |
 | AUTH-05 | Password recovery via emailed single-use, time-limited link |
-| AUTH-06 | Sign out (current session) |
+| AUTH-06 | Sign out (current session). Entry points: desktop sidebar, own profile (mobile and tablet), Settings → Account; sidebar and profile ask first ("Log out of dodoi?"). Signing out deletes the pages and images kept for offline use (SYSTEM_ARCHITECTURE §9) |
 | AUTH-07 | View and edit basic account details (email display, password change) |
 | AUTH-08 | Request account deletion |
 | AUTH-09 | Protected routes and APIs require an authenticated session |

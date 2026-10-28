@@ -81,7 +81,7 @@ Routing (P1-11): after sign-in or sign-up, `/` and every signed-in page send a u
 3. Card actions: tap card → F-07 · Save icon → F-09 · overflow menu → "Not interested" (FEED-05) / "More like this" (FEED-06).
 4. "Not interested" → card collapses with "Hidden. Undo" for a few seconds → `{POST /api/feed/feedback}`.
 5. States:
-   - Empty (no matching content) → friendly message + link to Explore.
+   - Empty (no matching content) → mood-board art + friendly message + **Explore crafts** button (→ `/explore`). Every feed filter uses this art; the message depends on the filter.
    - Error → message + "Try again".
    - Offline → offline banner; previously loaded cards remain visible; further loading disabled until reconnect.
    - ⚠ Broken media → fallback visual with skill color and icon.
@@ -147,6 +147,13 @@ Routing (P1-11): after sign-in or sign-up, `/` and every signed-in page send a u
 2. `/settings/account/delete`: explanation of what is deleted; re-authentication required (password, or for Google-only accounts *Confirm with Google*, which signs in again and returns here).
 3. Confirm → account deactivated, signed out → confirmation "We'll delete it on {date}. Changed your mind? Sign in before then to cancel." → hard delete after 14 days (OD-22).
 4. Signing in during the grace period → `/account-deletion` only: *Cancel deletion* (→ feed) or *Sign out*.
+
+### F-16 Log out (AUTH-06)
+
+1. Entry: desktop (≥ 1280) sidebar **Log out**, under the Ask dodoi card · mobile and tablet: own profile → **Log out** in the card at the end of the page (with **Settings and privacy**) · any size: Settings → Account → **Sign out**.
+2. Sidebar and profile open `[Log out of dodoi?]` (bottom sheet on mobile, centred panel from 768px): "Your collections, journal and progress stay saved. Log back in anytime." → **Log out** (danger) or **Cancel** (closes, nothing changes).
+3. Log out → `{delete data kept for offline use}` → `{end session}` → `[Landing]` (`/`). The button shows "Logging out…" and is disabled meanwhile.
+4. ⚠ Settings → Account → Sign out signs out straight away (no confirmation step).
 
 ### F-15 Admin: manage seed content (ADM-04…06)
 

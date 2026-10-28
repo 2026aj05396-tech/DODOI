@@ -1,24 +1,22 @@
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BackButton } from "@/components/ui/back-button";
 import { cn } from "@/lib/utils/cn";
 
-// Frame for settings screens (P1-14; not designed, built from the system): a back link, the
+// Frame for settings screens (P1-14; not designed, built from the system): a back icon, the
 // title and a single centred column at every width.
 
 export function SettingsFrame({
   title,
   description,
   backHref = "/settings",
-  backLabel = "Settings",
   className,
   children,
 }: {
   title: string;
   description?: string;
+  /** Where Back goes when there is no page in history to return to. */
   backHref?: string;
-  backLabel?: string;
   /** E.g. a wider column for a grid (`max-w-6xl`). */
   className?: string;
   children: ReactNode;
@@ -31,13 +29,7 @@ export function SettingsFrame({
       )}
     >
       <div className="flex flex-col gap-2">
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-1.5 self-start rounded-sm text-control font-bold text-foreground-secondary hover:text-foreground"
-        >
-          <ArrowLeft aria-hidden className="size-4" />
-          {backLabel}
-        </Link>
+        <BackButton fallbackHref={backHref} />
         <h1 className="text-greeting text-foreground md:text-greeting-web">{title}</h1>
         {description ? <p className="text-body text-foreground-secondary">{description}</p> : null}
       </div>

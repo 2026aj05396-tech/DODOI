@@ -38,7 +38,7 @@ const SECTIONS = [
 // Settings (P1-14, USER_FLOWS F-10; not designed, built from the system).
 export default function SettingsPage() {
   return (
-    <SettingsFrame title="Settings" backHref="/profile" backLabel="Profile">
+    <SettingsFrame title="Settings" backHref="/profile">
       <ul className="flex flex-col divide-y divide-border rounded-card border border-border bg-background">
         {SECTIONS.map(({ href, icon: Icon, title, description }) => (
           <li key={href}>

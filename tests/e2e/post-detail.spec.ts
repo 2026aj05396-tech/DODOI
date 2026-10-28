@@ -124,7 +124,7 @@ test("signed-in users get the app shell; on mobile the post is full screen", asy
   await expect(page.getByRole("link", { name: "Log in" })).toHaveCount(0);
   if (isMobile) {
     await expect(page.getByRole("navigation", { name: "Main" })).toBeHidden();
-    await expect(page.getByRole("button", { name: "Back" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Back" })).toBeVisible();
   } else {
     await expect(page.getByRole("navigation", { name: "Main" }).first()).toBeVisible();
   }

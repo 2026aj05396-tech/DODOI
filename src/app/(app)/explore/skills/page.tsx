@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 // All skills (P1-26; built from the system).
 export default function AllSkillsPage() {
   return (
-    <SettingsFrame title="All skills" backHref="/explore" backLabel="Explore" className="max-w-6xl">
+    <SettingsFrame title="All skills" backHref="/explore" className="max-w-6xl">
       <SkillDirectory />
     </SettingsFrame>
   );

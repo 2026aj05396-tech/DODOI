@@ -7,3 +7,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## dodoi project rules
+
+Read [docs/AI_DEVELOPMENT_RULES.md](docs/AI_DEVELOPMENT_RULES.md) before any change. Two rules apply to every change, however small:
+
+- **Docs in the same change.** Every request, flow change, copy change, design update or decision the product owner mentions is written into the docs in the same change as the code — README §2 for decisions, then the documents in the map in AI_DEVELOPMENT_RULES §13.
+- **No git writes.** Leave every change uncommitted; the product owner does all git operations (§11).

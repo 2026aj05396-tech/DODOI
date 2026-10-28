@@ -109,7 +109,7 @@ test("leaving Edit profile with unsaved changes asks first", async ({ page }) =>
     asked = true;
     await dialog.dismiss();
   });
-  await page.getByRole("link", { name: "Settings" }).first().click();
+  await page.getByRole("link", { name: "Back" }).click();
 
   expect(asked).toBe(true);
   await expect(page).toHaveURL(/\/settings\/profile$/);

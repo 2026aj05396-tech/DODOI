@@ -3,6 +3,7 @@
 import { Bell, Bookmark, Inbox, Plus, Sparkles, Video } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
+import { EmptyFeedArt } from "@/components/feed/empty-feed-art";
 import { Button } from "@/components/ui/button";
 import { ActionChip, Tag, ToggleChip } from "@/components/ui/chip";
 import { ComingSoonBadge, ComingSoonCard } from "@/components/ui/coming-soon";
@@ -227,6 +228,13 @@ export function UiPreview() {
             }
           />
           <ErrorState onRetry={() => undefined} />
+          <EmptyState
+            icon={<EmptyFeedArt />}
+            title="Nothing to show yet"
+            titleAs="h3"
+            description="New projects are added every week. Check back soon."
+            action={<Button>Explore crafts</Button>}
+          />
         </div>
       </Section>
     </main>

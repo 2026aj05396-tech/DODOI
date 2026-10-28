@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { ThemePosts } from "@/components/explore/theme-posts";
 import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
+import { BackButton } from "@/components/ui/back-button";
 import { PatternTile } from "@/components/ui/pattern-tile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils/cn";
@@ -36,6 +37,7 @@ async function ThemeContent({ params }: { params: Params }) {
   const { theme, posts } = await orNotFound(getTheme(actor, slug, { limit: 20 }));
   return (
     <>
+      <BackButton fallbackHref="/explore" />
       <header className="relative overflow-hidden rounded-card">
         {theme.coverMedia ? (
           // eslint-disable-next-line @next/next/no-img-element -- Cloudinary serves the sizes in srcSet.

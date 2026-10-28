@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 // confirmation (password, or signing in with Google again).
 export default function DeleteAccountPage() {
   return (
-    <SettingsFrame title="Delete account" backHref="/settings/account" backLabel="Account">
+    <SettingsFrame title="Delete account" backHref="/settings/account">
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-card" />}>
         <DeleteAccountContent />
       </Suspense>

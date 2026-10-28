@@ -1,8 +1,10 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { LogOutDialog } from "@/components/auth/log-out-dialog";
 import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { Wordmark } from "@/components/ui/wordmark";
 import { cn } from "@/lib/utils/cn";
@@ -59,6 +61,21 @@ function SidebarComingSoon({ item }: { item: NavItem }) {
   );
 }
 
+/** Log out (`2b`), under the Ask dodoi card; asks first. */
+function SidebarLogOut() {
+  return (
+    <LogOutDialog>
+      <button
+        type="button"
+        className={cn(ITEM_CLASSES, "font-bold text-destructive hover:bg-destructive-surface")}
+      >
+        <LogOut aria-hidden className="size-5" strokeWidth={1.8} />
+        Log out
+      </button>
+    </LogOutDialog>
+  );
+}
+
 /**
  * Full desktop sidebar (`2b`), 232px. Reads the current path to highlight the active item. On pages
  * whose address isn't known while prerendering (dynamic routes), the app shell shows `SidebarView`
@@ -111,8 +128,9 @@ export function SidebarView({
         {CREATE.label}
         <ComingSoonBadge size="sm" decorative />
       </ComingSoonTrigger>
-      <div className="mt-auto pt-6">
+      <div className="mt-auto flex flex-col gap-3 pt-6">
         <AskDodoiCard />
+        <SidebarLogOut />
       </div>
     </nav>
   );

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { ProfileView } from "@/components/profile/profile-view";
+import { BackButton } from "@/components/ui/back-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
 import { serverEnv } from "@/server/lib/env";
@@ -33,12 +34,16 @@ async function ProfileContent({ params }: { params: Params }) {
   const profile = await orNotFound(getProfile(actor, username));
   const isOwner = !profile.isPrivate && profile.isOwner;
   const showUsernamePrompt = isOwner ? (await getMyProfile(actor)).showUsernamePrompt : false;
+  // Your own profile is a main tab; someone else's is reached from a post, search or a collection.
   return (
-    <ProfileView
-      profile={profile}
-      showUsernamePrompt={showUsernamePrompt}
-      supportEmail={serverEnv.SUPPORT_EMAIL ?? null}
-    />
+    <div className="flex flex-col gap-2">
+      {isOwner ? null : <BackButton fallbackHref="/feed" />}
+      <ProfileView
+        profile={profile}
+        showUsernamePrompt={showUsernamePrompt}
+        supportEmail={serverEnv.SUPPORT_EMAIL ?? null}
+      />
+    </div>
   );
 }
 

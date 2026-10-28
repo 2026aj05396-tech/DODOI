@@ -148,6 +148,8 @@
   --animate-dd-twinkle: dd-twinkle 2.4s ease-in-out infinite;
   --animate-dd-pulse: dd-pulse 1.8s ease-out infinite;
   --animate-dd-pulse-soft: dd-pulse-soft 2s ease-out infinite;
+  /* Draws a stroke in: give the path pathLength="1" and stroke-dasharray="1". */
+  --animate-dd-draw: dd-draw 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards;
 
   @keyframes dd-up {
     from {
@@ -201,6 +203,14 @@
     }
     100% {
       box-shadow: 0 0 0 8px rgb(192 74 55 / 0);
+    }
+  }
+  @keyframes dd-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
     }
   }
   @keyframes dd-pulse-soft {

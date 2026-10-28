@@ -1,7 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, FolderMinus, Globe, Lock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { FolderMinus, Globe, Lock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "radix-ui";
@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Masonry, cardHeight } from "@/components/posts/masonry";
 import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
 import { PostCard } from "@/components/posts/post-card";
+import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -128,15 +129,7 @@ export function CollectionView({ initialPage }: { initialPage: CollectionPage })
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        {isOwner ? (
-          <Link
-            href="/saved"
-            className="inline-flex items-center gap-1.5 self-start rounded-sm text-control font-bold text-foreground-secondary hover:text-foreground"
-          >
-            <ArrowLeft aria-hidden className="size-4" />
-            Saved
-          </Link>
-        ) : null}
+        <BackButton fallbackHref={isOwner ? "/saved" : "/feed"} />
         <h1 className="text-greeting text-balance wrap-break-word text-foreground md:text-greeting-web">
           {collection.name}
         </h1>

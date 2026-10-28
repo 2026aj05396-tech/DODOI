@@ -194,15 +194,15 @@ Spacing: page gutter 20px mobile (24px onboarding/welcome), 28px web feed, 56px 
 
 ### 3.2 Desktop (≥ 1280)
 - **Sidebar everywhere (DC-12, CONFIRMED).**
-- **Home (`2b`):** full left sidebar 232px (Home, Explore, Community, Messages + badge, Saved, Journal, Profile, Create button, "Ask dodoi" card at bottom) · centre feed with search bar, bell, avatar · right rail 300px.
+- **Home (`2b`):** full left sidebar 232px (Home, Explore, Community, Messages + badge, Saved, Journal, Profile, Create button, "Ask dodoi" card at bottom, then **Log out** — danger red, bold, hover danger-surface, opens the log-out confirmation) · centre feed with search bar, bell, avatar · right rail 300px.
 - **Right rail in Phase 1 (DC-20/DC-22, CONFIRMED):** "New to you" card · **"Help other makers"** coming-soon card ("Answer questions in skills you know") that lists the user's *can help with* skills as chips when they chose any in onboarding step 3 · **"Live sessions"** coming-soon card ("Book a 30-min call with a maker · We'll let you know when this opens.").
 - **Post detail (`2c`):** two-column content (media | details). **Built (P1-20, PO decisions 2026-10-26):** mobile `1e` full screen (no header/tab bar; Back + Share over the media; sticky bar "Ask about this" + "Save to collection", both coming soon); tablet (built from system, PO review) media above details in a centred column; from 1024px side by side with sticky media. Gallery: swipe with dots and "n / total" on mobile, arrows + thumbnails from 768px; frame takes the first item's shape (4:5–4:3, mobile capped at 56svh) so nothing shifts; videos play inline after a tap. Save is coming soon until P1-25; Share uses the Web Share API, else copies the link with a toast. Signed-out visitors (OD-29) see a slim bar (wordmark, Log in with return, Sign up) instead of the app shell. Skill chips and the creator row link out once skill pages (P1-26) and profiles (P1-14) exist. **Phase 1: full 232px sidebar** (DC-23). From Phase 4, when the AI companion (380px) docks, the sidebar collapses to the **76px icon rail** (monogram "d.", Home, Explore, Community, Saved, Profile, Create). Icon-only items need accessible names (`aria-label`).
 
 **Implemented in P1-26b:** `AppShell` (`src/components/layout/app-shell.tsx`) used by `src/app/(app)/layout.tsx`; pages that need the right rail wrap their content in `PageWithRail`. Coming-soon nav items use `ComingSoonTrigger`: accessible name = visible label + ", coming soon" (never a separate `aria-label`, so voice-control users can say what they see); visual badges are `decorative`. Tight spots (icon rail, mobile bell) use the butter **dot**; elsewhere the "Soon" pill. Preview at `/shell-preview` (local only).
 
 ### 3.3 Tablet (768–1279, design `3c`)
-- 76px icon rail (same as `2c`), no right rail, 2-column feed, search + avatar header, filter chips wrap, floating "Ask dodoi" pill bottom-right.
-- **Landing (`2a`):** top bar (Discover · Learn · Community · Companion; Log in / Join free), hero left, animated patterned mosaic right.
+- 76px icon rail (same as `2c`), no right rail, 2-column feed, search + avatar header, filter chips wrap, floating "Ask dodoi" pill bottom-right. No Log out on the rail (design `3c`); tablet users log out from their profile (`1i` account card).
+- **Landing (`2a`):** top bar (Discover · Learn · Community · Companion; Log in / Join free), hero left, animated mosaic right. **Built:** each tile shows a craft photo (`public/images/crafts/`) over its pattern, fading in once loaded; white label on a bottom scrim; "+ 40 more crafts" keeps a coral tint. The pattern is the placeholder and the fallback (`components/marketing/craft-photo.tsx`).
 
 ## 4. Components (from design)
 
@@ -211,7 +211,7 @@ Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-
 | Component | Design ref | Spec |
 |---|---|---|
 | **Wordmark** | all | "dodoi" 24–28px bold brick, `-0.02em`, butter dot 7–8px |
-| **Button** | all | Pill. Variants: `primary` (coral bg, ink text, hover coral-hover), `outline` (1.5px ink border, transparent/paper bg), `inverse` (ink bg, white), `text` (brick, bold). Press scale .96 |
+| **Button** | all | Pill. Variants: `primary` (coral bg, ink text, hover coral-hover), `outline` (1.5px ink border, transparent/paper bg), `inverse` (ink bg, white), `destructive` (danger bg, white — confirming Log out), `text` (brick, bold). Press scale .96 |
 | **Chip** | 1b, 1c, 1e | Variants: `filter` (inactive: sand-input/paper + line border; active: ink bg, white bold), `interest` (unselected: paper + line-strong border, hover brick border; selected: coral bg + coral-deep border + check icon + pop), `meta` (sand bg: Beginner, 45 min), `skill` (lavender bg, plum bold), `suggestion` (paper + line-strong border), `dashed-add` (+ Add your own) |
 | **PostCard** | 1c, 2b | Patterned/photo media (radius card/lg) with **type badge** top-left (paper pill, bold) and **save button** top-right (paper circle, bookmark; saved = coral-deep fill + pop); below: title (bold) and `creator · skill` meta. Hover lift. Entrance `ddUp` staggered. **Built (P1-20/P1-22):** `components/posts/post-card.tsx`; badge `text-badge` without letter-spacing so "Tutorial · 45 min" fits 2-column mobile cards; failed images fall back to the skill's pattern (FEED-10); videos show play + duration and play muted on tap (FEED-12); feed cards add a "⋯" menu at the end of the byline |
 | **MasonryGrid** | 1c, 2b | CSS `columns` (2 mobile / 3 web), `break-inside: avoid` |
@@ -237,6 +237,9 @@ Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-
 | **OnboardingProgress** | 1b | 3 segments 28×4px (active coral, rest line). "Skip" link only on steps 2 and 3 (DC-28) |
 | **BottomTabBar** | 1c… | 5 columns, raised Create button |
 | **Sidebar / RightRail** | 2b | As §3.2 |
+| **LogOutDialog** | 1i | `sheet` dialog: grab handle (mobile), "Log out of dodoi?", "Your collections, journal and progress stay saved. Log back in anytime.", `destructive` Log out + outline Cancel. `components/auth/log-out-dialog.tsx` |
+| **Profile account card** | 1i | Own profile, below 1280px: bordered paper card, 52px rows — "Settings and privacy" (→ `/settings`) · "Log out" (danger, bold) |
+| **EmptyFeedArt** | — | Built from system (PO request): mood board of three craft prints (washi tape = craft patterns), coral thread drawn in with `animate-dd-draw`, `dd-twinkle` sparkles; fans out on hover; scaled to 0.84 below 640px. `components/feed/empty-feed-art.tsx` |
 | **AI pill / companion panel / chat bubbles** | 1c, 1e, 1f, 2c | P4 |
 | **JournalTimeline** | 1g | P2 |
 | **EmptyState / ErrorState / OfflineBanner / Skeleton / Toast / CollectionPicker** | — | Not designed — build from system (DC-11 rule) |
@@ -284,14 +287,14 @@ Error messages: what happened + what to do next. No blame, jargon or codes in th
 | Sign up (email form), Sign in, Check email, Verify, Forgot/Reset password, Date of birth, Verify-email banner | — | Not designed — built from system in P1-07 following `1a` (wordmark top-left, 448px column); PO review pending |
 | Onboarding: interests | `1b` | |
 | Onboarding steps 2 (familiarity) and 3 (skills you can help with) | — | Defined in DC-18, not drawn — built from system in P1-11 (level chips per interest; can-help picker). Step headings: design 32px → `text-title` (28px) mobile, `text-title-web` (40px) from 768px; PO review pending |
-| Home feed | `1c`, `2b` | |
+| Home feed | `1c`, `2b` | Empty state not designed — built from system: mood-board art + "Explore crafts" (PO review) |
 | Explore | `1d` | Web not designed. **Built (P1-26, PO review):** designed sections first, then Popular skills / New on dodoi (skill chip rows) and Beginner-friendly projects (masonry); "See all" → `/explore/skills`; search results, skill and theme pages built from the system |
 | Search results, Skill page, Theme page | — | Not designed |
 | Post / tutorial detail | `1e`, `2c` | Attribution block, persisted materials/steps (DC-07, DC-10) |
 | Home (tablet) | `3c` | |
 | Error, focus, coming-soon patterns | `3b` | |
 | Saved / collections | `1i` (profile tab) | Collection detail, picker not designed. **Built (P1-25, PO review):** `/saved` = collections row (sideways on mobile, grid from 768px) then All saved masonry; `/saved/{id}` collection page; picker = `sheet` dialog (checkbox per collection, "New collection" inline, Done) |
-| Public profile | `1i` | |
+| Public profile | `1i` | Own profile ends with the account card (Settings and privacy · Log out) below 1280px, per design v3 |
 | Edit profile, Settings, Account deletion | — | Not designed. **Built (P1-14, PO review):** `/settings` list → Edit profile, Your skills, Privacy, Account (single centred column, back link); profile `/u/{username}` per `1i` with DC-08 groups (Can help with = coral, Want to learn = butter, Interests = outline, level after the name); **account deletion (P1-28, PO review):** Account → *Delete account* → `/settings/account/delete` (what happens, then password or *Confirm with Google*, destructive button) → in-place confirmation; `/account-deletion` blocking screen in the auth frame (*Cancel deletion* / *Sign out*) |
 | Admin posts/themes/skills | — | Not designed — built from system in P1-17 (`/admin`, top bar + sections in cards, sticky action bar); PO review pending |
 

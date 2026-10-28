@@ -193,6 +193,7 @@ a{color:#C04A37;text-decoration:none}a:hover{text-decoration:underline}
               <span style="display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:#2B2233"><svg style="animation:ddTwinkle 2.4s ease-in-out infinite;transform-origin:center" width="16" height="16" viewBox="0 0 24 24" fill="#5B3F8F"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>Ask dodoi</span>
               <span style="font-size:14px;line-height:1.35;color:#5A4E5E">Stuck on a stitch? Show me a photo.</span>
             </div>
+            <div style="margin-top:12px;height:44px;border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 12px;font-size:16px;font-weight:700;color:#B3261E;cursor:pointer" style-hover="background:#FBE3E0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"></path></svg>Log out</div>
           </div>
           <div style="min-width:0;display:flex;flex-direction:column;overflow:hidden">
             <div style="flex:none;padding:20px 28px 0;display:flex;align-items:center;gap:12px">
@@ -757,7 +758,22 @@ a{color:#C04A37;text-decoration:none}a:hover{text-decoration:underline}
             <div style="display:flex;flex-direction:column;gap:6px"><div style="height:120px;border-radius:12px;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px;overflow:hidden"><span style="grid-row:span 2;background:conic-gradient(rgba(255,255,255,.45) 25%, transparent 0 50%, rgba(255,255,255,.45) 0 75%, transparent 0) 0 0/22px 22px, #CFE3F5"></span><span style="background:repeating-linear-gradient(45deg, rgba(255,255,255,.5) 0 5px, transparent 5px 13px), #F9D0D3"></span><span style="background:radial-gradient(rgba(255,255,255,.75) 2px, transparent 2.5px) 0 0/14px 14px, #FBE7A1"></span></div><span style="font-size:15px;font-weight:700;color:#2B2233">Things to make as gifts</span><span style="font-size:13px;color:#7A6E78">9 saved · Private</span></div>
             <div style="height:120px;border-radius:12px;border:1.5px dashed #B3A8AE;display:flex;align-items:center;justify-content:center;font-size:15px;color:#5A4E5E">+ New collection</div>
           </div>
+          <div style="display:flex;flex-direction:column;border:1px solid #EADFD3;border-radius:14px;background:#FFF8F0">
+            <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;border-bottom:1px solid #F3EADF;font-size:15px;color:#2B2233"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>Settings and privacy</div>
+            <button onClick="{{ openLogout }}" style-focus="outline:3px solid #5B3F8F;outline-offset:-3px" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;border:none;background:transparent;border-radius:14px;font:700 15px 'DM Sans';color:#B3261E;text-align:left;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"></path></svg>Log out</button>
+          </div>
         </div>
+        <sc-if value="{{ logoutOpen }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ closeLogout }}" style="position:absolute;inset:0;z-index:5;background:rgba(43,34,51,.4);display:flex;align-items:flex-end">
+            <div style="width:100%;background:#FFF8F0;border-radius:24px 24px 0 0;padding:12px 20px 34px;display:flex;flex-direction:column;gap:14px">
+              <span style="align-self:center;width:40px;height:4px;border-radius:2px;background:#DCCFC2"></span>
+              <span style="font-size:20px;font-weight:700;color:#2B2233">Log out of dodoi?</span>
+              <span style="font-size:15px;line-height:1.45;color:#5A4E5E">Your collections, journal and progress stay saved. Log back in anytime.</span>
+              <button onClick="{{ closeLogout }}" style-active="transform:scale(.97)" style="height:52px;border-radius:999px;border:none;background:#B3261E;color:#fff;font:700 16px 'DM Sans';cursor:pointer">Log out</button>
+              <button onClick="{{ closeLogout }}" style="height:52px;border-radius:999px;border:1px solid #EADFD3;background:transparent;color:#2B2233;font:700 16px 'DM Sans';cursor:pointer">Cancel</button>
+            </div>
+          </div>
+        </sc-if>
         <div style="position:absolute;left:0;right:0;bottom:0;height:84px;background:#FFF8F0;border-top:1px solid #F3EADF;display:grid;grid-template-columns:repeat(5,1fr);padding:8px 8px 22px;font-size:11px;color:#7A6E78">
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-4v6H4a1 1 0 0 1-1-1z"></path></svg>Home</div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>Explore</div>
@@ -805,6 +821,9 @@ class Component extends DCLogic {
     return {
       interests, filters, feed,
       selectedCount: interests.filter(i => i.on).length,
+      logoutOpen: !!this.state.logoutOpen,
+      openLogout: () => this.setState({ logoutOpen: true }),
+      closeLogout: () => this.setState({ logoutOpen: false }),
       canContinue: interests.filter(i => i.on).length >= 3,
       cantContinue: interests.filter(i => i.on).length < 3,
       needMore: Math.max(0, 3 - interests.filter(i => i.on).length),

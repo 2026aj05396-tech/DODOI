@@ -214,6 +214,8 @@ Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the P
 | Auth (sign-in, reset, verify) | Network-only | Disabled with message |
 | Search | Network-only | Disabled with message |
 
+**Sign-out and account deletion** first delete the cached pages and images (`clearOfflineData()`, `src/lib/utils/clear-offline-data.ts`), so the next person on the device can't open them. Every log-out entry point (sidebar, profile card, Settings → Account, account-deletion screens) goes through `useSignOut()` in `src/components/auth/sign-out-button.tsx`.
+
 As built: "previously visited pages" are the feed, posts, saved and collections, Explore, skill and theme pages (`src/lib/constants/offline.ts`), at most 50 for 7 days; a redirect is never kept as a page. "Marked stale" is the offline banner, which stays while offline. Images are fetched with CORS (Cloudinary allows it) so cached copies aren't opaque; the CSP's `connect-src` therefore includes `res.cloudinary.com`, or the service worker's fetch is blocked and images break. Signing out or deleting the account deletes both caches, so the next person on a shared device can't open them.
 
 ## 10. Search Architecture

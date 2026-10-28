@@ -14,3 +14,17 @@
 - License: SIL Open Font License 1.1, https://openfontlicense.org
 - Used in: `assets/fonts/DMSans_400Regular.ttf` and `DMSans_700Bold.ttf`, read at build time by `src/app/(marketing)/opengraph-image.tsx` to draw the landing page's share image (the app itself loads DM Sans through `next/font`); `assets/fonts/DMSans_800ExtraBold.ttf` (current Google Fonts DM Sans, via `@expo-google-fonts/dm-sans@0.4.2`, retrieved 2026-10-27), read by `scripts/generate-icons.ts` to draw the app icon.
 - Changes: none.
+
+## Craft photos (Unsplash)
+
+- Source: Unsplash (retrieved 2026-10-28). Photo IDs, at `https://images.unsplash.com/<id>`:
+  - `crochet.jpg` — `photo-1648005539099-709d5be525fb`
+  - `sketchbook.jpg` — `photo-1495232416988-d26458b7a5fb`
+  - `embroidery-blossom.jpg` — `photo-1695668148100-987abc5841ea`
+  - `clay.jpg` — `photo-1764507768797-5b7de6eedcb7`
+  - `watercolour.jpg` — `photo-1601049320268-42a9b275068c`
+  - `punch-needle.jpg` — `photo-1643190919067-6aab5356bc85`
+  - `more-crafts.jpg` — `photo-1604095879468-03fd4a4afaf2`
+- License: Unsplash License, https://unsplash.com/license (free for commercial use; attribution not required; photos may not be sold unaltered or used to build a competing service)
+- Used in: `public/images/crafts/`, shown on the landing and welcome tiles (`src/components/marketing/craft-tiles.tsx`) and the empty home feed (`src/components/feed/empty-feed-art.tsx`).
+- Changes: resized to at most 900 px and re-encoded as JPEG.
