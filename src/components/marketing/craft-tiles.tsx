@@ -1,8 +1,11 @@
+import { CraftPhoto } from "@/components/marketing/craft-photo";
 import { PatternTile, type PatternAccent } from "@/components/ui/pattern-tile";
 import { cn } from "@/lib/utils/cn";
 
 // The drifting craft-tile collages from the design: Welcome 1a (mobile) and Landing 2a (web).
 // Purely decorative (aria-hidden); the drift stops under prefers-reduced-motion.
+// Each tile shows a craft photo (public/images/crafts, Unsplash License) over its pattern; the
+// pattern stays as the placeholder and the fallback when a photo can't load.
 
 type Tile = {
   label: string;
@@ -10,18 +13,85 @@ type Tile = {
   /** Grid rows the tile spans. */
   rows: 1 | 2 | 3;
   delay: string;
+  photo: string;
+  /** object-position for the photo's crop. */
+  position?: string;
 };
+
+const PHOTOS = {
+  crochet: "/images/crafts/crochet.jpg",
+  sketchbook: "/images/crafts/sketchbook.jpg",
+  embroidery: "/images/crafts/embroidery-blossom.jpg",
+  clay: "/images/crafts/clay.jpg",
+  watercolour: "/images/crafts/watercolour.jpg",
+  punchNeedle: "/images/crafts/punch-needle.jpg",
+  moreCrafts: "/images/crafts/more-crafts.jpg",
+} as const;
+
+/** Darkens the photo under a label; hidden until the photo before it has loaded. */
+function PhotoScrim({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-700 peer-data-[loaded=true]:opacity-100 motion-reduce:transition-none",
+        className,
+      )}
+    />
+  );
+}
+
+/** The scrim and label for a tile labelled at the bottom edge. */
+function PhotoLabel({ children }: { children: string }) {
+  return (
+    <>
+      <PhotoScrim className="bg-linear-to-t from-inverse/65 via-inverse/10 via-40% to-transparent" />
+      <span className="relative transition-colors duration-700 peer-data-[loaded=true]:font-semibold peer-data-[loaded=true]:text-inverse-foreground motion-reduce:transition-none">
+        {children}
+      </span>
+    </>
+  );
+}
 
 const ROW_SPAN = { 1: "", 2: "row-span-2", 3: "row-span-3" } as const;
 
 // Design 1a: 3 columns, 84px rows.
 const WELCOME_TILES: Tile[] = [
-  { label: "crochet", accent: "butter", rows: 2, delay: "[animation-delay:0s]" },
-  { label: "sketch", accent: "lavender", rows: 1, delay: "[animation-delay:0.6s]" },
-  { label: "clay", accent: "mint", rows: 2, delay: "[animation-delay:1.2s]" },
-  { label: "embroidery", accent: "blush", rows: 2, delay: "[animation-delay:1.8s]" },
-  { label: "paint", accent: "sky", rows: 1, delay: "[animation-delay:2.4s]" },
+  {
+    label: "crochet",
+    accent: "butter",
+    rows: 2,
+    delay: "[animation-delay:0s]",
+    photo: PHOTOS.crochet,
+  },
+  {
+    label: "sketch",
+    accent: "lavender",
+    rows: 1,
+    delay: "[animation-delay:0.6s]",
+    photo: PHOTOS.sketchbook,
+    position: "50% 40%",
+  },
+  { label: "clay", accent: "mint", rows: 2, delay: "[animation-delay:1.2s]", photo: PHOTOS.clay },
+  {
+    label: "embroidery",
+    accent: "blush",
+    rows: 2,
+    delay: "[animation-delay:1.8s]",
+    photo: PHOTOS.embroidery,
+    position: "45% 55%",
+  },
+  {
+    label: "paint",
+    accent: "sky",
+    rows: 1,
+    delay: "[animation-delay:2.4s]",
+    photo: PHOTOS.watercolour,
+    position: "50% 70%",
+  },
 ];
+
+// Three columns of the max-w-md mobile layout.
+const WELCOME_SIZES = "(min-width: 448px) 150px, 33vw";
 
 /** Welcome (1a): five craft tiles and a solid coral "+ 40 more". */
 export function WelcomeCraftTiles({ className }: { className?: string }) {
@@ -32,16 +102,19 @@ export function WelcomeCraftTiles({ className }: { className?: string }) {
           key={tile.label}
           accent={tile.accent}
           className={cn(
-            "flex animate-dd-float items-end rounded-md p-2.5 text-tab text-foreground-secondary",
+            "relative flex animate-dd-float items-end overflow-hidden rounded-md p-2.5 text-tab text-foreground-secondary",
             ROW_SPAN[tile.rows],
             tile.delay,
           )}
         >
-          {tile.label}
+          <CraftPhoto src={tile.photo} sizes={WELCOME_SIZES} position={tile.position} />
+          <PhotoLabel>{tile.label}</PhotoLabel>
         </PatternTile>
       ))}
-      <div className="flex animate-dd-float items-end rounded-md bg-primary p-2.5 text-tab text-foreground [animation-delay:3s]">
-        + 40 more
+      <div className="relative flex animate-dd-float items-end overflow-hidden rounded-md bg-primary p-2.5 text-tab text-foreground [animation-delay:3s]">
+        <CraftPhoto src={PHOTOS.moreCrafts} sizes={WELCOME_SIZES} />
+        <PhotoScrim className="bg-primary/75" />
+        <span className="relative">+ 40 more</span>
       </div>
     </div>
   );
@@ -49,12 +122,41 @@ export function WelcomeCraftTiles({ className }: { className?: string }) {
 
 // Design 2a: 3 columns, 120px rows; 20px radius drawn, rounded-lg (18px) is the nearest token.
 const LANDING_TILES: Tile[] = [
-  { label: "crochet", accent: "butter", rows: 3, delay: "[animation-delay:0s]" },
-  { label: "sketchbook", accent: "lavender", rows: 2, delay: "[animation-delay:0.5s]" },
-  { label: "embroidery", accent: "blush", rows: 2, delay: "[animation-delay:1s]" },
-  { label: "clay", accent: "mint", rows: 2, delay: "[animation-delay:1.5s]" },
-  { label: "watercolour", accent: "sky", rows: 3, delay: "[animation-delay:2s]" },
+  {
+    label: "crochet",
+    accent: "butter",
+    rows: 3,
+    delay: "[animation-delay:0s]",
+    photo: PHOTOS.crochet,
+  },
+  {
+    label: "sketchbook",
+    accent: "lavender",
+    rows: 2,
+    delay: "[animation-delay:0.5s]",
+    photo: PHOTOS.sketchbook,
+    position: "50% 45%",
+  },
+  {
+    label: "embroidery",
+    accent: "blush",
+    rows: 2,
+    delay: "[animation-delay:1s]",
+    photo: PHOTOS.embroidery,
+    position: "45% 55%",
+  },
+  { label: "clay", accent: "mint", rows: 2, delay: "[animation-delay:1.5s]", photo: PHOTOS.clay },
+  {
+    label: "watercolour",
+    accent: "sky",
+    rows: 3,
+    delay: "[animation-delay:2s]",
+    photo: PHOTOS.watercolour,
+  },
 ];
+
+// Three columns of the right half of the landing grid (and the auth screens' side panel).
+const LANDING_SIZES = "(min-width: 1024px) 260px, 33vw";
 
 type LandingCraftTilesProps = {
   className?: string;
@@ -74,26 +176,35 @@ export function LandingCraftTiles({
           key={tile.label}
           accent={tile.accent}
           className={cn(
-            "flex animate-dd-float items-end rounded-lg p-3.5 text-meta text-foreground-secondary",
+            "relative flex animate-dd-float items-end overflow-hidden rounded-lg p-3.5 text-meta text-foreground-secondary",
             ROW_SPAN[tile.rows],
             tile.delay,
           )}
         >
-          {tile.label}
+          <CraftPhoto src={tile.photo} sizes={LANDING_SIZES} position={tile.position} />
+          <PhotoLabel>{tile.label}</PhotoLabel>
         </PatternTile>
       ))}
       <PatternTile
         accent="new-to-you"
-        className="row-span-2 flex flex-col justify-between rounded-lg p-4.5 text-foreground"
+        className="relative row-span-2 flex flex-col justify-between overflow-hidden rounded-lg p-4.5 text-foreground"
       >
-        <span className="text-overline uppercase">New to you</span>
-        <span className="text-greeting text-balance">Punch needle in under an hour</span>
+        <CraftPhoto src={PHOTOS.punchNeedle} sizes={LANDING_SIZES} position="30% 50%" />
+        <PhotoScrim className="bg-linear-to-b from-inverse/50 via-inverse/5 to-inverse/70" />
+        <span className="relative text-overline uppercase transition-colors duration-700 peer-data-[loaded=true]:text-inverse-foreground motion-reduce:transition-none">
+          New to you
+        </span>
+        <span className="relative text-greeting text-balance transition-colors duration-700 peer-data-[loaded=true]:text-inverse-foreground motion-reduce:transition-none">
+          Punch needle in under an hour
+        </span>
       </PatternTile>
       <PatternTile
         accent="coral"
-        className="flex animate-dd-float items-center justify-center rounded-lg text-control-xl font-bold text-foreground [animation-delay:3s]"
+        className="relative flex animate-dd-float items-center justify-center overflow-hidden rounded-lg text-control-xl font-bold text-foreground [animation-delay:3s]"
       >
-        + 40 more crafts
+        <CraftPhoto src={PHOTOS.moreCrafts} sizes={LANDING_SIZES} />
+        <PhotoScrim className="bg-primary/75" />
+        <span className="relative">+ 40 more crafts</span>
       </PatternTile>
     </div>
   );

@@ -69,7 +69,10 @@ test(
     await expect(
       page.getByText("You're offline. Saving needs a connection.", { exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole("searchbox")).toBeDisabled();
+    // The feed has a search box from 768px; phones search from the Explore tab.
+    if ((page.viewportSize()?.width ?? 0) >= 768) {
+      await expect(page.getByRole("searchbox")).toBeDisabled();
+    }
 
     // The feed comes from the cache; a page never opened shows the offline page.
     await page.reload();

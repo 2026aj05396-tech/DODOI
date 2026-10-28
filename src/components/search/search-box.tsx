@@ -58,6 +58,9 @@ export function SearchBox({
   return (
     <form
       role="search"
+      // Before hydration, Enter still opens the results page as a plain GET form.
+      action="/search"
+      method="get"
       className={cn("relative", className)}
       onSubmit={(event) => {
         event.preventDefault();
@@ -72,6 +75,7 @@ export function SearchBox({
     >
       <SearchField
         label="Search skills, projects and makers"
+        name="q"
         appearance={appearance}
         placeholder={isOnline ? placeholder : "Search needs a connection"}
         disabled={!isOnline}
