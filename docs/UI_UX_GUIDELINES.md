@@ -82,7 +82,7 @@ Implemented in `src/styles/tokens.css` and mapped to Tailwind utilities in `src/
 | Accents | `bg-butter`, `bg-blush`, `bg-lavender`, `bg-lavender-strong`, `bg-mint`, `bg-sky`, `bg-coral`, `text-plum` | tile accents |
 | Patterns | `bg-pattern-{butter,blush,lavender,mint,sky,coral,new-to-you}`, `bg-ai-paper` | §2.3 |
 
-Type scale: `text-hero`, `text-hero-web`, `text-title`, `text-title-web`, `text-greeting(-web)`, `text-section`, `text-card-title(-web)`, `text-body-lg(-web)`, `text-body`, `text-meta(-web)`, `text-chip`, `text-overline`, `text-tab`. Radii: `rounded-xs/sm/md/card/lg/xl/full`. Shadows: `shadow-hover/float/frame`. Motion: `animate-dd-up/pop/float/stripe/twinkle/pulse/pulse-soft`, easing `ease-soft`.
+Type scale: `text-hero`, `text-hero-web`, `text-title`, `text-title-web`, `text-greeting(-web)`, `text-section`, `text-card-title(-web)`, `text-body-lg(-web)`, `text-body`, `text-meta(-web)`, `text-chip`, `text-overline`, `text-tab`. Radii: `rounded-xs/sm/md/card/lg/xl/full`. Shadows: `shadow-hover/float/frame`. Motion: `animate-dd-up/pop/stripe/twinkle/pulse/pulse-soft` (no `float`: removed 2026-10-28), easing `ease-soft`.
 
 **Contrast notes (computed from design values, to be re-verified with a checker):**
 - Ink on paper, ink on coral (primary buttons), muted on paper, brick on paper, leaf on paper: pass WCAG AA for normal text.
@@ -154,7 +154,7 @@ Minimum body size 15px in design; inputs must be ≥ 16px on mobile to avoid iOS
 | Hover lift | `translateY(-4px)` cards, `-2px` list cards, 250ms `cubic-bezier(.2,.8,.2,1)` | Feed, skill, help cards |
 | `ddUp` | fade + rise 16px, 550ms, staggered 80ms | Feed card entrance, chat messages |
 | `ddPop` | scale .6 → 1.18 → 1, 300–350ms | Save toggle, chip select |
-| `ddFloat` | ±7px, 5–6s loop | Landing/welcome tiles |
+| ~~`ddFloat`~~ | **Removed** (PO, 2026-10-28). Craft tiles on landing, welcome and auth screens stay still; never add a looping float or drift to photos or image tiles | — |
 | `ddStripe` | stripe drift 2.5s loop | "New to you" card |
 | `ddTwinkle` | sparkle rotate/scale 2.4s | AI icon |
 | `ddPulse` / `ddPulseSoft` | ring pulse | Notification dot, current journal entry |

@@ -2,8 +2,9 @@ import { CraftPhoto } from "@/components/marketing/craft-photo";
 import { PatternTile, type PatternAccent } from "@/components/ui/pattern-tile";
 import { cn } from "@/lib/utils/cn";
 
-// The drifting craft-tile collages from the design: Welcome 1a (mobile) and Landing 2a (web).
-// Purely decorative (aria-hidden); the drift stops under prefers-reduced-motion.
+// The craft-tile collages from the design: Welcome 1a (mobile) and Landing 2a (web). Purely
+// decorative (aria-hidden). The tiles stay still: the design's floating loop is removed and
+// must not come back (PO, 2026-10-28; UI_UX_GUIDELINES §2.5).
 // Each tile shows a craft photo (public/images/crafts, Unsplash License) over its pattern; the
 // pattern stays as the placeholder and the fallback when a photo can't load.
 
@@ -12,7 +13,6 @@ type Tile = {
   accent: PatternAccent;
   /** Grid rows the tile spans. */
   rows: 1 | 2 | 3;
-  delay: string;
   photo: string;
   /** object-position for the photo's crop. */
   position?: string;
@@ -60,23 +60,20 @@ const WELCOME_TILES: Tile[] = [
     label: "crochet",
     accent: "butter",
     rows: 2,
-    delay: "[animation-delay:0s]",
     photo: PHOTOS.crochet,
   },
   {
     label: "sketch",
     accent: "lavender",
     rows: 1,
-    delay: "[animation-delay:0.6s]",
     photo: PHOTOS.sketchbook,
     position: "50% 40%",
   },
-  { label: "clay", accent: "mint", rows: 2, delay: "[animation-delay:1.2s]", photo: PHOTOS.clay },
+  { label: "clay", accent: "mint", rows: 2, photo: PHOTOS.clay },
   {
     label: "embroidery",
     accent: "blush",
     rows: 2,
-    delay: "[animation-delay:1.8s]",
     photo: PHOTOS.embroidery,
     position: "45% 55%",
   },
@@ -84,7 +81,6 @@ const WELCOME_TILES: Tile[] = [
     label: "paint",
     accent: "sky",
     rows: 1,
-    delay: "[animation-delay:2.4s]",
     photo: PHOTOS.watercolour,
     position: "50% 70%",
   },
@@ -102,16 +98,15 @@ export function WelcomeCraftTiles({ className }: { className?: string }) {
           key={tile.label}
           accent={tile.accent}
           className={cn(
-            "relative flex animate-dd-float items-end overflow-hidden rounded-md p-2.5 text-tab text-foreground-secondary",
+            "relative flex items-end overflow-hidden rounded-md p-2.5 text-tab text-foreground-secondary",
             ROW_SPAN[tile.rows],
-            tile.delay,
           )}
         >
           <CraftPhoto src={tile.photo} sizes={WELCOME_SIZES} position={tile.position} />
           <PhotoLabel>{tile.label}</PhotoLabel>
         </PatternTile>
       ))}
-      <div className="relative flex animate-dd-float items-end overflow-hidden rounded-md bg-primary p-2.5 text-tab text-foreground [animation-delay:3s]">
+      <div className="relative flex items-end overflow-hidden rounded-md bg-primary p-2.5 text-tab text-foreground">
         <CraftPhoto src={PHOTOS.moreCrafts} sizes={WELCOME_SIZES} />
         <PhotoScrim className="bg-primary/75" />
         <span className="relative">+ 40 more</span>
@@ -126,14 +121,12 @@ const LANDING_TILES: Tile[] = [
     label: "crochet",
     accent: "butter",
     rows: 3,
-    delay: "[animation-delay:0s]",
     photo: PHOTOS.crochet,
   },
   {
     label: "sketchbook",
     accent: "lavender",
     rows: 2,
-    delay: "[animation-delay:0.5s]",
     photo: PHOTOS.sketchbook,
     position: "50% 45%",
   },
@@ -141,16 +134,14 @@ const LANDING_TILES: Tile[] = [
     label: "embroidery",
     accent: "blush",
     rows: 2,
-    delay: "[animation-delay:1s]",
     photo: PHOTOS.embroidery,
     position: "45% 55%",
   },
-  { label: "clay", accent: "mint", rows: 2, delay: "[animation-delay:1.5s]", photo: PHOTOS.clay },
+  { label: "clay", accent: "mint", rows: 2, photo: PHOTOS.clay },
   {
     label: "watercolour",
     accent: "sky",
     rows: 3,
-    delay: "[animation-delay:2s]",
     photo: PHOTOS.watercolour,
   },
 ];
@@ -176,9 +167,8 @@ export function LandingCraftTiles({
           key={tile.label}
           accent={tile.accent}
           className={cn(
-            "relative flex animate-dd-float items-end overflow-hidden rounded-lg p-3.5 text-meta text-foreground-secondary",
+            "relative flex items-end overflow-hidden rounded-lg p-3.5 text-meta text-foreground-secondary",
             ROW_SPAN[tile.rows],
-            tile.delay,
           )}
         >
           <CraftPhoto src={tile.photo} sizes={LANDING_SIZES} position={tile.position} />
@@ -200,7 +190,7 @@ export function LandingCraftTiles({
       </PatternTile>
       <PatternTile
         accent="coral"
-        className="relative flex animate-dd-float items-center justify-center overflow-hidden rounded-lg text-control-xl font-bold text-foreground [animation-delay:3s]"
+        className="relative flex items-center justify-center overflow-hidden rounded-lg text-control-xl font-bold text-foreground"
       >
         <CraftPhoto src={PHOTOS.moreCrafts} sizes={LANDING_SIZES} />
         <PhotoScrim className="bg-primary/75" />
