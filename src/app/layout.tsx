@@ -5,7 +5,6 @@ import { DM_Sans } from "next/font/google";
 import "@/styles/globals.css";
 
 import { CollectionPickerHost } from "@/components/collections/collection-picker";
-import { EnvironmentBadge } from "@/components/layout/environment-badge";
 import { OfflineBanner } from "@/components/layout/offline-banner";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/toast";
@@ -49,7 +48,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </QueryProvider>
           <OfflineBanner />
           <Toaster />
-          {serverEnv.APP_ENV === "test" ? <EnvironmentBadge /> : null}
         </SerwistProvider>
       </body>
     </html>

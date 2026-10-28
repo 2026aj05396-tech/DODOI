@@ -10,7 +10,6 @@ How the **test** site (`APP_ENV=test`, SYSTEM_ARCHITECTURE §13) is hosted and s
 | Database | Neon project, region Singapore (AWS `ap-southeast-1`) | App uses the **pooled** URL (`DATABASE_URL`); migrations use the **direct** URL (`DIRECT_DATABASE_URL`) |
 | Daily jobs | Vercel Cron → `GET /api/cron/daily` at 21:00 UTC (≈ 02:30 IST, ±59 min on Hobby) | Vercel sends `Authorization: Bearer <CRON_SECRET>`; anyone else gets 404 |
 | Search engines | `APP_ENV=test` | `robots.txt` disallows all and every response has `X-Robots-Tag: noindex` |
-| TEST badge | Top-left corner of every page when `APP_ENV=test` | |
 | Skills seed | Run once by hand (below) | Not on every deploy: it would undo skill edits made in the test admin |
 
 ## One-time setup
@@ -50,7 +49,7 @@ Never set `AUTH_GOOGLE_ISSUER` or `CLOUDINARY_API_BASE` here: they are for autom
 ## Checking a deploy
 
 - Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`.
-- The site shows the **TEST** badge; `/robots.txt` says `Disallow: /`.
+- `/robots.txt` says `Disallow: /`.
 - Sign up, verify (with the Resend owner's address), onboard, open the feed, save a post, sign out.
 - On a phone over HTTPS: the install banner after a save, and offline mode (visit the feed, turn on airplane mode, reopen).
 - Vercel → Settings → Cron Jobs lists `/api/cron/daily`; "Run" triggers it, and the function log shows each job's count.

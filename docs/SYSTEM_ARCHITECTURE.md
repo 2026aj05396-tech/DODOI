@@ -258,7 +258,7 @@ Three application environments (CONFIRMED) plus automated test runs:
 **Promotion flow (PROPOSED):** feature branch → PR (CI green) → merge to `main` → automatic deploy to **test** → PO verifies → production deploy from a version tag (`vX.Y.Z`) after PO approval. Database migrations run with `prisma migrate deploy` as part of each deploy; never `migrate dev` outside local.
 
 **Environment-specific behaviour:**
-- Non-production environments send `X-Robots-Tag: noindex` and show a small "TEST" badge so testers never confuse them with production.
+- Non-production environments send `X-Robots-Tag: noindex` and disallow all crawling in `robots.txt`. No on-screen badge (removed at PO request, 2026-10-28).
 - Seed/import scripts refuse to run against `APP_ENV=production` unless an explicit confirmation flag is passed (PROPOSED).
 - Test-only helpers (e.g. E2E sign-in route) are enabled only in automated test runs, never in the hosted test or production environments.
 
