@@ -38,7 +38,7 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Database | PostgreSQL | CONFIRMED |
 | ORM | Prisma | CONFIRMED |
 | Auth | Auth.js v5 (`next-auth@5.0.0-beta.32`, pinned) with an own minimal adapter on the Prisma client; Credentials + Google | CONFIRMED |
-| Email | Resend | CONFIRMED |
+| Email | Resend; SMTP (Gmail App Password) on the test site until a sending domain is verified (PO, 2026-10-28) | CONFIRMED |
 | Media | Cloudinary | CONFIRMED |
 | Search | PostgreSQL full-text + `pg_trgm` | CONFIRMED |
 | Package manager | pnpm | CONFIRMED |
@@ -65,7 +65,7 @@ Libraries are installed in the task that first uses them, so the project never c
 | PWA / service worker | Serwist | Maintained Next.js service-worker tooling (verify Turbopack support at P1-27) | P1-27 |
 | Password hashing | `argon2` (or `bcryptjs` if native build is problematic) | Secure password storage | P1-04 |
 | Cloudinary SDK | Not used — Cloudinary's REST APIs are called directly (`src/server/integrations/media/cloudinary.ts`): signing, Admin API lookup/delete (P1-03) | Signed uploads, verification, deletion | P1-03 |
-| Email | `resend` SDK | Transactional email | P1-05 |
+| Email | Resend REST API (no SDK); `nodemailer` for SMTP | Transactional email | P1-05, P1-35 |
 | Test a11y | `@axe-core/playwright` | Automated accessibility checks | P0-06 |
 
 ## 4. Architectural Rules
@@ -123,7 +123,7 @@ src/
 │   │   ├── admin/                      # audit log, admin ops
 │   │   └── (P2+) social/ notifications/ moderation/ communities/ messaging/ help/ sessions/ ai/
 │   ├── integrations/
-│   │   ├── email/   (resend implementation)
+│   │   ├── email/   (resend and smtp implementations)
 │   │   ├── media/   (cloudinary implementation)
 │   │   └── ai/      (P4, provider OPEN)
 │   └── lib/                            # errors, logger, rate-limit, pagination, http helpers
@@ -253,7 +253,7 @@ Three application environments (CONFIRMED) plus automated test runs:
 
 **Naming:** "Test environment" always means the hosted QA site. Automated tests are called "automated test runs"; they run with `NODE_ENV=test`. `APP_ENV` (not `NODE_ENV`) identifies the deployed environment, because both hosted environments build with `NODE_ENV=production`.
 
-**Isolation (CONFIRMED — fully separate):** each environment has its own database, Auth.js secret, Google OAuth client (with its own redirect URIs), Cloudinary account or product environment, and Resend API key / sending domain. No secret or database is shared, and test data never touches production.
+**Isolation (CONFIRMED — fully separate):** each environment has its own database, Auth.js secret, Google OAuth client (with its own redirect URIs), Cloudinary account or product environment, and email credentials (Resend API key / sending domain, or the test site's own SMTP account). No secret or database is shared, and test data never touches production.
 
 **Promotion flow (PROPOSED):** feature branch → PR (CI green) → merge to `main` → automatic deploy to **test** → PO verifies → production deploy from a version tag (`vX.Y.Z`) after PO approval. Database migrations run with `prisma migrate deploy` as part of each deploy; never `migrate dev` outside local.
 

@@ -20,6 +20,7 @@ const ALLOWED_PLACEHOLDERS = new Set([
   "",
   "http://localhost:3000",
   "dodoi <onboarding@resend.dev>",
+  "smtp.gmail.com",
 ]);
 
 const SECRET_PATTERNS: [string, RegExp][] = [

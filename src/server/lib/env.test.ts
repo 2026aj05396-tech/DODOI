@@ -19,7 +19,7 @@ const validEnv = {
 
 describe("parseServerEnv", () => {
   it("accepts a complete, valid environment", () => {
-    expect(parseServerEnv(validEnv)).toEqual(validEnv);
+    expect(parseServerEnv(validEnv)).toEqual({ ...validEnv, SMTP_HOST: "smtp.gmail.com" });
   });
 
   it("names every missing variable in one error", () => {
@@ -50,6 +50,13 @@ describe("parseServerEnv", () => {
         CRON_SECRET: CRON_SECRET,
       }),
     ).toMatchObject({ RESEND_API_KEY: "re_key" });
+  });
+
+  it("accepts SMTP instead of RESEND_API_KEY outside local development (P1-35)", () => {
+    const hosted = { ...validEnv, APP_ENV: "test", CRON_SECRET };
+    const smtp = { SMTP_USER: "dodoi.test@gmail.com", SMTP_PASSWORD: "app-password" };
+    expect(parseServerEnv({ ...hosted, ...smtp })).toMatchObject(smtp);
+    expect(() => parseServerEnv({ ...hosted, SMTP_USER: smtp.SMTP_USER })).toThrow(/SMTP_PASSWORD/);
   });
 
   it("requires a long CRON_SECRET outside local development (P1-35)", () => {

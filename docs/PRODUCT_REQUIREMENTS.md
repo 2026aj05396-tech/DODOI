@@ -335,7 +335,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | NFR-06 | Idempotent seed import; duplicate-submit protection on create actions |
 | NFR-07 | Structured error responses (see API spec) |
 | NFR-08 | No secrets in client bundles; server-only env vars |
-| NFR-09 | Operate within free tiers; track usage of Cloudinary, Resend |
+| NFR-09 | Operate within free tiers; track usage of Cloudinary, Resend (and Gmail SMTP on the test site) |
 
 ## 8. Success Metrics
 

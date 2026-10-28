@@ -117,7 +117,7 @@ Names must say what a thing **is** or **does**, in plain English, without the re
 | JSON fields | `camelCase` | `nextCursor`, `isSaved` |
 
 ### 2.5 Environment variables
-- `SCREAMING_SNAKE_CASE`, grouped by prefix of the service: `AUTH_*`, `CLOUDINARY_*`, `RESEND_*`.
+- `SCREAMING_SNAKE_CASE`, grouped by prefix of the service: `AUTH_*`, `CLOUDINARY_*`, `RESEND_*`, `SMTP_*`.
 - Only variables prefixed `NEXT_PUBLIC_` reach the browser; they must never contain secrets.
 - Every variable is declared in `.env.example` and validated once in `src/server/lib/env.ts` (client-safe ones in `src/lib/env-client.ts`). Code imports from those modules, never reads `process.env` directly elsewhere.
 
@@ -263,7 +263,7 @@ Mutations use `/api/*` route handlers; **Server Actions are not used** (SYSTEM_A
 | **Services** | Business rules, authorization (with explicit `actor`), orchestration, transactions | Know about HTTP |
 | **Policies** | Pure yes/no permission decisions | Query the database |
 | **Repositories** | Prisma queries, explicit `select` projections | Make permission or business decisions |
-| **Integrations** | Talking to Cloudinary, Resend, (AI) behind an interface | Leak provider types into services |
+| **Integrations** | Talking to Cloudinary, Resend or SMTP, (AI) behind an interface | Leak provider types into services |
 | **`server/lib`** | Errors, logger, env, rate limiting, pagination, route wrapper | Contain domain logic |
 
 ### 4.3 Authentication, authorization, route protection

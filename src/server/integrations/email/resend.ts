@@ -35,9 +35,9 @@ export function createResendSender(apiKey: string, from: string): EmailSender {
   };
 }
 
-/** Used when no API key is configured (automated local test runs): nothing is sent. */
+/** Used when no provider is configured (automated local test runs): nothing is sent. */
 export const skippedEmailSender: EmailSender = {
   async send(message) {
-    logger.info("Email skipped: RESEND_API_KEY is not set", { tag: message.tag });
+    logger.info("Email skipped: no RESEND_API_KEY or SMTP settings", { tag: message.tag });
   },
 };

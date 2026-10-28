@@ -28,6 +28,7 @@ Read the documents in this order before writing any code.
 | 10 | [docs/AI_INTEGRATION.md](docs/AI_INTEGRATION.md) | AI companion (Phase 4) design and safety |
 | 11 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) | Unit, integration, E2E, accessibility, AI evals |
 | 12 | [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md) | Phased tasks, dependencies, acceptance criteria |
+| 13 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Hosted test site: accounts, variables, deploy and checks |
 
 ### Marker conventions used across all documents
 
@@ -51,8 +52,8 @@ Read the documents in this order before writing any code.
 | Database | PostgreSQL | CONFIRMED |
 | ORM | Prisma | CONFIRMED |
 | Authentication | Auth.js (NextAuth) — email/password + Google | CONFIRMED |
-| Transactional email | Resend (free tier) | CONFIRMED |
-| Hosting | **Local development only for now** (PostgreSQL via Docker). Deployment target is OPEN. | CONFIRMED / OPEN |
+| Transactional email | Resend (free tier); Gmail SMTP on the test site until a sending domain is verified (2026-10-28) | CONFIRMED |
+| Hosting | Local: PostgreSQL via Docker. Test site: Vercel Hobby + Neon Postgres (2026-10-27, [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)). Production host is OPEN. | CONFIRMED / OPEN |
 | Cost constraint | No paid services at this stage; free tiers only | CONFIRMED |
 | Media storage | Cloudinary (free tier) | CONFIRMED |
 | Search | PostgreSQL full-text search (`simple` config) + `pg_trgm` trigram matching | CONFIRMED |
@@ -155,6 +156,7 @@ Free accounts required:
 | Google Cloud Console | OAuth client for Google sign-in | Phase 1 |
 | Cloudinary | Image/video storage, transforms, CDN | Phase 1 |
 | Resend | Verification and password-reset emails | Phase 1 |
+| Gmail account with an App Password | Same emails from the test site, until a Resend domain is verified | Test site (P1-35) |
 
 ---
 
@@ -206,19 +208,22 @@ pnpm dev
 
 ## 5. Environment Variables
 
-Each environment (local, test, production) has its **own values for every variable** — separate database, OAuth client, Cloudinary and Resend credentials. Hosted environments set them in the host's secret settings, never in files.
+Each environment (local, test, production) has its **own values for every variable** — separate database, OAuth client, Cloudinary and email (Resend or SMTP) credentials. Hosted environments set them in the host's secret settings, never in files.
 
 `.env.example` must list every variable with a placeholder and comment. Never commit real values.
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `DATABASE_URL` | Yes | PostgreSQL connection string (on Neon: the pooled URL) |
+| `DIRECT_DATABASE_URL` | No — hosted only | Direct (unpooled) URL used by `prisma migrate deploy`; falls back to `DATABASE_URL` |
 | `AUTH_SECRET` | Yes | Auth.js secret (`npx auth secret`) |
 | `AUTH_URL` | Yes | Base URL, e.g. `http://localhost:3000`; Google redirect URI is `<AUTH_URL>/api/auth/callback/google` |
 | `AUTH_GOOGLE_ID` | Yes | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Yes | Google OAuth client secret |
-| `RESEND_API_KEY` | Yes (may be empty only with `APP_ENV=local`, for automated tests: emails are then skipped) | Resend API key |
-| `EMAIL_FROM` | Yes | Sender address (must be verified in Resend for non-test sending) |
+| `RESEND_API_KEY` | Yes, unless SMTP is set (may be empty with `APP_ENV=local`, for automated tests: emails are then skipped) | Resend API key |
+| `SMTP_USER`, `SMTP_PASSWORD` | No — set together | SMTP login (e.g. a Gmail address and its App Password); when set, email goes through SMTP instead of Resend |
+| `SMTP_HOST` | No | SMTP server, default `smtp.gmail.com` (port 465, TLS) |
+| `EMAIL_FROM` | Yes | Sender address: on a domain verified in Resend, or the SMTP account's own address |
 | `CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Yes | Cloudinary API key (server only) |
 | `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret (server only) |
@@ -227,6 +232,7 @@ Each environment (local, test, production) has its **own values for every variab
 | `CLOUDINARY_API_BASE` | No — automated tests only | Points the Cloudinary Admin API at the local mock in E2E runs; refused unless `APP_ENV=local` |
 | `AUTH_GOOGLE_ISSUER` | No — automated tests only | Points Google sign-in at the local mock provider in E2E runs; refused unless `APP_ENV=local` |
 | `SEED_ADMIN_EMAIL` | No | Email of the account promoted to ADMIN after it signs in with a verified email (P1-04) |
+| `CRON_SECRET` | Outside local | 32+ random characters; Vercel Cron sends it to `/api/cron/daily` (P1-35) |
 | `SUPPORT_EMAIL` | No | Support address shown to owners of profiles hidden after a report (P1-28b); set before launch |
 
 Rule: only variables prefixed `NEXT_PUBLIC_` may be read in client code, and none of them may contain secrets.

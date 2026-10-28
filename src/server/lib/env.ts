@@ -41,13 +41,26 @@ const serverEnvSchema = z.object({
     .email()
     .transform((email) => email.toLowerCase())
     .optional(),
-  // Resend (P1-05). The key may be left empty only when APP_ENV is local (automated tests):
-  // emails are then skipped, never sent.
+  // Resend (P1-05). The key may be left empty when SMTP is used instead (below), or when APP_ENV
+  // is local (automated tests): emails are then skipped, never sent.
   RESEND_API_KEY: z
     .string()
     .optional()
     .transform((key) => key || undefined),
-  /** Sender, e.g. `dodoi <onboarding@resend.dev>`. */
+  /**
+   * SMTP instead of Resend (P1-35): the test site sends from a Gmail account with an App Password
+   * until a sending domain is verified. When both user and password are set, SMTP is used.
+   */
+  SMTP_HOST: z.string().min(1).default("smtp.gmail.com"),
+  SMTP_USER: z
+    .string()
+    .optional()
+    .transform((user) => user || undefined),
+  SMTP_PASSWORD: z
+    .string()
+    .optional()
+    .transform((password) => password || undefined),
+  /** Sender, e.g. `dodoi <onboarding@resend.dev>`; with Gmail SMTP, that Gmail address. */
   EMAIL_FROM: z.string().min(3),
   // Cloudinary (P1-03): server only; uploads are signed, never unsigned presets.
   CLOUDINARY_CLOUD_NAME: z.string().min(1),
@@ -85,11 +98,19 @@ const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
       message: "CRON_SECRET is required outside local development (daily jobs)",
     });
   }
-  if (env.APP_ENV !== "local" && !env.RESEND_API_KEY) {
+  if (Boolean(env.SMTP_USER) !== Boolean(env.SMTP_PASSWORD)) {
+    context.addIssue({
+      code: "custom",
+      path: [env.SMTP_USER ? "SMTP_PASSWORD" : "SMTP_USER"],
+      message: "SMTP_USER and SMTP_PASSWORD are set together",
+    });
+  }
+  if (env.APP_ENV !== "local" && !env.RESEND_API_KEY && !env.SMTP_USER) {
     context.addIssue({
       code: "custom",
       path: ["RESEND_API_KEY"],
-      message: "RESEND_API_KEY is required outside local development",
+      message:
+        "RESEND_API_KEY (or SMTP_USER and SMTP_PASSWORD) is required outside local development",
     });
   }
 });

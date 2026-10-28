@@ -19,7 +19,11 @@ Each environment has its own accounts and keys; nothing is shared with local or 
 1. **Neon** (neon.tech): create a project `dodoi-test`, region **AWS Asia Pacific (Singapore)**, Postgres 16+. From *Connect*, copy two connection strings: **pooled** (host contains `-pooler`) → `DATABASE_URL`, and **direct** (pooling off) → `DIRECT_DATABASE_URL`. Both end with `?sslmode=require`.
 2. **Google OAuth** (Google Cloud console → APIs & Services → Credentials): a new *Web application* client `dodoi test`. Authorized redirect URI: `https://<your-project>.vercel.app/api/auth/callback/google` (fill in after step 5 gives the address, then redeploy). → `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
 3. **Cloudinary**: a separate product environment (or account) for test → `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Uploads go to `dodoi/test/…`.
-4. **Resend**: a separate API key → `RESEND_API_KEY`; `EMAIL_FROM="dodoi <onboarding@resend.dev>"`. Until a sending domain is verified, Resend only delivers to the Resend account owner's address, so other testers won't get verification emails.
+4. **Email.** Until a sending domain is verified in Resend, Resend only delivers to the Resend account owner's address, and `*.vercel.app` can't be verified (you can't add DNS records to it). So the test site sends through **Gmail SMTP** instead (PO, 2026-10-28):
+   - Create a Gmail account just for the test site (e.g. `dodoi.test@gmail.com`); an App Password can send mail as the whole account, so not your personal one.
+   - On it, turn on 2-Step Verification, then Google Account → Security → **App passwords** → create one named `dodoi test`.
+   - Set `SMTP_USER` (the Gmail address), `SMTP_PASSWORD` (the 16-character App Password) and `EMAIL_FROM="dodoi <that Gmail address>"`. When both SMTP values are set, SMTP is used and `RESEND_API_KEY` is ignored. Gmail allows about 500 emails a day.
+   - Later, with a verified domain: remove `SMTP_USER` and `SMTP_PASSWORD`, set `RESEND_API_KEY` and `EMAIL_FROM` on that domain, and redeploy.
 5. **Vercel** (vercel.com, sign in with GitHub): *Add New → Project*, import the dodoi repository. Framework: Next.js (detected); leave build and install commands as they are (`vercel.json` sets the build). Node.js version: **24.x** (Settings → Build and Deployment). Before the first deploy, add the environment variables below for the **Production** environment (on this project, Vercel's "Production" is our test site).
 6. **Deploy, then seed the skills once.** The first deploy creates the tables (`prisma migrate deploy` in the build). Then, from your machine, load the predefined skills into the test database using its **direct** URL; your `.env.local` supplies the other values the script checks, and only the database changes:
    ```bash
@@ -38,7 +42,8 @@ Each environment has its own accounts and keys; nothing is shared with local or 
 | `AUTH_SECRET` | New random value: `npx auth secret` (never reuse local's) |
 | `AUTH_URL` | `https://<your-project>.vercel.app` |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` | Test OAuth client |
-| `RESEND_API_KEY`, `EMAIL_FROM` | Test Resend key; `dodoi <onboarding@resend.dev>` |
+| `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` | Test Gmail address, its App Password, `dodoi <that address>` |
+| `RESEND_API_KEY` | Optional while SMTP is set; needed once a domain is verified |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Test Cloudinary |
 | `CRON_SECRET` | New random value, 32+ characters: `openssl rand -base64 32` |
 | `SEED_ADMIN_EMAIL` | Your email |
@@ -50,6 +55,6 @@ Never set `AUTH_GOOGLE_ISSUER` or `CLOUDINARY_API_BASE` here: they are for autom
 
 - Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`.
 - `/robots.txt` says `Disallow: /`.
-- Sign up, verify (with the Resend owner's address), onboard, open the feed, save a post, sign out.
+- Sign up with any address, verify from the email, onboard, open the feed, save a post, sign out.
 - On a phone over HTTPS: the install banner after a save, and offline mode (visit the feed, turn on airplane mode, reopen).
 - Vercel → Settings → Cron Jobs lists `/api/cron/daily`; "Run" triggers it, and the function log shows each job's count.
