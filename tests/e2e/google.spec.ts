@@ -31,6 +31,8 @@ test("a new Google user confirms their age once, then goes to onboarding", async
   await page.getByRole("button", { name: "Continue with Google" }).click();
 
   await expect(page).toHaveURL(/\/confirm-age\?returnTo=%2F$/);
+  // Submitted before hydration, the form posts back to itself (method="post") and nothing happens.
+  await page.waitForLoadState();
   await page.getByLabel("Date of birth").fill("1995-08-15");
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);

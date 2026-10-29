@@ -29,10 +29,17 @@ export const EXPLORE: NavItem = {
   href: "/explore",
 };
 export const SAVED: NavItem = { key: "saved", label: "Saved", icon: Bookmark, href: "/saved" };
-export const CREATE: NavItem = { key: "create", label: "Create", icon: Plus };
+/** Live from P2-02: opens the Create post flow (F-17). */
+export const CREATE: NavItem = { key: "create", label: "Create", icon: Plus, href: "/create" };
 export const COMMUNITY: NavItem = { key: "community", label: "Community", icon: Users };
 export const MESSAGES: NavItem = { key: "messages", label: "Messages", icon: MessageSquare };
-export const JOURNAL: NavItem = { key: "journal", label: "Journal", icon: NotebookPen };
+/** Live from P2-03: the creative journal (F-18). */
+export const JOURNAL: NavItem = {
+  key: "journal",
+  label: "Journal",
+  icon: NotebookPen,
+  href: "/journal",
+};
 
 /**
  * Profile links to the user's public profile. The shell usually doesn't know the username (it is

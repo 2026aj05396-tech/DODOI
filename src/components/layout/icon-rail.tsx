@@ -83,13 +83,16 @@ export function IconRailView({
       </ComingSoonTrigger>
       <RailLink item={SAVED} pathname={pathname} />
       <RailLink item={profileNavItem(username)} pathname={pathname} />
-      <ComingSoonTrigger
-        label={CREATE.label}
-        className={cn(ITEM_CLASSES, "mt-2.5 rounded-full bg-primary/60 text-primary-foreground")}
+      <Link
+        href={CREATE.href ?? "/create"}
+        aria-label={CREATE.label}
+        className={cn(
+          ITEM_CLASSES,
+          "mt-2.5 rounded-full bg-primary text-primary-foreground hover:bg-primary-hover",
+        )}
       >
         <CreateIcon aria-hidden className="size-5" strokeWidth={2.2} />
-        <ComingSoonBadge size="dot" decorative className="absolute top-2 right-2" />
-      </ComingSoonTrigger>
+      </Link>
     </nav>
   );
 }

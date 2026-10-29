@@ -4,6 +4,8 @@ export {
   deleteOrphanedMedia,
   getOwnAvatar,
   getMedia,
+  getMediaMap,
+  getOwnedMediaIds,
   MEDIA_SIGN_RATE_LIMIT,
   mediaFolder,
   ORPHAN_MEDIA_AGE_MS,
@@ -47,6 +49,18 @@ export {
   updateAdminTheme,
 } from "./admin-service";
 export { getSeedCoverage } from "./coverage-service";
+export {
+  createOwnPost,
+  deleteOwnPost,
+  getOwnPost,
+  listOwnPosts,
+  listProfilePosts,
+  MAX_DRAFTS,
+  OWN_POST_PUBLISH_RATE_LIMIT,
+  publishOwnPost,
+  toTag,
+  updateOwnPost,
+} from "./own-post-service";
 export { getPostProgress, updatePostProgress } from "./progress-service";
 export { importSeedContent, type SeedImportOutcome, type SeedPostSummary } from "./seed-import";
 export { computeSeedCoverage, type CoveragePost } from "./seed-coverage";

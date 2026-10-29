@@ -27,6 +27,7 @@ import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import {
   deleteMediaRow,
   findMediaById,
+  findMediaByIds,
   findMediaWithOwner,
   findOrphanedMedia,
   insertMedia,
@@ -40,7 +41,7 @@ import {
   limitsFor,
   type MediaProblem,
 } from "./media-rules";
-import { canManageMedia, canUploadMedia } from "./policies";
+import { canEditMedia, canUploadMedia } from "./policies";
 
 // Media pipeline (SYSTEM_ARCHITECTURE §8, SECURITY_AND_PRIVACY §5): sign → the browser uploads
 // straight to Cloudinary → register, which re-checks Cloudinary's metadata and deletes files that
@@ -62,6 +63,7 @@ const FOLDER_BY_PURPOSE: Record<MediaPurpose, string> = {
   post: "posts",
   cover: "covers",
   avatar: "avatars",
+  entry: "entries",
 };
 
 /** Everything dodoi stores lives under `dodoi/<APP_ENV>/`, so environments never mix. */
@@ -73,13 +75,7 @@ function resourceTypeOf(type: "IMAGE" | "VIDEO"): ResourceType {
   return type === "VIDEO" ? "video" : "image";
 }
 
-/** Admin-only in Phase 1; everyone else gets 404, like other admin features (§3). */
-function requireMediaManager(actor: Actor): AuthenticatedActor {
-  if (!actor || !canManageMedia(actor)) throw new NotFoundError();
-  return actor;
-}
-
-/** Avatars: any signed-in user (P1-12); everything else: admins (others get 404, §3). */
+/** Avatars, post media and journal photos: any signed-in user; covers: admins (others: 404, §3). */
 function requireUploader(actor: Actor, purpose: MediaPurpose): AuthenticatedActor {
   if (!actor || !canUploadMedia(actor, purpose)) throw new NotFoundError();
   return actor;
@@ -199,15 +195,15 @@ export async function registerMedia(
   return toMedia(row, provider);
 }
 
-/** PATCH /api/media/{id}: alt text (MediaAsset updates are admin-only in Phase 1). */
+/** PATCH /api/media/{id}: alt text, by the uploader or an admin (others get 404, §3). */
 export async function updateMedia(
   actor: Actor,
   id: string,
   input: UpdateMediaInput,
   { provider = defaultProvider }: ProviderOption = {},
 ): Promise<Media> {
-  requireMediaManager(actor);
-  if (!(await findMediaById(id))) throw new NotFoundError();
+  const row = await findMediaWithOwner(id);
+  if (!row || !canEditMedia(actor, row.ownerId)) throw new NotFoundError();
   return toMedia(await updateMediaAltText(id, input.altText), provider);
 }
 
@@ -258,6 +254,21 @@ export async function getOwnAvatar(
     });
   }
   return toMedia(row, provider);
+}
+
+/** Media by id, as the API shows it (journal entries and other modules' own lists). */
+export async function getMediaMap(
+  ids: string[],
+  { provider = defaultProvider }: ProviderOption = {},
+): Promise<Map<string, Media>> {
+  const rows = await findMediaByIds([...new Set(ids)]);
+  return new Map(rows.map((row) => [row.id, toMedia(row, provider)]));
+}
+
+/** Of `ids`, the media `ownerId` uploaded (others may only attach their own photos). */
+export async function getOwnedMediaIds(ownerId: string, ids: string[]): Promise<Set<string>> {
+  const rows = await findMediaByIds([...new Set(ids)], ownerId);
+  return new Set(rows.map((row) => row.id));
 }
 
 /** Delivery URL for a stored avatar (profiles and creator rows), scaled for its small slot. */

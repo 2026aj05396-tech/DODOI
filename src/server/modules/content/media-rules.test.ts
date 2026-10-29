@@ -55,17 +55,14 @@ describe("checkUploadedAsset", () => {
     expect(checkUploadedAsset("post", "IMAGE", image())).toBeNull();
     expect(checkUploadedAsset("post", "VIDEO", video({ durationSec: 60 }))).toBeNull();
     expect(checkUploadedAsset("avatar", "IMAGE", image({ width: 200, height: 200 }))).toBeNull();
+    // No minimum size (PO decision 2026-10-29): small photos only get a "may look soft" note.
+    expect(checkUploadedAsset("post", "IMAGE", image({ width: 320, height: 240 }))).toBeNull();
   });
 
   it.each([
     ["a GIF", image({ format: "gif" }), "type"],
     ["a video posted as an image", video(), "type"],
     ["an image over 10 MB", image({ bytes: 10 * MB + 1 }), "size"],
-    [
-      "an image under 600 px on its shortest side",
-      image({ width: 1200, height: 599 }),
-      "dimensions",
-    ],
   ] as const)("rejects %s", (_label, asset, kind) => {
     expect(checkUploadedAsset("post", "IMAGE", asset)?.kind).toBe(kind);
   });

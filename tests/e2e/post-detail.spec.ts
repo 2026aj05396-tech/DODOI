@@ -84,7 +84,10 @@ test("the gallery steps through photos and plays a video when tapped", async ({
   await expect(gallery.locator("video")).toBeVisible();
 });
 
-test("Share copies the link and coming-soon actions don't act", async ({ page, context }) => {
+test("Share copies the link, and Start as my project asks a visitor to sign in", async ({
+  page,
+  context,
+}) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const { id } = createPost();
   await page.goto(`/p/${id}`);
@@ -96,14 +99,10 @@ test("Share copies the link and coming-soon actions don't act", async ({ page, c
     new RegExp(`/p/${id}$`),
   );
 
-  // aria-disabled controls stay tappable for real users; Playwright needs `force` to click them.
-  await page
-    .getByRole("button", { name: /Ask about this\s*, coming soon/ })
-    .or(page.getByRole("button", { name: /Start as my project\s*, coming soon/ }))
-    .filter({ visible: true })
-    .click({ force: true });
-  await expect(page.getByRole("tooltip")).toHaveText("Coming soon");
-  await expect(page).toHaveURL(`/p/${id}`);
+  // The test post is a tutorial: "Start as my project" is live (P2-03) and needs an account.
+  await expect(
+    page.getByRole("link", { name: "Start as my project" }).filter({ visible: true }),
+  ).toHaveAttribute("href", `/sign-in?returnTo=${encodeURIComponent(`/p/${id}`)}`);
 
   // Saving needs an account: signed-out visitors go to sign-in and come back.
   await page.getByRole("button", { name: "Save to collection" }).filter({ visible: true }).click();

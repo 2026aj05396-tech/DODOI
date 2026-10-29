@@ -3,20 +3,22 @@ import Link from "next/link";
 
 import { LogOutDialog } from "@/components/auth/log-out-dialog";
 import { CollectionTile } from "@/components/collections/collection-tile";
-import { ComingSoonTrigger } from "@/components/layout/coming-soon-trigger";
 import { ReportButton } from "@/components/reports/report-button";
 import { Button } from "@/components/ui/button";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
+import type { Paginated } from "@/lib/types/api";
+import type { ProjectSummary } from "@/lib/types/journal";
 import type { ProfileSkill, ProfileView as ProfileViewData } from "@/lib/types/me";
+import type { OwnPostSummary, PostCard } from "@/lib/types/posts";
 import { cn } from "@/lib/utils/cn";
 import { levelLabel } from "@/lib/utils/post-labels";
 
 import { Avatar } from "./avatar";
+import { ProfileTabs } from "./profile-tabs";
 import { UsernamePrompt } from "./username-prompt";
 
 // Public profile (`/u/{username}`, PRF-05…08; design `1i`, tablet/desktop built from the system).
 // Skill groups follow DC-08: Can help with (coral), Want to learn (butter), Interests (outline).
-// Tabs: Collections works; Projects and Posts arrive in Phase 2 (PO decision, P1-14).
+// Tabs: Projects (P2-03), Collections, Posts (P2-02).
 
 const GROUPS = [
   { key: "canHelp", label: "Can help with", chip: "bg-primary text-foreground font-bold" },
@@ -147,9 +149,18 @@ export function ProfileView({
   profile,
   showUsernamePrompt,
   supportEmail,
+  posts,
+  drafts,
+  projects,
 }: {
+  /** Projects tab (P2-03). */
+  projects: ProjectSummary[];
   profile: ProfileViewData;
   showUsernamePrompt: boolean;
+  /** First page of the Posts tab (P2-02). */
+  posts: Paginated<PostCard>;
+  /** The owner's drafts (empty for everyone else). */
+  drafts: OwnPostSummary[];
   /** For the hidden-profile notice; without it the notice names the dodoi team. */
   supportEmail: string | null;
 }) {
@@ -230,51 +241,36 @@ export function ProfileView({
         </p>
       ) : null}
 
-      <section aria-labelledby="profile-collections" className="flex flex-col gap-4">
-        <div className="flex items-end gap-6 border-b border-border">
-          <ComingSoonTrigger
-            label="Projects"
-            hasVisibleLabel
-            className="flex items-center gap-1.5 pb-2.5 text-control-lg text-muted-foreground"
-          >
-            Projects
-            <ComingSoonBadge size="sm" decorative />
-          </ComingSoonTrigger>
-          <h2
-            id="profile-collections"
-            className="-mb-px border-b-2 border-link pb-2.5 text-control-lg font-bold text-link"
-          >
-            Collections
-          </h2>
-          <ComingSoonTrigger
-            label="Posts"
-            hasVisibleLabel
-            className="flex items-center gap-1.5 pb-2.5 text-control-lg text-muted-foreground"
-          >
-            Posts
-            <ComingSoonBadge size="sm" decorative />
-          </ComingSoonTrigger>
-        </div>
-        {profile.isOwner ? (
-          <p className="text-meta text-foreground-secondary">
-            Only public collections show here.{" "}
-            <Link href="/saved" className="font-bold text-link hover:underline">
-              Manage collections in Saved
-            </Link>
-          </p>
-        ) : null}
-        {profile.publicCollections.length > 0 ? (
-          <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {profile.publicCollections.map((collection) => (
-              <li key={collection.id}>
-                <CollectionTile collection={collection} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-body text-foreground-secondary">No public collections yet.</p>
-        )}
-      </section>
+      <ProfileTabs
+        username={profile.username}
+        isOwner={profile.isOwner}
+        posts={posts}
+        drafts={drafts}
+        projects={projects}
+        collections={
+          <>
+            {profile.isOwner ? (
+              <p className="text-meta text-foreground-secondary">
+                Only public collections show here.{" "}
+                <Link href="/saved" className="font-bold text-link hover:underline">
+                  Manage collections in Saved
+                </Link>
+              </p>
+            ) : null}
+            {profile.publicCollections.length > 0 ? (
+              <ul className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                {profile.publicCollections.map((collection) => (
+                  <li key={collection.id}>
+                    <CollectionTile collection={collection} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-body text-foreground-secondary">No public collections yet.</p>
+            )}
+          </>
+        }
+      />
       {profile.isOwner ? <AccountActions /> : null}
     </div>
   );

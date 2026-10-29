@@ -4,9 +4,10 @@ import { z } from "zod";
 
 /**
  * What an upload is for. Decides the Cloudinary folder and the limits:
- * post = post images and videos, cover = skill/theme covers, avatar = profile photos (P1-12).
+ * post = post images and videos, cover = skill/theme covers, avatar = profile photos (P1-12),
+ * entry = journal progress-entry photos (P2-01, used from P2-03).
  */
-export const mediaPurposeSchema = z.enum(["post", "cover", "avatar"]);
+export const mediaPurposeSchema = z.enum(["post", "cover", "avatar", "entry"]);
 export type MediaPurpose = z.output<typeof mediaPurposeSchema>;
 
 export const mediaTypeSchema = z.enum(["IMAGE", "VIDEO"]);
@@ -22,6 +23,12 @@ export const signMediaSchema = z.object({
 export type SignMediaInput = z.output<typeof signMediaSchema>;
 
 export const ALT_TEXT_MAX_LENGTH = 300;
+
+/**
+ * Below this many pixels on the shortest side a photo may look soft on large screens. Not a limit
+ * (PO decision 2026-10-29): such photos upload normally and only get a friendly note.
+ */
+export const SHARP_IMAGE_MIN_SIDE = 600;
 
 export const registerMediaSchema = z.object({
   purpose: mediaPurposeSchema,

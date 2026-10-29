@@ -124,6 +124,8 @@ export async function getFeed(
 
   let candidates = await getFeedCandidates({
     excludeIds: [...served, ...notInterested.postIds],
+    // CRT-12: makers never see their own posts in their feed.
+    excludeAuthorId: user.id,
     skillId,
     take: FEED_CONFIG.candidateLimit,
   });

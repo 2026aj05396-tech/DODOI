@@ -209,18 +209,15 @@ describe("seed content import", () => {
     });
   });
 
-  it("rejects an image Cloudinary reports as too small and deletes the upload", async () => {
+  it("imports a small image: there is no minimum size (PO decision 2026-10-29)", async () => {
     provider.uploadMetadata.set("square.jpg", { width: 400, height: 300 });
     await writePost(postFile());
 
     const [outcome] = await importAll();
 
-    expect(outcome).toMatchObject({
-      result: "failed",
-      problems: [expect.stringMatching(/^media\/square\.jpg: That image is too small/)],
-    });
-    expect(provider.deleted).toHaveLength(1);
-    expect(await db.post.count()).toBe(0);
+    expect(outcome?.result).not.toBe("failed");
+    expect(provider.deleted).toHaveLength(0);
+    expect(await db.post.count()).toBe(1);
   });
 
   it("does not publish (or save) a post that breaks the publish rules", async () => {

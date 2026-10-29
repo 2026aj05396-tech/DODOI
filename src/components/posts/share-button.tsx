@@ -5,6 +5,26 @@ import { Share2 } from "lucide-react";
 import { showToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils/cn";
 
+/** Shares a post with the system share sheet, or copies its link where there is none. */
+export async function sharePost(title: string, path: string): Promise<void> {
+  const url = new URL(path, window.location.origin).toString();
+  if (typeof navigator.share === "function") {
+    try {
+      await navigator.share({ title, url });
+      return;
+    } catch (error) {
+      // Closing the share sheet is not an error; anything else falls back to copying.
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast({ message: "Link copied" });
+  } catch {
+    showToast({ message: "We couldn't copy the link. Copy it from the address bar instead." });
+  }
+}
+
 /**
  * Share a post (POST-09): the device's share sheet where the Web Share API exists, otherwise the
  * link is copied with a toast. `overlay` is the round button over the mobile media (`1e`);
@@ -22,24 +42,7 @@ export function ShareButton({
   variant: "overlay" | "outline";
   className?: string;
 }) {
-  async function share() {
-    const url = new URL(path, window.location.origin).toString();
-    if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title, url });
-        return;
-      } catch (error) {
-        // Closing the share sheet is not an error; anything else falls back to copying.
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast({ message: "Link copied" });
-    } catch {
-      showToast({ message: "We couldn't copy the link. Copy it from the address bar instead." });
-    }
-  }
+  const share = () => sharePost(title, path);
 
   return (
     <button

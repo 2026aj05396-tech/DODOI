@@ -41,6 +41,8 @@ export type PostDetail = PostCard & {
   materials: { id: string; name: string; note: string | null }[];
   steps: { position: number; text: string; media: Media | null }[];
   publishedAt: string;
+  /** The viewer wrote this post themselves (P2-02): it shows Edit instead of Follow. */
+  isOwn: boolean;
 };
 
 export type ThemeSummary = {
@@ -59,4 +61,35 @@ export type PostProgress = {
   completedStepPositions: number[];
   /** Null until the user ticks something. */
   updatedAt: string | null;
+};
+
+/** A maker's own post as the Create post flow edits it (P2-02, API_SPECIFICATION §9.1). */
+export type OwnPost = {
+  id: string;
+  status: "DRAFT" | "PUBLISHED";
+  type: PostTypeName;
+  title: string;
+  description: string | null;
+  skillIds: string[];
+  primarySkillId: string | null;
+  media: Media[];
+  tags: string[];
+  difficulty: ExperienceLevel | null;
+  estimatedMinutes: number | null;
+  materials: { name: string; note: string | null }[];
+  steps: { text: string; mediaId: string | null; media: Media | null }[];
+  /** Whether the own-work confirmation (CRT-08) was already given; asked only the first time. */
+  ownWorkConfirmed: boolean;
+  publishedAt: string | null;
+  updatedAt: string;
+};
+
+export type OwnPostSummary = {
+  id: string;
+  status: "DRAFT" | "PUBLISHED";
+  type: PostTypeName;
+  title: string;
+  coverMedia: Media | null;
+  publishedAt: string | null;
+  updatedAt: string;
 };

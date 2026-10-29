@@ -7,6 +7,9 @@ import { createPasswordAccount } from "./helpers/accounts";
 // Reports (roadmap P1-28b; RPT-01…05): a maker reports a custom skill, an admin hides it, and it
 // is gone for everyone; reporting a profile shows a neutral confirmation.
 
+// Three users sign in during the first test; under a full parallel run that alone can pass 30 s.
+test.describe.configure({ timeout: 60_000 });
+
 async function signIn(page: Page, options: { admin?: boolean } = {}) {
   const { email, password } = createPasswordAccount({ ...options, interests: ["crochet"] });
   await page.goto("/sign-in");

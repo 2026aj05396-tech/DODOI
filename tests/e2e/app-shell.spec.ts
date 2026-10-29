@@ -66,7 +66,7 @@ test("E2E-16: coming-soon items show a tooltip and make no network requests", as
 
   // aria-disabled controls stay tappable for real users; Playwright needs `force` to click them.
   await page
-    .getByRole("button", { name: /Create\s*, coming soon/ })
+    .getByRole("button", { name: /Community\s*, coming soon/ })
     .filter({ visible: true })
     .click({ force: true });
 

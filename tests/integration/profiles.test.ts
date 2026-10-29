@@ -152,7 +152,8 @@ describe("profiles", () => {
     await expect(
       signMediaUpload(
         actor,
-        { purpose: "post", type: "IMAGE", bytes: 1000, mimeType: "image/jpeg" },
+        // Post media opened to users in P2-01; covers stay admin-only.
+        { purpose: "cover", type: "IMAGE", bytes: 1000, mimeType: "image/jpeg" },
         options,
       ),
     ).rejects.toMatchObject({ status: 404 });

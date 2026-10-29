@@ -113,6 +113,17 @@ enum ReportStatus {
   DISMISSED
 }
 
+/// Creative journal (P2-03, JRN-01).
+enum ProjectStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ProjectVisibility {
+  PRIVATE
+  PUBLIC
+}
+
 // ---------------------------------------------------------------------------
 // Identity and auth
 // ---------------------------------------------------------------------------
@@ -152,6 +163,7 @@ model User {
   auditLogs       AuditLog[]
   reportsFiled    Report[]       @relation("ReportReporter")
   reportsResolved Report[]       @relation("ReportResolver")
+  projects        Project[]
 
   @@map("user")
 }
@@ -248,6 +260,7 @@ model Skill {
   coverMedia  MediaAsset?     @relation("SkillCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
   userSkills  UserSkill[]
   postSkills  PostSkill[]
+  projects    Project[]
   relatedFrom SkillRelation[] @relation("SkillRelationFrom")
   relatedTo   SkillRelation[] @relation("SkillRelationTo")
 
@@ -294,35 +307,43 @@ model UserSkill {
 // ---------------------------------------------------------------------------
 
 model Post {
-  id               String                   @id @default(cuid())
+  id                 String                   @id @default(cuid())
   /// Set for invited-creator posts; null for team, stock and Creative Commons posts.
-  authorId         String?                  @map("author_id")
+  authorId           String?                  @map("author_id")
   /// Stable key of a seeded post so the importer is idempotent.
-  seedKey          String?                  @unique @map("seed_key")
-  type             PostType
-  status           PostStatus               @default(DRAFT)
-  title            String                   @db.VarChar(120)
-  description      String?                  @db.Text
-  difficulty       ExperienceLevel?
-  estimatedMinutes Int?                     @map("estimated_minutes")
-  publishedAt      DateTime?                @map("published_at")
-  createdAt        DateTime                 @default(now()) @map("created_at")
-  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  seedKey            String?                  @unique @map("seed_key")
+  type               PostType
+  status             PostStatus               @default(DRAFT)
+  title              String                   @db.VarChar(120)
+  description        String?                  @db.Text
+  difficulty         ExperienceLevel?
+  estimatedMinutes   Int?                     @map("estimated_minutes")
+  publishedAt        DateTime?                @map("published_at")
+  /// The journal project this post was shared from (JRN-05).
+  projectId          String?                  @map("project_id")
+  /// Set when a user publishes their own post and confirms it is their own work (CRT-08, OD-05).
+  ownWorkConfirmedAt DateTime?                @map("own_work_confirmed_at")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+  updatedAt          DateTime                 @updatedAt @map("updated_at")
   /// Full-text vector ('simple' config): title weight A, description B, skill names C.
   /// Written by the content service; queried with $queryRaw.
-  searchVector     Unsupported("tsvector")? @map("search_vector")
+  searchVector       Unsupported("tsvector")? @map("search_vector")
 
-  author      User?            @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  skills      PostSkill[]
-  media       PostMedia[]
-  steps       PostStep[]
-  materials   PostMaterial[]
-  attribution PostAttribution?
-  saves       Save[]
-  themePosts  ThemePost[]
-  impressions FeedImpression[]
-  feedback    FeedFeedback[]
-  progress    PostProgress[]
+  author          User?            @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  skills          PostSkill[]
+  media           PostMedia[]
+  steps           PostStep[]
+  materials       PostMaterial[]
+  attribution     PostAttribution?
+  saves           Save[]
+  themePosts      ThemePost[]
+  impressions     FeedImpression[]
+  feedback        FeedFeedback[]
+  progress        PostProgress[]
+  tags            PostTag[]
+  project         Project?         @relation("ProjectPosts", fields: [projectId], references: [id], onDelete: SetNull)
+  /// Projects started from this tutorial ("Start as my project", JRN-03).
+  startedProjects Project[]        @relation("ProjectSource")
 
   @@index([status, publishedAt(sort: Desc)])
   @@index([authorId])
@@ -345,6 +366,31 @@ model PostSkill {
   @@map("post_skill")
 }
 
+/// Free tags on user posts (CRT-06): searchable, no tag pages in P2.
+model Tag {
+  id             String @id @default(cuid())
+  /// As first typed, lowercased.
+  name           String @db.VarChar(30)
+  /// NFKC, lowercased, whitespace collapsed — the same tag is reused.
+  normalizedName String @unique @map("normalized_name")
+
+  posts PostTag[]
+
+  @@map("tag")
+}
+
+model PostTag {
+  postId String @map("post_id")
+  tagId  String @map("tag_id")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Restrict)
+
+  @@id([postId, tagId])
+  @@index([tagId])
+  @@map("post_tag")
+}
+
 model MediaAsset {
   id          String    @id @default(cuid())
   /// Uploader.
@@ -363,12 +409,13 @@ model MediaAsset {
   altText     String?   @map("alt_text") @db.VarChar(300)
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  owner         User?       @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  owner         User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   postMedia     PostMedia[]
   stepMedia     PostStep[]
-  profileAvatar Profile?    @relation("ProfileAvatar")
-  skillCovers   Skill[]     @relation("SkillCover")
-  themeCovers   Theme[]     @relation("ThemeCover")
+  profileAvatar Profile?            @relation("ProfileAvatar")
+  skillCovers   Skill[]             @relation("SkillCover")
+  themeCovers   Theme[]             @relation("ThemeCover")
+  entryMedia    ProjectEntryMedia[]
 
   @@index([ownerId])
   @@map("media_asset")
@@ -647,4 +694,76 @@ model RateLimitBucket {
   @@id([key, windowStart])
   @@index([windowStart])
   @@map("rate_limit_bucket")
+}
+
+/// A maker's project in the creative journal (P2-03, JRN-01…07; design `1g`).
+model Project {
+  id           String            @id @default(cuid())
+  ownerId      String            @map("owner_id")
+  title        String            @db.VarChar(80)
+  skillId      String?           @map("skill_id")
+  /// The tutorial it was started from (JRN-03).
+  sourcePostId String?           @map("source_post_id")
+  status       ProjectStatus     @default(IN_PROGRESS)
+  visibility   ProjectVisibility @default(PRIVATE)
+  completedAt  DateTime?         @map("completed_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  owner      User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  skill      Skill?            @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  sourcePost Post?             @relation("ProjectSource", fields: [sourcePostId], references: [id], onDelete: SetNull)
+  entries    ProjectEntry[]
+  materials  ProjectMaterial[]
+  posts      Post[]            @relation("ProjectPosts")
+
+  @@index([ownerId, updatedAt(sort: Desc)])
+  @@index([skillId])
+  @@index([sourcePostId])
+  @@map("project")
+}
+
+/// The project's materials checklist, copied from the tutorial it was started from (JRN-03).
+model ProjectMaterial {
+  id        String  @id @default(cuid())
+  projectId String  @map("project_id")
+  position  Int
+  name      String  @db.VarChar(120)
+  note      String? @db.VarChar(200)
+  checked   Boolean @default(false)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, position])
+  @@map("project_material")
+}
+
+/// A progress entry: optional title (design `1g`), text and up to 4 photos (JRN-02).
+model ProjectEntry {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  title     String?  @db.VarChar(80)
+  body      String?  @db.VarChar(2000)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  media   ProjectEntryMedia[]
+
+  @@index([projectId, createdAt(sort: Desc)])
+  @@map("project_entry")
+}
+
+model ProjectEntryMedia {
+  entryId  String @map("entry_id")
+  mediaId  String @map("media_id")
+  position Int
+
+  entry ProjectEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  media MediaAsset   @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([entryId, mediaId])
+  @@unique([entryId, position])
+  @@index([mediaId])
+  @@map("project_entry_media")
 }

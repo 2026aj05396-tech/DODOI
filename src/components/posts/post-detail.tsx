@@ -1,7 +1,10 @@
-import { Sparkles } from "lucide-react";
+import { Pencil, Sparkles } from "lucide-react";
+import Link from "next/link";
 
+import { StartProjectButton } from "@/components/journal/start-project-button";
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { BackButton } from "@/components/ui/back-button";
+import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/chip";
 import type {
   PostCard as PostCardData,
@@ -27,6 +30,18 @@ import { TutorialSections } from "./tutorial-sections";
 
 /** Two equal buttons side by side, their text wrapping like the design (`2c`). */
 const WRAPPING_ACTION = "h-auto min-h-11 py-2 text-center leading-tight whitespace-normal";
+
+/** Edit on the maker's own post (F-17 step 7): opens the Create flow on Details. */
+function EditPostLink({ postId, className }: { postId: string; className?: string }) {
+  return (
+    <Button asChild variant="outline" className={className}>
+      <Link href={`/create/${postId}`}>
+        <Pencil aria-hidden className="size-4" />
+        Edit post
+      </Link>
+    </Button>
+  );
+}
 
 export function PostDetail({
   post,
@@ -88,7 +103,7 @@ export function PostDetail({
             <h1 className="text-title text-balance text-foreground md:text-title-web">
               {post.title}
             </h1>
-            <CreatorRow creator={post.creator} />
+            <CreatorRow creator={post.creator} isOwn={post.isOwn} />
           </header>
 
           <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2.5 md:grid">
@@ -98,11 +113,21 @@ export function PostDetail({
               isSignedIn={progress !== null}
               className={WRAPPING_ACTION}
             />
-            <ComingSoonAction
-              label="Start as my project"
-              shape="outline"
-              className={WRAPPING_ACTION}
-            />
+            {post.isOwn ? (
+              <EditPostLink postId={post.id} className={WRAPPING_ACTION} />
+            ) : post.type === "TUTORIAL" ? (
+              <StartProjectButton
+                postId={post.id}
+                isSignedIn={progress !== null}
+                className={WRAPPING_ACTION}
+              />
+            ) : (
+              <ComingSoonAction
+                label="Start as my project"
+                shape="outline"
+                className={WRAPPING_ACTION}
+              />
+            )}
             <ShareButton title={post.title} path={path} variant="outline" />
           </div>
 
@@ -145,13 +170,23 @@ export function PostDetail({
       ) : null}
 
       <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-3 border-t border-muted bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
-        <ComingSoonAction
-          label="Ask about this"
-          shape="outline"
-          badge="dot"
-          icon={<Sparkles aria-hidden className="size-4" />}
-          className="h-13 px-3"
-        />
+        {post.isOwn ? (
+          <EditPostLink postId={post.id} className="h-13 px-3" />
+        ) : post.type === "TUTORIAL" ? (
+          <StartProjectButton
+            postId={post.id}
+            isSignedIn={progress !== null}
+            className="h-13 px-3 leading-tight whitespace-normal"
+          />
+        ) : (
+          <ComingSoonAction
+            label="Ask about this"
+            shape="outline"
+            badge="dot"
+            icon={<Sparkles aria-hidden className="size-4" />}
+            className="h-13 px-3"
+          />
+        )}
         <SaveToCollectionButton
           postId={post.id}
           postTitle={post.title}

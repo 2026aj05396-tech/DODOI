@@ -110,6 +110,7 @@ export async function findRelatedCandidates(postId: string, skillIds: string[], 
 /** Published posts for the feed to rank (P1-21), newest first, without `excludeIds`. */
 export async function findFeedCandidates(options: {
   excludeIds: string[];
+  excludeAuthorId?: string;
   skillId?: string;
   take: number;
 }) {
@@ -117,6 +118,10 @@ export async function findFeedCandidates(options: {
     where: {
       ...PUBLISHED,
       ...(options.excludeIds.length > 0 ? { id: { notIn: options.excludeIds } } : {}),
+      // Posts without an author (team, stock, Creative Commons) have a null author_id.
+      ...(options.excludeAuthorId
+        ? { OR: [{ authorId: null }, { authorId: { not: options.excludeAuthorId } }] }
+        : {}),
       ...(options.skillId ? { skills: { some: { skillId: options.skillId } } } : {}),
       // Cards need a cover (P1-15); posts without media never reach a page.
       media: { some: {} },
@@ -214,6 +219,10 @@ export async function updatePostSearchVector(postId: string): Promise<void> {
         SELECT string_agg(skill.name, ' ')
         FROM post_skill JOIN skill ON skill.id = post_skill.skill_id
         WHERE post_skill.post_id = post.id
+      ), '') || ' ' || coalesce((
+        SELECT string_agg(tag.name, ' ')
+        FROM post_tag JOIN tag ON tag.id = post_tag.tag_id
+        WHERE post_tag.post_id = post.id
       ), '')), 'C')
     WHERE post.id = ${postId}
   `;

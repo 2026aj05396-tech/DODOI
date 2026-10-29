@@ -229,7 +229,7 @@ Single `skill_suggestion` for the desktop right rail (`2b`), or `204` if none.
 Undo: same body → `204`.
 
 ### GET /api/posts/{postId} — User*
-`PostDetail`. DRAFT/UNPUBLISHED → 404 for non-admins.
+`PostDetail`, plus `isOwn` (the viewer wrote it themselves: Edit instead of Follow, P2-02). DRAFT/UNPUBLISHED → 404 for non-admins, except the post's own author (Preview, CRT-09).
 
 ### GET /api/posts/{postId}/progress — User
 `{ "checkedMaterialIds": string[], "completedStepPositions": number[], "updatedAt": string | null }` (empty defaults if none).
@@ -308,17 +308,17 @@ One row per reported target (PO decision, P1-28b): `{ reportId, targetType, targ
 
 ### POST /api/media/sign — Admin (Phase 1); User from P2
 ```json
-{ "purpose": "post" | "cover" | "avatar", "type": "IMAGE" | "VIDEO", "bytes": 123456, "mimeType": "image/jpeg" }
+{ "purpose": "post" | "cover" | "avatar" | "entry", "type": "IMAGE" | "VIDEO", "bytes": 123456, "mimeType": "image/jpeg" }
 ```
-Validates against MEDIA-01…03 (`413 PAYLOAD_TOO_LARGE`, `400 UNSUPPORTED_MEDIA_TYPE`; videos only for `post`). Returns `{ "uploadUrl", "signature", "timestamp", "apiKey", "folder", "resourceType", "allowedFormats" }` for a direct Cloudinary upload; the browser sends `folder`, `allowed_formats`, `timestamp`, `api_key` and `signature` exactly as returned. Folder: `dodoi/<APP_ENV>/{posts|covers|avatars}`. Rate limit: 30 / hour / user. Non-admins (and signed-out callers) → `404`.
+Validates against MEDIA-01…03 (`413 PAYLOAD_TOO_LARGE`, `400 UNSUPPORTED_MEDIA_TYPE`; videos only for `post`; `entry` = journal photos, post-image limits). Returns `{ "uploadUrl", "signature", "timestamp", "apiKey", "folder", "resourceType", "allowedFormats" }` for a direct Cloudinary upload; the browser sends `folder`, `allowed_formats`, `timestamp`, `api_key` and `signature` exactly as returned. Folder: `dodoi/<APP_ENV>/{posts|covers|avatars|entries}`. Rate limit: 30 / hour / user. Signed-in users may use `avatar`, `post` and `entry` (P2-01); `cover` is admin-only; anything else (and signed-out callers) → `404`.
 
-### POST /api/media — Admin (P1)
-`{ "purpose": "post", "type": "IMAGE", "publicId": "…", "altText": "…" }` → server fetches asset metadata from Cloudinary, re-validates type/size/dimensions/duration, creates `MediaAsset` → `201 Media`. Mismatch → deletes the Cloudinary asset and returns `400 UNSUPPORTED_MEDIA_TYPE` / `400 MEDIA_REJECTED` / `413`. `publicId` outside the purpose's folder or unknown → `400 MEDIA_NOT_FOUND`; already saved → `409 MEDIA_ALREADY_REGISTERED`. Alt text is optional here (it can be added after upload with `PATCH /api/media/{id}`); publishing a post requires it on every image.
+### POST /api/media — same callers as `/api/media/sign`
+`{ "purpose": "post", "type": "IMAGE", "publicId": "…", "altText": "…" }` → server fetches asset metadata from Cloudinary, re-validates type/size/duration, creates `MediaAsset` → `201 Media`. Mismatch → deletes the Cloudinary asset and returns `400 UNSUPPORTED_MEDIA_TYPE` / `400 MEDIA_REJECTED` / `413`. `publicId` outside the purpose's folder or unknown → `400 MEDIA_NOT_FOUND`; already saved → `409 MEDIA_ALREADY_REGISTERED`. Alt text is optional here (it can be added after upload with `PATCH /api/media/{id}`); publishing a post requires it on every image.
 
 ### PATCH /api/media/{id} — Owner/Admin
 `{ "altText": "…" }`.
 
-Avatar uploads for regular users (P1-12): any signed-in user may sign and register uploads for `purpose: "avatar"` only (IMAGE, MEDIA-02, folder `avatars/`, the same 30/hour limit) — CONFIRMED 2026-10-27. Other purposes stay admin-only (`404`).
+Avatar uploads for regular users (P1-12): any signed-in user may sign and register uploads for `purpose: "avatar"` (IMAGE, MEDIA-02, folder `avatars/`, the same 30/hour limit) — CONFIRMED 2026-10-27. From P2-01 also `post` and `entry`; `PATCH /api/media/{id}` is allowed to the uploader or an admin (others `404`).
 
 ---
 
@@ -388,4 +388,70 @@ Import rules: each file is fully checked (shape, skill slugs, creator account, a
 
 ## 9. Later Phases (to be specified)
 
-P2: posts (user create/edit/delete), projects & entries, comments, likes, follows, notifications, reports, blocks. P3: communities, conversations/messages (polling: `GET /api/conversations/{id}/messages?after=<cursor>`), help requests, sessions. P4: AI endpoints (see AI_INTEGRATION.md).
+P2: specified in §9.1 below. P3: communities, conversations/messages (polling: `GET /api/conversations/{id}/messages?after=<cursor>`), help requests, sessions. P4: AI endpoints (see AI_INTEGRATION.md).
+
+### 9.1 Phase 2 endpoints (CONFIRMED — P2-00 approved 2026-10-28)
+
+Requirements: PRODUCT_REQUIREMENTS §6.1 · schema: DATABASE_SCHEMA §9.1. `Verified` = signed in with a verified email (otherwise `403 EMAIL_NOT_VERIFIED`, as for custom skills). `Moderator` = role MODERATOR or ADMIN. Every read that returns another user's content excludes users blocked either way (404 for direct links). All conventions in §1 apply.
+
+**Media (P2-01)** — `POST /api/media/sign` and `POST /api/media` open to `User` for `purpose: "post"` (images + video) and `"entry"` (images, journal); folders `dodoi/<APP_ENV>/{posts|entries}`; same MEDIA limits and 30 / hour. Users can only attach media they own.
+
+**Own posts (P2-02, built)** — the admin post body (§8) without `attribution` and `authorUsername`, plus `tags: string[]` (≤ 10), with the user limits: ≤ 5 skills, description ≤ 2,000, ≤ 30 materials and ≤ 30 steps (≤ 1,000 chars). Media must be the caller's own uploads and skills active (`400` field errors). Response `OwnPost` (`src/lib/types/posts.ts`): the editable post with `tags` and `ownWorkConfirmed`. `GET /api/posts/{postId}` also returns the author's own draft to them (CRT-09 Preview).
+
+| Method & path | Who | Purpose |
+|---|---|---|
+| `GET /api/me/posts?status=DRAFT\|PUBLISHED&cursor=` | User | Own posts and drafts |
+| `POST /api/me/posts` | User | Create draft → `201` (only `type` needed; defaults `FIRST_ATTEMPT`, title "Untitled"); 50 drafts max → `422 DRAFT_LIMIT` |
+| `GET /api/me/posts/{id}` | Owner | Full editable post |
+| `PATCH /api/me/posts/{id}` | Owner | Update fields, media order, skills, tags, steps, materials (published posts change live) |
+| `POST /api/me/posts/{id}/publish` | Owner, Verified | `{ "ownWorkConfirmed": true }` required the first time (empty body later); rules CRT-02/03/05/08 → `400 POST_NOT_PUBLISHABLE` with `fields` (as the admin editor); 20 / day → `429`; already published → `200`, no change |
+| `DELETE /api/me/posts/{id}` | Owner | Delete post and its media → `204` |
+| `GET /api/profiles/{username}/posts?cursor=` | User* | Published posts on a profile (Posts tab) |
+
+**Journal (P2-03, built 2026-10-29)** — module `journal`; `Project` = summary + `isOwner`, `owner`, `sourcePost`, `materials`, `entries` (all of them, newest first, ≤ 200, each with `number`, `title`, `body`, `media`, `createdAt`), `completedAt` (`src/lib/types/journal.ts`).
+
+| Method & path | Who | Purpose |
+|---|---|---|
+| `GET /api/me/projects?status=` / `POST /api/me/projects` | User | List (`{ items }`, in progress first, ≤ 100 so no cursor) / create `{ title, skillId?, visibility? }` → `201 Project`; `422 PROJECT_LIMIT` at 100; `PUBLIC` needs a verified email (`403 EMAIL_NOT_VERIFIED`) |
+| `POST /api/posts/{postId}/start-project` | User | "Start as my project" from a published tutorial → `201 Project` (JRN-03); not a tutorial → `422 NOT_A_TUTORIAL` |
+| `GET /api/projects/{id}` | Owner, or User* if PUBLIC | The project; private or a hidden owner's → `404` |
+| `PATCH /api/projects/{id}` / `DELETE` | Owner | Title, skill, status (`COMPLETED` sets `completedAt`, `IN_PROGRESS` clears it), visibility; delete removes entries and their photos used nowhere else (shared posts stay) |
+| `POST /api/projects/{id}/entries` | Owner | `{ title?, body?, mediaIds[] (≤ 4, own uploads) }`, at least one → `201 Project`; `422 ENTRY_LIMIT` at 200 |
+| `PATCH` / `DELETE /api/projects/{id}/entries/{entryId}` | Owner | Edit (→ `200 Project`; dropped photos deleted) / delete (`204`) |
+| `PUT /api/projects/{id}/materials/{materialId}` | Owner | `{ checked }` → `204` |
+| `GET /api/profiles/{username}/projects` | User* | `{ items }`: public projects; the owner sees all of theirs; private profile → none |
+
+Share (JRN-05): the client creates the draft with `POST /api/me/posts` and `projectId` (checked as the caller's by the route; `Post.projectId`), then opens it in Create.
+
+**Comments (P2-04, OD-25)**
+
+| Method & path | Who | Purpose |
+|---|---|---|
+| `GET /api/posts/{postId}/comments?cursor=` | User* | Top-level comments, oldest first, each with `replyCount` and its first 3 replies |
+| `GET /api/comments/{id}/replies?cursor=` | User* | More replies |
+| `POST /api/posts/{postId}/comments` | Verified | `{ body, parentId? }`; a reply to a reply is attached to its parent; 30 / hour → `201 Comment` |
+| `PATCH /api/comments/{id}` | Owner | `{ body }` → sets `editedAt` |
+| `DELETE /api/comments/{id}` | Owner, or the post's author | Soft or hard delete (CMT-02/03) → `204` |
+
+**Likes, follows, blocks (P2-05, P2-06, P2-08)** — idempotent PUT/DELETE, `204`.
+
+| Method & path | Who | Purpose |
+|---|---|---|
+| `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author |
+| `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404` |
+| `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `isFollowing` and, for the owner, counts |
+| `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02) |
+| `GET /api/me/blocks?cursor=` | User | Block list |
+
+**Notifications (P2-07)**
+
+| Method & path | Who | Purpose |
+|---|---|---|
+| `GET /api/notifications?cursor=` | User | Newest first; likes grouped per post per day |
+| `GET /api/notifications/unread` | User | `{ "hasUnread": boolean }` — polled every 60 s while visible |
+| `POST /api/notifications/read` | User | Mark all read → `204` |
+| `GET` / `PUT /api/me/notification-preferences` | User | `{ COMMENT: true, REPLY: true, FOLLOW: true, LIKE: true }` |
+
+**Safety (P2-08)** — `POST /api/reports` accepts `targetType: "POST" | "COMMENT"` and `reason: "NOT_MY_WORK"`. `/api/admin/reports*` opens to `Moderator` (other `/api/admin/*` stays Admin); `HIDE_TARGET` sets `hiddenAt` on posts and comments. `PATCH /api/admin/users/{id}/role` `{ role: "USER" | "MODERATOR" }` — Admin, audited.
+
+**Feed (P2-06)** — `GET /api/feed?filter=following` (FLW-04); `/api/feed/filters` lists "Following" once the user follows someone.

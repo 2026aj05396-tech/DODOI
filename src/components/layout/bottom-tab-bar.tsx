@@ -78,13 +78,13 @@ export function BottomTabBarView({
         <TabLink item={HOME} pathname={pathname} />
         <TabLink item={EXPLORE} pathname={pathname} />
         <div className="flex justify-center">
-          <ComingSoonTrigger
-            label={CREATE.label}
-            className="relative -mt-1 flex size-12 items-center justify-center rounded-lg bg-primary/60 text-primary-foreground"
+          <Link
+            href={CREATE.href ?? "/create"}
+            aria-label={CREATE.label}
+            className="-mt-1 flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform duration-150 hover:bg-primary-hover active:scale-95"
           >
             <CreateIcon aria-hidden className="size-6" strokeWidth={2.2} />
-            <ComingSoonBadge size="sm" decorative className="absolute -top-1.5 -right-2" />
-          </ComingSoonTrigger>
+          </Link>
         </div>
         <ComingSoonTab item={COMMUNITY} />
         <TabLink item={profileNavItem(username)} pathname={pathname} />

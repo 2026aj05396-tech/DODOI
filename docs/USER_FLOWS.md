@@ -165,14 +165,56 @@ Routing (P1-11): after sign-in or sign-up, `/` and every signed-in page send a u
 
 ---
 
+## 1b. Phase 2 Flows (CONFIRMED — P2-00 approved 2026-10-28)
+
+Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified email; an unverified user who tries one sees the verify-email banner's message with "Resend email" (OD-08).
+
+### F-17 Create and publish a post (CRT-01…13) — Instagram-style (PO choice 2026-10-28)
+
+1. `[Create]` (+ tab on mobile, button in the sidebar/rail) → the system photo picker opens at once (camera roll or camera on phones; several files, up to 10) → `/create`. Uploads start the moment files are picked; a draft is created with the first upload. Cancel in the picker → back where you were.
+2. `[Pick]` big preview of the selected item, thumbnail strip below (progress ring on each until uploaded, "+" to add more, × to remove) → "Next" (top right). A photo can be opened in **Edit photo** (crop shape, zoom, drag, rotate → "Use this photo" uploads the edited version in its place); small photos show a "Small photo" note but are never refused.
+3. `[Arrange]` drag (or arrows) to reorder; first is the cover ("Cover" badge); tap a photo → alt text ("Describe the photo for people who can't see it"), with "2 of 3 photos described" → "Next". Each photo also has "Edit photo".
+4. `[Details]` caption-style screen (each step in Materials and steps can get a photo, which needs a description): cover thumbnail beside the title and story fields; below, tappable rows that open sheets — **Type** (six illustrated choices; Tutorial adds the steps and time rows) · **Skills** (search, 1–5, main one marked; suggested from interests) · **Tags** · **Materials and steps** (optional; required steps for a Tutorial) · **Difficulty and time**. Each row shows its value once set; rows still needed for publishing show a dot. "Preview" link shows the post as others see it.
+5. "Share" (top right; bottom bar on phones). First time: "This is my own work, and I'm happy for dodoi to show it" checkbox (link to terms) → published → short confetti moment and "Posted! Share it?" (Web Share) → post page.
+6. ⚠ Something missing → Share is still tappable; the row with the problem is highlighted and its sheet opens (photos without a description → Arrange; the own-work tick scrolls into view). ⚠ Leaving mid-way → the draft stays; `/create` lists drafts under "Pick up where you left off", and the own profile's Posts tab shows them under "Your drafts"; either reopens a draft on Details.
+7. Own post page: "Edit post" (in place of "Start as my project" from 768px and "Ask about this" on phones; no Follow on your own creator row) opens Details at `/create/{id}`; changes are live on Save ("Unsaved changes" until then). "Delete post" at the bottom of Details → "Delete this post? Comments, likes and saves go with it." → profile with toast.
+
+### F-18 Creative journal (JRN-01…07, design `1g`) — built 2026-10-29
+
+1. `[Journal]` (sidebar and `/journal`; on phones via the profile's Projects tab) → "In progress" then "Finished" project cards → "New project" → name and, optionally, one of your crafts → the project page `/projects/{id}`.
+2. Tutorial page → "Start as my project" (from 768px beside Save; on phones in place of "Ask about this") → private project named after the tutorial, on its main craft, its materials as a checklist ("Started from …") → project page. Signed-out visitors are asked to sign in first.
+3. Project page (`1g`, full screen on phones): "Project · in progress" label, title, "{craft} · started {when} · {n} entries" (+ "Only you" while private); materials checklist; entries as a timeline, newest first ("Entry n · today", title, photos, text). "Add progress entry" → sheet: title (optional), what happened, up to 4 photos → added. Each entry: edit / delete.
+4. "Share" (needs an entry) → a draft post from the latest entry (Work in progress, or Finished once the project is) opens in Create on Details (F-17 step 4). Project menu ⋯: Rename · Mark as finished / Reopen · Show on my profile / Make private · Delete project ("Posts you shared from it stay").
+5. Public projects show on the profile's Projects tab; private ones only to the owner (with a lock).
+
+### F-19 Comment and reply (CMT-01…05)
+
+1. Post page → "Comments (n)" section below related posts on mobile, below steps on desktop → field "Add a comment" → Post → appears at the end.
+2. "Reply" under a comment → field under it, starting with @username → reply shown under that comment. Replies on a reply go to the same comment.
+3. Own comment menu: Edit (shows "edited"), Delete ("Comment deleted" stays if it has replies). Post author's menu on others' comments: Delete. Everyone else: Report, Block.
+
+### F-20 Like and follow (LIKE-01…03, FLW-01…04)
+
+1. Heart on post detail (and the card menu) → filled at once (optimistic); the author sees "{n} likes" on their own post only.
+2. Follow on a profile, creator row or post → "Following"; unfollow from the same button. Private profiles show no Follow button.
+3. Feed → "Following" chip (once you follow someone) shows only their posts. Own profile → "Followers · Following" (owner only) → lists.
+
+### F-21 Notifications (NTF-01…05)
+
+1. Bell shows a dot when something is new (checked on page open and every 60 s) → `/notifications` → list newest first ("Asha commented on Cherry blossom hoop", "Ravi and 3 others liked …", "Meera followed you") → all marked read.
+2. Each item opens the post, comment (scrolled to) or profile. `[Settings] → Notifications` → four switches.
+
+### F-22 Report and block (MOD-01…06)
+
+1. Post, comment or profile menu → Report → reason (Offensive · Spam · Impersonation · Not my work · Other) + optional note → "Thanks for letting us know" (as P1).
+2. Menu → Block → "Block @name? You won't see each other's posts, comments or profile, and follows are removed. They won't be told." → Block → back to the previous page with toast; their content disappears.
+3. `[Settings] → Blocked accounts` → Unblock.
+4. Moderator: `/admin/reports` (moderators see only Reports) → Hide post / comment / profile / skill, Dismiss, Show again; author sees "Hidden after a report" on their hidden item.
+
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 
 | Phase | Flow |
 |---|---|
-| P2 | Create post: media → details → skills/tags → optional materials/steps → preview → publish; edit/delete own post |
-| P2 | Creative journal: create project → add progress entries over time → mark complete |
-| P2 | Comment, like, follow/unfollow, view notifications |
-| P2 | Report content/profile → reason → confirmation; block user → effects explained |
 | P3 | Discover/join community → read rules → post discussion |
 | P3 | Start conversation → send messages (polling) → block/report |
 | P3 | Create help request → receive responses → mark resolved |

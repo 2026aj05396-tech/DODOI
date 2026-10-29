@@ -30,6 +30,11 @@ Each environment has its own accounts and keys; nothing is shared with local or 
    DATABASE_URL="<Neon direct URL>" pnpm db:seed
    ```
    Safe to repeat; it refuses only production.
+   Then load the seed posts from `./seed-content` (the same posts as the local feed) the same way. Set `APP_ENV=test` too, so the photos upload to Cloudinary under `dodoi/test/` and not `dodoi/local/`; the test site must use the same Cloudinary account as `.env.local`:
+   ```bash
+   APP_ENV=test CRON_SECRET="$(openssl rand -hex 24)" DATABASE_URL="postgresql://…neon.tech/neondb?sslmode=require" pnpm seed:content
+   ```
+   Paste the URL without angle brackets. `APP_ENV=test` makes the env check require `CRON_SECRET`; the importer never uses it, so any random value does. Safe to repeat: an unchanged file updates its post and is not uploaded again (PO request, 2026-10-28).
 7. **Admin**: set `SEED_ADMIN_EMAIL` to your address; sign up on the test site and verify the email, and the account becomes admin.
 
 ## Environment variables (Vercel → Settings → Environment Variables → Production)

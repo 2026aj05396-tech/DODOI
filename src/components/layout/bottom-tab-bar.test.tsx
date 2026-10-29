@@ -12,7 +12,8 @@ describe("BottomTabBar", () => {
     expect(screen.getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute("aria-current");
     expect(screen.getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/u/aanya-4821");
-    expect(screen.getByRole("button", { name: "Create, coming soon" })).toBeInTheDocument();
+    // Create is live from P2-02.
+    expect(screen.getByRole("link", { name: "Create" })).toHaveAttribute("href", "/create");
     expect(screen.getByRole("button", { name: /Community\s*, coming soon/ })).toBeInTheDocument();
   });
 });

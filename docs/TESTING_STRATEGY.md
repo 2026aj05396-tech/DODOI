@@ -91,7 +91,9 @@ Phase 1 (required before MVP exit):
 | E2E-15 | Feed filter chips: switching to an interest chip shows only that skill; "New to you" shows only non-interest skills; "Try it →" on suggestion card opens skill page |
 | E2E-17 | Tick materials and mark steps done/undone on a tutorial; reload / second browser context → progress restored |
 | E2E-18 | Onboarding: continue disabled until 3 interests, no Skip on step 1; steps 2 and 3 skippable; username auto-generated and editable |
-| E2E-16 | Coming-soon items (Create, Community, bell, Ask dodoi…) are announced as disabled and trigger no network calls to unbuilt endpoints |
+| E2E-19 | Create post (P2-02, F-17): pick two photos → describe and reorder → title + craft → Share without the own-work tick shows the message → tick → "Posted!" → post page with Edit; also: a draft is deleted and gone, Edit on a shared post saves live, a photo is cropped square and rotated in the photo editor and uploaded again, a tutorial is held back until it has two steps and a time and then shares with a described step photo; the profile then opens on Posts (`create-post.spec.ts`) |
+| E2E-20 | Creative journal (P2-03, F-18): new project → two entries (one with a photo) newest first → show on profile → mark finished → profile Projects tab → Share opens Create pre-filled; also: Start as my project copies a tutorial's materials and a tick survives a reload (`journal.spec.ts`) |
+| E2E-16 | Coming-soon items (Community, bell, Ask dodoi…; Create is live from P2-02) are announced as disabled and trigger no network calls to unbuilt endpoints |
 
 Later phases add the master doc scenarios: create/edit post, comment, join community, send message, help request, schedule session, AI guidance, report/block.
 
@@ -155,4 +157,5 @@ CI (GitHub Actions, OD-24) runs lint, typecheck, `pnpm test` and E2E on every pu
 - Bug fixes include a regression test that fails before the fix.
 - Tests must not depend on order or on real network services.
 - Never skip or delete a failing test to make a build pass; report it.
+- E2E runs fully parallel against one server, so timing differs from a single test. Wait for the page to load (`page.waitForLoadState()`) before submitting a form a redirect just opened: a submit before hydration posts back to the same page (`method="post"`) and nothing happens. Assertions wait up to 10 s (`expect.timeout` in `playwright.config.ts`), since sign-in flows chain several redirects; a test that signs in several users gets a longer test budget (`test.describe.configure({ timeout })`). Fix timing this way rather than with local retries.
 - Report tests not run in every session summary (AI_DEVELOPMENT_RULES §9).

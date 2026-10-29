@@ -3,7 +3,7 @@ import { created, withRouteHandler } from "@/server/lib/route-handler";
 import { registerMedia } from "@/server/modules/content";
 
 /**
- * POST /api/media — admin only (others 404). Re-checks the upload against Cloudinary's metadata;
+ * POST /api/media — same callers as /api/media/sign (others 404). Re-checks the upload against Cloudinary's metadata;
  * a file that breaks MEDIA-01…03 is deleted (400 / 413). 201 `Media`.
  */
 export const POST = withRouteHandler(

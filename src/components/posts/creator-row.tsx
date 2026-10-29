@@ -5,7 +5,14 @@ import type { CreatorSummary } from "@/lib/types/posts";
 // creators; posts without a dodoi author show a muted "via dodoi editors" line instead. The profile
 // link and "helps with …" arrive with profiles (P1-13/P1-14).
 
-export function CreatorRow({ creator }: { creator: CreatorSummary | null }) {
+export function CreatorRow({
+  creator,
+  isOwn = false,
+}: {
+  creator: CreatorSummary | null;
+  /** The viewer's own post (P2-02): no Follow for yourself. */
+  isOwn?: boolean;
+}) {
   if (!creator) {
     return <p className="text-body text-foreground-secondary">via dodoi editors</p>;
   }
@@ -31,13 +38,15 @@ export function CreatorRow({ creator }: { creator: CreatorSummary | null }) {
       <p className="min-w-0 flex-1 truncate text-body font-bold text-foreground">
         {creator.displayName}
       </p>
-      <ComingSoonTrigger
-        label="Follow"
-        hasVisibleLabel
-        className="rounded-sm px-1 text-control font-bold text-muted-foreground"
-      >
-        Follow
-      </ComingSoonTrigger>
+      {isOwn ? null : (
+        <ComingSoonTrigger
+          label="Follow"
+          hasVisibleLabel
+          className="rounded-sm px-1 text-control font-bold text-muted-foreground"
+        >
+          Follow
+        </ComingSoonTrigger>
+      )}
     </div>
   );
 }

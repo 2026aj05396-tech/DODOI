@@ -147,6 +147,8 @@
   --animate-dd-twinkle: dd-twinkle 2.4s ease-in-out infinite;
   --animate-dd-pulse: dd-pulse 1.8s ease-out infinite;
   --animate-dd-pulse-soft: dd-pulse-soft 2s ease-out infinite;
+  /* One burst when a post is shared (UI_UX_GUIDELINES §8.1); never loops. */
+  --animate-dd-confetti: dd-confetti 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) both;
   /* Draws a stroke in: give the path pathLength="1" and stroke-dasharray="1". */
   --animate-dd-draw: dd-draw 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards;
 
@@ -160,6 +162,18 @@
       transform: none;
     }
   }
+  @keyframes dd-confetti {
+    0% {
+      transform: translate3d(0, -10vh, 0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(var(--confetti-drift, 0), 105vh, 0)
+        rotate(var(--confetti-spin, 540deg));
+      opacity: 0.85;
+    }
+  }
+
   @keyframes dd-pop {
     0% {
       transform: scale(0.6);

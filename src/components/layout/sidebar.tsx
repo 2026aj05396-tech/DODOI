@@ -117,17 +117,15 @@ export function SidebarView({
       <SidebarComingSoon item={COMMUNITY} />
       <SidebarComingSoon item={MESSAGES} />
       <SidebarLink item={SAVED} pathname={pathname} />
-      <SidebarComingSoon item={JOURNAL} />
+      <SidebarLink item={JOURNAL} pathname={pathname} />
       <SidebarLink item={profileNavItem(username)} pathname={pathname} />
-      <ComingSoonTrigger
-        label={CREATE.label}
-        hasVisibleLabel
-        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary/60 text-control-lg font-bold text-primary-foreground"
+      <Link
+        href={CREATE.href ?? "/create"}
+        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-control-lg font-bold text-primary-foreground transition-colors hover:bg-primary-hover"
       >
         <CreateIcon aria-hidden className="size-4.5" strokeWidth={2.2} />
         {CREATE.label}
-        <ComingSoonBadge size="sm" decorative />
-      </ComingSoonTrigger>
+      </Link>
       <div className="mt-auto flex flex-col gap-3 pt-6">
         <AskDodoiCard />
         <SidebarLogOut />

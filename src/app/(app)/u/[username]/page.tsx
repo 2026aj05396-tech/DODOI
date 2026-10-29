@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
 import { serverEnv } from "@/server/lib/env";
 import { orNotFound } from "@/server/lib/not-found";
+import { listOwnPosts, listProfilePosts } from "@/server/modules/content";
+import { listProfileProjects } from "@/server/modules/journal";
 import { getMyProfile, getProfile } from "@/server/modules/library";
 
 export const metadata: Metadata = {
@@ -33,7 +35,12 @@ async function ProfileContent({ params }: { params: Params }) {
   if (!actor) redirect(`/sign-in?returnTo=${encodeURIComponent(`/u/${username}`)}`);
   const profile = await orNotFound(getProfile(actor, username));
   const isOwner = !profile.isPrivate && profile.isOwner;
-  const showUsernamePrompt = isOwner ? (await getMyProfile(actor)).showUsernamePrompt : false;
+  const [showUsernamePrompt, posts, drafts, projects] = await Promise.all([
+    isOwner ? getMyProfile(actor).then((me) => me.showUsernamePrompt) : false,
+    listProfilePosts(actor, username, { limit: 20 }),
+    isOwner ? listOwnPosts(actor, { status: "DRAFT", limit: 12 }) : null,
+    listProfileProjects(actor, username),
+  ]);
   // Your own profile is a main tab; someone else's is reached from a post, search or a collection.
   return (
     <div className="flex flex-col gap-2">
@@ -42,6 +49,9 @@ async function ProfileContent({ params }: { params: Params }) {
         profile={profile}
         showUsernamePrompt={showUsernamePrompt}
         supportEmail={serverEnv.SUPPORT_EMAIL ?? null}
+        posts={posts}
+        drafts={drafts?.items ?? []}
+        projects={projects}
       />
     </div>
   );

@@ -275,6 +275,8 @@ export async function findUnusedMedia(ids: string[]) {
       profileAvatar: null,
       skillCovers: { none: {} },
       themeCovers: { none: {} },
+      // Journal entry photos (P2-03) live on the media table's relation too.
+      entryMedia: { none: {} },
     },
     select: { id: true, type: true, publicId: true },
   });

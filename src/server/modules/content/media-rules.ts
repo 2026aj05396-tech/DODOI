@@ -10,8 +10,6 @@ type Limits = {
   /** Cloudinary format names accepted (also enforced by Cloudinary through `allowed_formats`). */
   formats: readonly string[];
   mimeTypes: readonly string[];
-  /** Shortest side, images only. */
-  minShortestSide?: number;
   /** Videos only. */
   maxDurationSec?: number;
 };
@@ -39,14 +37,12 @@ export function limitsFor(purpose: MediaPurpose, type: MediaTypeName): Limits | 
     maxBytes: 10 * MB,
     formats: IMAGE_FORMATS,
     mimeTypes: IMAGE_MIME_TYPES,
-    minShortestSide: 600,
   };
 }
 
 export type MediaProblem =
   | { kind: "type"; message: string }
   | { kind: "size"; message: string }
-  | { kind: "dimensions"; message: string }
   | { kind: "duration"; message: string };
 
 const TYPE_MESSAGE = {
@@ -99,12 +95,6 @@ export function checkUploadedAsset(
     return { kind: "type", message: TYPE_MESSAGE[type] };
   }
   if (asset.bytes > limits.maxBytes) return { kind: "size", message: sizeMessage(limits.maxBytes) };
-  if (limits.minShortestSide && Math.min(asset.width, asset.height) < limits.minShortestSide) {
-    return {
-      kind: "dimensions",
-      message: `That image is too small. The shortest side needs at least ${limits.minShortestSide} px.`,
-    };
-  }
   if (limits.maxDurationSec !== undefined) {
     if (asset.durationSec === null || asset.durationSec > limits.maxDurationSec) {
       return {

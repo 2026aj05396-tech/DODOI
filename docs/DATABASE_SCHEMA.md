@@ -531,6 +531,177 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 
 | Phase | Entities |
 |---|---|
-| P2 | Follow, Project, ProjectEntry, Comment, Reaction (single LIKE), Notification, NotificationPreference, Report, ModerationAction, Block, Tag, PostTag |
+| P2 | Specified in §9.1 (CONFIRMED, P2-00) |
 | P3 | Community, Membership, CommunityPost, Conversation, ConversationParticipant, Message, HelpRequest, HelpResponse, Session (rename to `CreativeSession` to avoid clashing with Auth.js `Session`) |
 | P4 | AIConversation, AIMessage, AIUsage (retention policy required) |
+
+### 9.1 Phase 2 models (CONFIRMED — P2-00 approved 2026-10-28)
+
+Requirements: PRODUCT_REQUIREMENTS §6.1. Changes to the earlier list: **Reaction → `PostLike`** (single like, no reaction types); **no `ModerationAction` table** — moderation is recorded in the existing `AuditLog` (as P1 reports are); **`Report` already exists** (P1) and gains target types. User posts reuse `Post` and its child tables unchanged.
+
+```prisma
+enum Role              { USER MODERATOR ADMIN }              // + MODERATOR
+enum ReportTargetType  { SKILL PROFILE POST COMMENT }         // + POST, COMMENT
+enum ReportReason      { OFFENSIVE SPAM IMPERSONATION NOT_MY_WORK OTHER }   // + NOT_MY_WORK (OD-05)
+enum ProjectStatus     { IN_PROGRESS COMPLETED }
+enum ProjectVisibility { PRIVATE PUBLIC }                     // default PRIVATE
+enum NotificationType  { COMMENT REPLY FOLLOW LIKE }
+// User posts have no PostAttribution row: authorId + ownWorkConfirmedAt identify them, so
+// SourceType.USER_UPLOAD stays unused (removed in the P2 migration if still unused).
+
+model Post {                    // added fields only
+  ownWorkConfirmedAt DateTime?  // CRT-08; set on first publish by a user
+  hiddenAt           DateTime?  // MOD-04; hidden after a report (null = visible)
+  projectId          String?    // JRN-05; post shared from a project (onDelete: SetNull)
+  tags     PostTag[]
+  comments Comment[]
+  likes    PostLike[]
+}
+
+model Tag {
+  id             String  @id @default(cuid())
+  name           String  @db.VarChar(30)          // as first typed, lowercased
+  normalizedName String  @unique                  // NFKC + lowercase, as custom skills
+  posts PostTag[]
+}
+
+model PostTag {
+  postId String
+  tagId  String
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Restrict)
+  @@id([postId, tagId])
+  @@index([tagId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String
+  authorId  String?                             // null once the author's account is deleted ("Comment deleted" kept for its replies)
+  parentId  String?                              // set on replies; a reply's parent has parentId null (service-enforced, OD-25)
+  body      String    @db.VarChar(1000)
+  editedAt  DateTime?
+  deletedAt DateTime?                            // soft delete only when it has replies (CMT-02); otherwise hard delete
+  hiddenAt  DateTime?                            // MOD-04
+  createdAt DateTime  @default(now())
+  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("Replies")
+  @@index([postId, parentId, createdAt])
+  @@index([authorId])
+}
+
+model PostLike {
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([postId, userId])
+  @@index([userId])
+}
+
+model Follow {
+  followerId String
+  followeeId String
+  createdAt  DateTime @default(now())
+  follower User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followee User @relation("Followers", fields: [followeeId], references: [id], onDelete: Cascade)
+  @@id([followerId, followeeId])
+  @@index([followeeId, createdAt(sort: Desc)])
+}
+
+model Block {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker User @relation("Blocking", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model Project {
+  id           String            @id @default(cuid())
+  ownerId      String
+  title        String            @db.VarChar(80)
+  skillId      String?
+  sourcePostId String?                           // JRN-03 "Start as my project" (onDelete: SetNull)
+  status       ProjectStatus     @default(IN_PROGRESS)
+  visibility   ProjectVisibility @default(PRIVATE)
+  completedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  owner     User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  skill     Skill?            @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  entries   ProjectEntry[]
+  materials ProjectMaterial[]
+  @@index([ownerId, updatedAt(sort: Desc)])
+}
+
+model ProjectMaterial {                            // JRN-03 checklist copied from the tutorial
+  id        String  @id @default(cuid())
+  projectId String
+  position  Int
+  name      String  @db.VarChar(120)
+  note      String? @db.VarChar(200)
+  checked   Boolean @default(false)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  @@unique([projectId, position])
+}
+
+model ProjectEntry {
+  id        String   @id @default(cuid())
+  projectId String
+  body      String?  @db.VarChar(2000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  media   ProjectEntryMedia[]
+  @@index([projectId, createdAt(sort: Desc)])
+}
+
+model ProjectEntryMedia {
+  entryId  String
+  mediaId  String
+  position Int                                     // 0–3 (JRN-02)
+  entry ProjectEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  media MediaAsset   @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  @@id([entryId, mediaId])
+  @@unique([entryId, position])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  recipientId String
+  type        NotificationType
+  actorId     String?                              // who commented / followed / liked (SetNull on deletion)
+  postId      String?
+  commentId   String?
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+  recipient User @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  @@index([recipientId, createdAt(sort: Desc)])
+}
+
+model NotificationPreference {                     // a row only when a type is switched off (NTF-04)
+  userId  String
+  type    NotificationType
+  enabled Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, type])
+}
+```
+
+**Built (P2-03, migration `creative_journal`, 2026-10-29):** `Project`, `ProjectMaterial`, `ProjectEntry` (plus an optional `title` VarChar(80), design `1g`), `ProjectEntryMedia` (indexed on `media_id`), `Post.projectId` (SetNull) with the `ProjectPosts` / `ProjectSource` relations. The content module's orphan and unused-media queries treat entry photos as used (`entryMedia: { none: {} }`).
+
+**Built so far (P2-02, migration `20261028165443_user_posts_tags`):** `Post.ownWorkConfirmedAt`, `Tag`, `PostTag` as listed (`Tag.normalizedName` = the lowercased name; no separate display case). Tag names join skill names at weight C in `search_vector`. The other §9.1 models come with their tasks.
+
+**Rules**
+- **"Own post"** = `authorId` is the user **and** the post has no `PostAttribution` row: invited creators' seeded posts also have an author, but always attribution, and stay admin-managed. An own post an admin unpublished is listed with the maker's drafts and can be shared again.
+- Likes are grouped into one notification per post per day when read (NTF-01) at query time; rows stay one per like.
+- Block filtering is applied in every read that returns another user's content (feed, search, post detail, comments, profiles, follower lists): a shared `notBlockedWith(actorId)` condition in the users module, used by the other modules through its public API.
+- Search: `Post.searchVector` adds tag names at weight C, with skill names.
+- Lifecycle additions to §7: notifications deleted after 90 days (daily job); deleting a post cascades comments, likes, tags and saves; account deletion removes likes, follows, blocks, notifications, projects and their media; the deletion job first turns the user's comments that have replies into "Comment deleted" (as CMT-02, so other people's replies stay) and deletes the rest.
+

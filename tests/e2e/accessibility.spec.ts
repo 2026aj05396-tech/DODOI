@@ -102,6 +102,8 @@ test("signed-in screens", async ({ page }) => {
     { name: "privacy", path: "/settings/privacy" },
     { name: "account", path: "/settings/account" },
     { name: "delete account", path: "/settings/account/delete" },
+    { name: "create post", path: "/create" },
+    { name: "journal", path: "/journal" },
   ]);
 
   expect(problems).toEqual([]);

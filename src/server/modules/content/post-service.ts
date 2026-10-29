@@ -106,12 +106,17 @@ async function toCards(
 
 async function findVisiblePost(actor: Actor, postId: string) {
   const row = await findPostDetail(postId);
-  const visible = row && (row.status === "PUBLISHED" || actor?.role === "ADMIN");
+  // Admins and the post's own author (CRT-09 Preview) also see drafts.
+  const visible =
+    row &&
+    (row.status === "PUBLISHED" ||
+      actor?.role === "ADMIN" ||
+      (actor !== null && row.authorId === actor.id));
   if (!row || !visible) throw new NotFoundError("We couldn't find that post.");
   return row;
 }
 
-/** GET /api/posts/{postId}: public for published posts; admins can also preview drafts. */
+/** GET /api/posts/{postId}: public for published posts; admins and authors can preview drafts. */
 export async function getPostDetail(
   actor: Actor,
   postId: string,
@@ -132,6 +137,8 @@ export async function getPostDetail(
       media: step.media ? toMedia(step.media, provider) : null,
     })),
     publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
+    // The maker's own post (not an invited creator's seeded one): Edit instead of Follow (F-17).
+    isOwn: actor !== null && row.authorId === actor.id && !row.attribution,
   };
 }
 
@@ -256,6 +263,7 @@ export type FeedCandidate = {
 /** Published posts with a cover, newest first, for the feed to rank. */
 export async function getFeedCandidates(options: {
   excludeIds: string[];
+  excludeAuthorId?: string;
   skillId?: string;
   take: number;
 }): Promise<FeedCandidate[]> {

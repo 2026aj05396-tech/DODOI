@@ -242,10 +242,10 @@ Comments and reporting on posts are P2.
 | PRF-04 | Edit own profile |
 | PRF-05 | Public profile page at `/u/{username}` |
 | PRF-06 | Profiles **public by default** (CONFIRMED); user can set profile to private |
-| PRF-07 | Public collections shown on profile |
+| PRF-07 | Public collections shown on profile; from P2-02 also the user's published posts (Posts tab) and, for the owner, their drafts |
 | PRF-08 | Private fields (email, DOB if collected) never exposed by public endpoints |
 
-**Private profile (CONFIRMED, OD-10):** others see only avatar, display name and username with "This profile is private"; bio, skills and public collections are hidden; the profile is excluded from creator search. The owner always sees everything. Follow-approval behaviour is decided in P2. Following (P2) and blocking (P2) are not in P1. Username rules (CONFIRMED, OD-11): 3–20 characters; lowercase letters, digits, `_` and `-`; must start with a letter; case-insensitive unique; reserved names blocked; can be changed at most once every 30 days.
+**Private profile (CONFIRMED, OD-10):** others see only avatar, display name and username with "This profile is private"; bio, skills and public collections are hidden; the profile is excluded from creator search. The owner always sees everything. Follow-approval behaviour is decided in P2 (proposed: private profiles cannot be followed, FLW-02). Following (P2) and blocking (P2) are not in P1. Username rules (CONFIRMED, OD-11): 3–20 characters; lowercase letters, digits, `_` and `-`; must start with a letter; case-insensitive unique; reserved names blocked; can be changed at most once every 30 days.
 
 ### 5.8 Seed Content Pipeline and Admin (ADM)
 
@@ -268,7 +268,7 @@ Comments and reporting on posts are P2.
 
 | ID | Requirement (CONFIRMED, OD-15 / OD-23) |
 |---|---|
-| MEDIA-01 | Images: JPEG, PNG, WebP, HEIC; max 10 MB each; shortest side ≥ 600 px; max 10 images per post |
+| MEDIA-01 | Images: JPEG, PNG, WebP, HEIC; max 10 MB each; max 10 images per post. **No minimum size (PO decision 2026-10-29, was ≥ 600 px):** photos under 600 px on the short side upload normally and get a friendly "may look a little soft" note. In the Create flow, photos over 10 MB are shrunk in the browser (long side 2,400 px) instead of being refused, and every photo can be cropped, zoomed and rotated in a photo editor (UI_UX_GUIDELINES §8.1) |
 | MEDIA-02 | Avatars: same formats, max 5 MB |
 | MEDIA-03 | Video: MP4, MOV, WebM; max 60 seconds and 50 MB; Cloudinary transcodes for streaming and generates the poster |
 | MEDIA-04 | Location/EXIF metadata stripped on delivery |
@@ -280,7 +280,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 
 | ID | Requirement |
 |---|---|
-| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count |
+| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Create is live from P2-02** (2026-10-29) |
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |
@@ -318,10 +318,94 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 
 | Phase | Requirements (summary) | Decisions already made |
 |---|---|---|
-| P2 | Post creation (images, short video, captions, skills, tags, materials, steps, difficulty), preview, edit, delete; creative journal (Project → ProjectEntry); comments (threading OPEN); single like; following; in-app notifications; reporting and blocking for posts, comments, profiles | Single like/heart; like counts visible only to owner |
+| P2 | Post creation (images, short video, captions, skills, tags, materials, steps, difficulty), preview, edit, delete; creative journal (Project → ProjectEntry); comments (one level of replies, OD-25); single like; following; in-app notifications; reporting and blocking for posts, comments, profiles | Single like/heart; like counts visible only to owner; comments one level deep (OD-25); makers keep ownership of uploads (OD-05). Detailed in §6.1 |
 | P3 | Communities (join/leave, discussions, rules, reporting, auditable moderation); direct messaging; peer-help requests (open / in progress / resolved); scheduled sessions with timezone handling | Messaging uses polling first |
 | P4 | AI companion: skill discovery, learning assistance, image-aware troubleshooting, project planning; usage limits | Provider OPEN |
 | P5 | Recommendation improvements, push notifications, offline improvements, performance, advanced community tools | — |
+
+### 6.1 Phase 2 — Creative Expression (P2-00 draft, 2026-10-28)
+
+**Status: CONFIRMED — approved by the product owner 2026-10-28 (P2-00).** Decided by the PO: single like with owner-only counts; comments one level deep (OD-25); makers keep ownership (OD-05); Create post is the first build slice. The rest was proposed in the P2-00 draft and approved as written. Schema: DATABASE_SCHEMA §9; API: API_SPECIFICATION §9; flows: USER_FLOWS §2; permissions and limits: SECURITY_AND_PRIVACY §3, §6; screens: UI_UX_GUIDELINES §8.
+
+**Who can do what (PROPOSED):** every signed-in user can write drafts and journal entries (private); anything others can see — publishing a post, a public project, a comment, a like, a follow, a report — needs a verified email (OD-08 rule extended).
+
+#### Create post (CRT) — slice 1 (P2-01, P2-02)
+
+| ID | Requirement |
+|---|---|
+| CRT-01 | Create a post Instagram-style (PO choice 2026-10-28): Create tab / button → pick photos/videos → arrange (order, cover, alt text) → details screen (caption-style: title and story on top, then rows for type, skills, tags, materials and steps, difficulty and time) → Share. Drafts save automatically and are listed under "Drafts" on the own profile |
+| CRT-02 | Post type: any of the six types (First attempt, Tutorial, Work in progress, Journal, Finished, Tip). A Tutorial needs ≥ 2 steps and an estimated time to publish |
+| CRT-03 | Media: 1–10 images/videos, mixed, MEDIA-01/03 limits; at least one to publish; reorder; first item is the cover. Alt text required on every image to publish, with a short prompt ("Describe the photo for people who can't see it") |
+| CRT-04 | Details: title (1–120), description (≤ 2,000), difficulty and estimated time optional |
+| CRT-05 | Skills: 1–5, exactly one main skill; any active skill, including the user's own custom skills |
+| CRT-06 | Tags: 0–10 free tags, 2–30 characters, lowercased and normalised like custom skills, blocklist applied (OD-36). Tags are searchable; no tag pages in P2 |
+| CRT-07 | Materials (≤ 30, name + optional note) and steps (≤ 30, text ≤ 1,000 + optional photo), as in POST-05/06 |
+| CRT-08 | Ownership (OD-05): before the first publish the maker ticks "This is my own work, and I'm happy for dodoi to show it" (links to the terms); stored with the date. The post shows the creator row; no attribution block |
+| CRT-09 | "Preview" on the details screen shows the post exactly as others will see it (`1e`/`2c` layout); optional, not a step (as Instagram) |
+| CRT-10 | Edit after publishing: all fields; changes are live immediately; "Edited" is not shown |
+| CRT-11 | Delete: confirmation, then the post, its media, comments, likes and saves are deleted (removed from everyone's collections). No unpublish for users |
+| CRT-12 | Published user posts join the feed candidate pool, search and skill pages like seeded posts; the author never sees their own posts in their feed |
+| CRT-13 | Limits: 20 published posts / day / user; 50 drafts per user |
+
+#### Creative journal (JRN) — P2-03
+
+| ID | Requirement |
+|---|---|
+| JRN-01 | A **project** has a title (1–80), an optional main skill, status *In progress* / *Completed*, and visibility *Private* (default) / *Public* |
+| JRN-02 | **Progress entries**: an optional title (≤ 80, as design `1g` shows — added 2026-10-29, PO to confirm), text (≤ 2,000) and 0–4 photos; at least one of them; dated automatically; newest first; numbered "Entry n · {relative date}" (design `1g`) |
+| JRN-03 | "Start as my project" on a tutorial creates a private project named after it, linked to the tutorial and copying its materials as the project's checklist |
+| JRN-04 | Mark complete (and reopen); completed projects show a "Finished" pill |
+| JRN-05 | **Share** (design `1g`) opens Create post pre-filled from the project's latest entry (type Work in progress, or Finished when the project is complete); the post links back to the public project |
+| JRN-06 | Public projects appear on the profile **Projects** tab; private ones only to the owner. Projects never appear in the feed |
+| JRN-07 | Limits: 100 projects per user, 200 entries per project |
+
+#### Comments (CMT) — P2-04 (OD-25)
+
+| ID | Requirement |
+|---|---|
+| CMT-01 | Comments on published posts: 1–1,000 characters, plain text, oldest first; replies (one level) shown under their comment, oldest first; "Reply" on a reply answers the same comment and starts with @username |
+| CMT-02 | Edit own comment (shows "edited"); delete own comment — if it has replies it shows "Comment deleted" and the replies stay |
+| CMT-03 | The post's author can delete any comment on their post |
+| CMT-04 | Comments load 20 at a time; the count of comments is shown publicly (it is not a like count) |
+| CMT-05 | Rate limit: 30 comments / hour / user |
+
+#### Likes (LIKE) — P2-05
+
+| ID | Requirement |
+|---|---|
+| LIKE-01 | One like per user per post (heart toggle); the liker sees their own state |
+| LIKE-02 | The like count is visible only to the post's author (CONFIRMED); nobody sees who liked except the author, as a list in notifications |
+| LIKE-03 | Likes do not change feed ranking in P2 |
+
+#### Following (FLW) — P2-06
+
+| ID | Requirement |
+|---|---|
+| FLW-01 | Follow / unfollow a user with a public profile from their profile, the creator row and the post detail (replaces the coming-soon Follow buttons) |
+| FLW-02 | Private profiles cannot be followed in P2 (no follow requests); turning a profile private keeps existing followers |
+| FLW-03 | Follower and following counts are shown only to the profile owner (PP-4); the owner can open both lists |
+| FLW-04 | Feed: posts from followed makers get a ranking boost, and a "Following" filter chip shows only them |
+
+#### Notifications (NTF) — P2-07
+
+| ID | Requirement |
+|---|---|
+| NTF-01 | In-app only: new comment on your post, reply to your comment, new follower, likes on your post (grouped: "Asha and 3 others liked …") |
+| NTF-02 | The bell (replaces the coming-soon bell) shows an unread dot; the list opens at `/notifications`; opening the list marks all as read |
+| NTF-03 | Checked when a page opens and every 60 s while the tab is visible (no push in P2) |
+| NTF-04 | Preferences in Settings: each type on/off (all on by default) |
+| NTF-05 | Kept 90 days; never sent for blocked users |
+
+#### Safety (MOD) — P2-08
+
+| ID | Requirement |
+|---|---|
+| MOD-01 | Report posts, comments, profiles and custom skills; reasons as RPT-02 plus **"Not my work"** (copyright — OD-05 takedown) |
+| MOD-02 | **Block** a user from their profile, post or comment menu: both stop seeing each other's profile, posts and comments (404 / filtered out); follows both ways are removed; neither can comment on, like or follow the other. The blocked user is not told. Block list with Unblock in Settings |
+| MOD-03 | **MODERATOR** role: works the reports queue (hide post / comment / profile / skill, dismiss, show again) but cannot edit content, themes, skills or roles. Admins assign it |
+| MOD-04 | A hidden post or comment disappears for everyone except its author, who sees "Hidden after a report" and can delete it |
+| MOD-05 | Every moderation action is audited (AuditLog, as in P1) |
+| MOD-06 | "Not my work" reports are also reachable by email (support address in the terms) for people without an account |
 
 ## 7. Non-Functional Requirements
 
@@ -355,7 +439,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-02 | AI provider and model(s) | All AI work | P4 |
 | OD-03 | Video calls: integrated vs external provider | Sessions | P3 |
 | OD-04 | Monetization | — | Later |
-| OD-05 | Content licensing policy for user uploads (terms of service, ownership, takedown process) | Launch, P2 uploads | Before launch |
+| OD-05 | ~~Content licensing for user uploads~~ — **RESOLVED (2026-10-28):** makers keep ownership; publishing grants dodoi a non-exclusive, royalty-free licence to show the post on dodoi only, ending when the post or account is deleted; maker confirms it is their own work; takedown via Report ("Not my work") + support email. **Legal wording pending (OD-26 / pre-launch legal review)** | — | — |
 | OD-06 | Community creation permissions, private communities | Communities | P3 |
 | OD-07 | ~~Age-gate method~~ — **RESOLVED: date of birth, discarded after check** | — | — |
 | OD-08 | ~~Unverified user permissions~~ — **RESOLVED: private features allowed; public actions need verification; delete after 30 days** | — | — |
@@ -373,9 +457,9 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-20 | Analytics tool (must be free) | Metrics | P1 or later |
 | OD-21 | Error monitoring / logging service (must be free) | Observability | P1 or later |
 | OD-22 | ~~Account deletion~~ — **RESOLVED: 14-day grace period, then hard delete (§ SECURITY 7.3)** | — | — |
-| OD-23 | ~~Image limits~~ — **RESOLVED: JPEG/PNG/WebP/HEIC, 10 MB, ≥600 px, 10 per post** | — | — |
+| OD-23 | ~~Image limits~~ — **RESOLVED: JPEG/PNG/WebP/HEIC, 10 MB, 10 per post**; the ≥ 600 px minimum was dropped for everyone on 2026-10-29 (soft note instead) | — | — |
 | OD-24 | ~~Git hosting / CI~~ — **RESOLVED: GitHub + GitHub Actions** | — | — |
-| OD-25 | Comment threading in P2 | Comments | P2 |
+| OD-25 | ~~Comment threading in P2~~ — **RESOLVED (2026-10-28): one level of replies** (comments + replies to a comment; no replies to replies) | — | — |
 | OD-26 | Privacy policy and terms of service authorship | Launch | Before launch |
 | OD-27 | ~~Rate-limit store~~ — **RESOLVED: PostgreSQL table behind interface** | — | — |
 | OD-28 | ~~Minimum age 13+ vs India's DPDP Act~~ — **RESOLVED: minimum age raised to 18+** (adults only) | — | — |

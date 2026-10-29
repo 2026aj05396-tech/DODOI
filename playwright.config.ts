@@ -22,6 +22,9 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
+  // Sign-in flows chain several redirects (e.g. Google → callback → /confirm-age → /feed); with
+  // every worker on one server, the default 5 s ran out now and then on whichever test was busiest.
+  expect: { timeout: 10_000 },
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",

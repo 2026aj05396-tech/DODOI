@@ -144,13 +144,14 @@ export async function createPost(
 
 /** An uploaded media asset (as registered after a Cloudinary upload). */
 export async function createMedia(
-  overrides: { type?: "IMAGE" | "VIDEO"; altText?: string | null } = {},
+  overrides: { type?: "IMAGE" | "VIDEO"; altText?: string | null; ownerId?: string } = {},
 ) {
   const n = next();
   const type = overrides.type ?? "IMAGE";
   return db.mediaAsset.create({
     data: {
       type,
+      ownerId: overrides.ownerId ?? null,
       publicId: `dodoi/local/posts/media${n}`,
       format: type === "VIDEO" ? "mp4" : "jpg",
       width: 1200,

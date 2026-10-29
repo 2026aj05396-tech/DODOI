@@ -199,7 +199,7 @@ export function MediaField({
           </Button>
           <p className="pt-1.5 text-meta text-foreground-secondary">
             {allowVideo
-              ? "JPEG, PNG, WebP or HEIC up to 10 MB (at least 600 px); MP4, MOV or WebM up to 60 s and 50 MB."
+              ? "JPEG, PNG, WebP or HEIC up to 10 MB; MP4, MOV or WebM up to 60 s and 50 MB."
               : "JPEG, PNG, WebP or HEIC up to 10 MB."}
           </p>
         </div>

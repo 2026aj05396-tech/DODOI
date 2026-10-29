@@ -80,6 +80,25 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 
 `User*` = signed-in users only, **except** published post detail and related posts, which are Public read-only (OD-29).
 
+### Phase 2 permission matrix (CONFIRMED — P2-00)
+
+`Verified` = signed in with a verified email (OD-08). Every row also excludes users blocked either way (404). Hidden (`hiddenAt`) posts and comments are visible only to their author and Moderators.
+
+| Resource | Read | Create | Update | Delete |
+|---|---|---|---|---|
+| Own post (draft) | Owner | User | Owner | Owner |
+| Post (published, user's) | User* | Verified (publish) | Owner | Owner, Admin |
+| Project / entries (private) | Owner | User | Owner | Owner |
+| Project (public) | User* | — | Owner | Owner |
+| Comment | User* (on visible posts) | Verified | Owner | Owner, the post's author |
+| Like | Own state: liker; count: post's author | Verified | — | Liker |
+| Follow | Lists: profile owner | Verified (public profiles only) | — | Follower |
+| Block | Blocker | User | — | Blocker |
+| Notification / preferences | Recipient | System | Recipient | System (90 days) |
+| Reports queue | Moderator, Admin | User (report) | Moderator, Admin (action) | — |
+| User role | Admin | — | Admin (USER ↔ MODERATOR) | — |
+| Media asset (post, entry) | Via parent resource | User (own) | Owner | Owner |
+
 ## 4. Input Handling and Web Vulnerabilities
 
 | Vulnerability | Control |
@@ -101,7 +120,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 
 - Only **signed** uploads; unsigned upload presets disabled in Cloudinary.
 - Signature scoped to folder, resource type and short expiry.
-- Server re-validates asset metadata from Cloudinary after upload (type, bytes, dimensions, duration) and deletes non-compliant assets.
+- Server re-validates asset metadata from Cloudinary after upload (type, bytes, duration; no minimum dimensions since 2026-10-29) and deletes non-compliant assets.
 - Allowed formats and limits: PRODUCT_REQUIREMENTS §5.8b (MEDIA-01…05).
 - Strip EXIF/location metadata on delivery (Cloudinary transformation): every delivery URL uses `f_auto,q_auto`, which re-encodes the file without EXIF/location data (P1-03).
 - The Cloudinary API key has full account access (free plan keys cannot be folder-scoped), so the app only registers files under the purpose's `dodoi/<APP_ENV>/…` folder and the client refuses to delete anything outside `dodoi/` (P1-03).
@@ -118,6 +137,10 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Custom skill creation | 10 / day / user |
 | Search | 60 / min / user |
 | Media signing | 30 / hour / user |
+| Publish post (P2) | 20 / day / user |
+| Comment (P2) | 30 / hour / user |
+| Follow, like (P2) | 200 / hour / user each |
+| Block (P2) | 50 / day / user |
 
 Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed window), behind the limiter interface; expired rows purged daily. Implemented in `src/server/lib/rate-limit.ts` (P1-08): atomic `INSERT … ON CONFLICT` increment, and bucket keys are `<rule>:<sha256(subject)>` so emails and IPs are never stored in plain text. Custom-interest text rules and blocklist: PRODUCT_REQUIREMENTS §5.2 (OD-13). Additional limit: reports 10 / day / user.
 

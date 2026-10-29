@@ -109,7 +109,8 @@ Read the documents in this order before writing any code.
 | Age check date | Age computed on today's date in India (IST) | PROPOSED (P1-05) |
 | Reserved usernames and fallback | Full list in `src/server/modules/users/username.ts` (OD-11 names + every top-level route); usernames fall back to `maker-NNNN` when neither name nor email gives 3 usable characters; the same list applies to username changes | CONFIRMED (2026-10-27) |
 | Rate-limit store | PostgreSQL table | CONFIRMED |
-| Media limits | Images JPEG/PNG/WebP/HEIC ≤ 10 MB, ≥ 600 px, ≤ 10/post; video MP4/MOV/WebM ≤ 60 s, ≤ 50 MB, no feed autoplay | CONFIRMED |
+| Media limits | Images JPEG/PNG/WebP/HEIC ≤ 10 MB, ≤ 10/post, **no minimum size** (the ≥ 600 px rule was dropped 2026-10-29: small photos get a soft note); video MP4/MOV/WebM ≤ 60 s, ≤ 50 MB, no feed autoplay | CONFIRMED |
+| Photo editor (PO request 2026-10-29) | Makers are not turned away for photo size: in Create post every photo has **Edit photo** (crop to Original / Square / 4:5 / 3:4 / 16:9, zoom, drag, rotate), applied as a new upload in the same place with its description; photos over 10 MB are shrunk in the browser to 2,400 px. Built without a new library (canvas) | CONFIRMED (screens: PO review) |
 | Collections | ≤ 100 per user, ≤ 1,000 items, unique names | CONFIRMED |
 | Reporting in P1 | Custom skills and profiles | CONFIRMED |
 | Account deletion | Deactivate now, hard delete after 14 days | CONFIRMED |
@@ -140,6 +141,15 @@ Read the documents in this order before writing any code.
 | Visual design source | Claude Design `dodoi App v3.dc.html`, local copy in `docs/design/`; tokens extracted into UI_UX_GUIDELINES §2. DC-01–05 resolved; remaining conflicts OPEN (UI_UX_GUIDELINES §10) | CONFIRMED |
 | Custom interests | Immediately public, normalized to prevent duplicates, reportable | CONFIRMED |
 | Experience levels | Curious / Beginner / Intermediate / Experienced | CONFIRMED |
+| Phase 2 start | Draft the Phase 2 spec (P2-00) now, in parallel with Phase 1 sign-off; no Phase 2 code until the PO approves it (2026-10-28) | CONFIRMED |
+| Comment threading (OD-25) | One level of replies: comments + replies to a comment; replies to a reply attach to the same comment (2026-10-28) | CONFIRMED |
+| User upload licence (OD-05) | Makers keep ownership; publishing grants dodoi a non-exclusive licence to show the post on dodoi only, ending on deletion; "my own work" confirmation; takedown via Report "Not my work" + support email. Legal wording pending (2026-10-28) | CONFIRMED (wording: PO to confirm with legal) |
+| First Phase 2 slice | Create post: P2-01 user uploads → P2-02 create/preview/edit/delete (2026-10-28) | CONFIRMED |
+| Phase 2 spec details | PRODUCT_REQUIREMENTS §6.1 and the §9.1 / §1b sections it links, including the 7 highlighted proposals (verified email for public actions, required alt text, no unpublish, owner-only follower counts, in-app notifications every 60 s, MODERATOR role, Create post built from the system) — approved 2026-10-28 | CONFIRMED |
+| Creative journal (P2-03) | Built 2026-10-29: `/journal` (sidebar; phones reach it from the profile's Projects tab), project pages `/projects/{id}` per design `1g`, "Start as my project" on tutorials, Share → draft post | CONFIRMED (screens: PO review) |
+| Journal entry title | Entries get an optional title, as design `1g` shows (the approved spec had text + photos only) | PROPOSED — PO to confirm |
+| Newest-entry dot | Shown still, not pulsing as in `1g`, following the no-looping-motion decision of 2026-10-28 | PROPOSED — PO to confirm |
+| Create post experience | PO request (2026-10-28): the Create post flow must be really interactive, attractive and easy; richer motion allowed within the tokens — **Instagram flow chosen (2026-10-28):** picker opens at once → Pick → Arrange → Details (caption-style rows) → Share, uploads start on pick, Preview optional, one publish celebration, reduced-motion respected — UI_UX_GUIDELINES §8.1, USER_FLOWS F-17 | CONFIRMED (screens: PO review) |
 
 The full list of open decisions lives in [docs/PRODUCT_REQUIREMENTS.md §9](docs/PRODUCT_REQUIREMENTS.md#9-open-decisions-register).
 

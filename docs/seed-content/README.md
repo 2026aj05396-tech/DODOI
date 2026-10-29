@@ -54,7 +54,7 @@ The numbers and the focus list live in `src/lib/constants/seed-coverage.ts`.
 | `attribution` | yes | See below. |
 | `authorUsername` | invited creators only | The creator's real dodoi username; `null` otherwise. |
 
-Media: images JPEG, PNG, WebP or HEIC, ≤ 10 MB, at least 600 px on the short side; videos MP4, MOV or WebM, ≤ 60 s, ≤ 50 MB. Unknown keys are rejected. Full contract: API_SPECIFICATION §8.
+Media: images JPEG, PNG, WebP or HEIC, ≤ 10 MB (no minimum size; under 600 px on the short side may look soft); videos MP4, MOV or WebM, ≤ 60 s, ≤ 50 MB. Unknown keys are rejected. Full contract: API_SPECIFICATION §8.
 
 ## Attribution by source
 

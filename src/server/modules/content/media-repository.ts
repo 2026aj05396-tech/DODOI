@@ -27,6 +27,15 @@ export async function findMediaById(id: string): Promise<MediaRow | null> {
   return db.mediaAsset.findUnique({ where: { id }, select: mediaSelect });
 }
 
+/** Media rows by id; with `ownerId`, only those that user uploaded. */
+export async function findMediaByIds(ids: string[], ownerId?: string): Promise<MediaRow[]> {
+  if (ids.length === 0) return [];
+  return db.mediaAsset.findMany({
+    where: { id: { in: ids }, ...(ownerId ? { ownerId } : {}) },
+    select: mediaSelect,
+  });
+}
+
 export async function findMediaByPublicId(publicId: string): Promise<MediaRow | null> {
   return db.mediaAsset.findUnique({ where: { publicId }, select: mediaSelect });
 }
@@ -68,6 +77,8 @@ export async function findOrphanedMedia(cutoff: Date) {
       profileAvatar: null,
       skillCovers: { none: {} },
       themeCovers: { none: {} },
+      // Journal entry photos (P2-03) live on the media table's relation too.
+      entryMedia: { none: {} },
     },
     select: { id: true, type: true, publicId: true },
   });

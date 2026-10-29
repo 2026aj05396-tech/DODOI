@@ -63,13 +63,38 @@ describe("media", () => {
       });
     });
 
-    it("answers 404 to non-admins and signed-out callers", async () => {
-      const input = { purpose: "post", type: "IMAGE", bytes: MB, mimeType: "image/jpeg" } as const;
+    it("signs a user's post and journal uploads (P2-01); covers stay admin-only", async () => {
+      const user = actorFor(await createUser());
+      const provider = createFakeMediaProvider();
+      const image = { type: "IMAGE", bytes: MB, mimeType: "image/jpeg" } as const;
 
-      await expect(signMediaUpload(actorFor(await createUser()), input)).rejects.toMatchObject({
+      await expect(
+        signMediaUpload(
+          user,
+          { purpose: "post", type: "VIDEO", bytes: 30 * MB, mimeType: "video/mp4" },
+          { provider },
+        ),
+      ).resolves.toMatchObject({ folder: POSTS, resourceType: "video" });
+      await expect(
+        signMediaUpload(user, { purpose: "entry", ...image }, { provider }),
+      ).resolves.toMatchObject({ folder: "dodoi/local/entries", resourceType: "image" });
+      await expect(signMediaUpload(user, { purpose: "cover", ...image })).rejects.toMatchObject({
         status: 404,
       });
-      await expect(signMediaUpload(null, input)).rejects.toMatchObject({ status: 404 });
+      await expect(signMediaUpload(null, { purpose: "post", ...image })).rejects.toMatchObject({
+        status: 404,
+      });
+    });
+
+    it("refuses videos for journal photos", async () => {
+      await expect(
+        signMediaUpload(actorFor(await createUser()), {
+          purpose: "entry",
+          type: "VIDEO",
+          bytes: MB,
+          mimeType: "video/mp4",
+        }),
+      ).rejects.toMatchObject({ status: 400, code: "UNSUPPORTED_MEDIA_TYPE" });
     });
 
     it("refuses oversized and unsupported files before signing", async () => {
@@ -161,7 +186,6 @@ describe("media", () => {
     it.each([
       ["over 10 MB", uploaded(`${POSTS}/x`, { bytes: 10 * MB + 1 }), 413],
       ["in the wrong format", uploaded(`${POSTS}/x`, { format: "gif" }), 400],
-      ["too small", uploaded(`${POSTS}/x`, { width: 800, height: 500 }), 400],
     ])("deletes an image %s from Cloudinary and rejects it", async (_label, asset, status) => {
       const provider = createFakeMediaProvider();
       provider.assets.set(asset.publicId, asset);
@@ -251,6 +275,29 @@ describe("media", () => {
     );
 
     expect(updated.altText).toBe("A granny square in teal");
+  });
+
+  it("lets the uploader change their own alt text, and nobody else but admins", async () => {
+    const provider = createFakeMediaProvider();
+    provider.assets.set(`${POSTS}/mine`, uploaded(`${POSTS}/mine`));
+    const owner = actorFor(await createUser());
+    const media = await registerMedia(
+      owner,
+      { purpose: "post", type: "IMAGE", publicId: `${POSTS}/mine` },
+      { provider },
+    );
+    const input = { altText: "My first pinch pot" };
+
+    await expect(updateMedia(owner, media.id, input, { provider })).resolves.toMatchObject({
+      altText: "My first pinch pot",
+    });
+    await expect(
+      updateMedia(actorFor(await createUser()), media.id, input, { provider }),
+    ).rejects.toMatchObject({ status: 404 });
+    await expect(updateMedia(null, media.id, input, { provider })).rejects.toMatchObject({
+      status: 404,
+    });
+    await expect(updateMedia(await admin(), media.id, input, { provider })).resolves.toBeTruthy();
   });
 
   it("deletes media left unattached for over 24 hours, and keeps used or recent media", async () => {

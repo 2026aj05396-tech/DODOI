@@ -2,7 +2,7 @@ import type { FieldErrors } from "@/server/lib/errors";
 
 // What a post needs before it can be (or stay) published (P1-16; DC-25, OD-18, PO decisions):
 // skills with an active primary, at least one photo or video, alt text on every image, and
-// attribution that fits its source type.
+// attribution that fits its source type — or, for a maker's own post (P2-02), the own-post rules.
 
 export type PublishState = {
   skills: { skillId: string; isPrimary: boolean }[];
@@ -29,6 +29,40 @@ const missingAlt = (items: PublishState["media"]) =>
 
 /** Field errors that block publishing; empty when the post can be published. */
 export function publishProblems(state: PublishState): FieldErrors {
+  return {
+    ...contentProblems(state),
+    ...attributionProblems(state.attribution, state.authorId),
+  };
+}
+
+/**
+ * A maker's own post (CRT-02/03/05/08): the same skill and media rules, a Tutorial needs at least
+ * two steps and an estimated time, and the maker confirms it is their own work. No attribution:
+ * the creator row shows who made it.
+ */
+export function ownPostProblems(
+  state: Omit<PublishState, "attribution" | "authorId"> & {
+    type: string;
+    stepCount: number;
+    estimatedMinutes: number | null;
+    ownWorkConfirmed: boolean;
+  },
+): FieldErrors {
+  const problems = contentProblems(state);
+  if (state.type === "TUTORIAL") {
+    if (state.stepCount < 2) problems.steps = "A tutorial needs at least two steps.";
+    if (!state.estimatedMinutes) problems.estimatedMinutes = "Add roughly how long it takes.";
+  }
+  if (!state.ownWorkConfirmed) {
+    problems.ownWorkConfirmed = "Confirm this is your own work.";
+  }
+  return problems;
+}
+
+/** Skills with an active main one, at least one photo or video, alt text on every image. */
+function contentProblems(
+  state: Pick<PublishState, "skills" | "skillStatuses" | "media" | "stepMedia">,
+): FieldErrors {
   const problems: FieldErrors = {};
 
   const primary = state.skills.find((skill) => skill.isPrimary);
@@ -41,8 +75,6 @@ export function publishProblems(state: PublishState): FieldErrors {
   if (state.media.length === 0) problems.mediaIds = "Add at least one photo or video.";
   else if (missingAlt(state.media)) problems.mediaIds = "Every photo needs alt text.";
   if (missingAlt(state.stepMedia)) problems.steps = "Every step photo needs alt text.";
-
-  Object.assign(problems, attributionProblems(state.attribution, state.authorId));
   return problems;
 }
 
