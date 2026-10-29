@@ -257,7 +257,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 ## 6. Phase 4 — AI Creative Companion (Milestone M11)
 
-**Before starting:** AI_INTEGRATION §9 decided by the PO on 2026-10-29 (OD-02 Google Gemini, free tier for development only; photos in the first release with provider safety filters + consent + reports; 30-day retention; no private collections). The quota numbers, one-response-at-a-time (no streaming), reportable AI answers and plan → journal project were approved with the spec.
+**Before starting:** AI_INTEGRATION §9 decided by the PO on 2026-10-29 (OD-02 Google Gemini, free tier for local and test (widened 2026-10-29), paid before production; photos in the first release with provider safety filters + consent + reports; 30-day retention; no private collections). The quota numbers, one-response-at-a-time (no streaming), reportable AI answers and plan → journal project were approved with the spec.
 
 | ID | Task |
 |---|---|

@@ -409,7 +409,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 
 ### 6.2 Phase 4 — AI Creative Companion (P4-00, approved 2026-10-29)
 
-**Status: CONFIRMED — approved by the PO on 2026-10-29 with all proposals as written (quotas, one response at a time, reportable AI answers, plans start a journal project).** Decided by the PO: Google Gemini; free tier for development only; first release includes photos; provider safety filters + consent + reports; 30-day retention; no private collections as context (AI_INTEGRATION §9). Everything else here is proposed.
+**Status: CONFIRMED — approved by the PO on 2026-10-29 with all proposals as written (quotas, one response at a time, reportable AI answers, plans start a journal project).** Decided by the PO: Google Gemini; free tier for local and test (widened 2026-10-29), paid before production; first release includes photos; provider safety filters + consent + reports; 30-day retention; no private collections as context (AI_INTEGRATION §9). Everything else here is proposed.
 
 | ID | Requirement |
 |---|---|
@@ -455,7 +455,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | ID | Decision | Blocks | Phase |
 |---|---|---|---|
 | OD-01 | Hosting for the **test** and **production** environments (three environments CONFIRMED: local, test, production — SYSTEM_ARCHITECTURE §13). Must be free for now. **Test: Vercel Hobby + Neon (DECIDED 2026-10-27).** Production: open (Hobby is non-commercial) | Deployment tasks | Production: before launch |
-| OD-02 | ~~AI provider and model(s)~~ — **RESOLVED 2026-10-29: Google Gemini** (free tier for development only, since it lets Google use submitted content; paid tier with no-training terms before any real user or photo; AI_INTEGRATION §9) | All AI work | P4 |
+| OD-02 | ~~AI provider and model(s)~~ — **RESOLVED 2026-10-29: Google Gemini** (free tier for local and test, since no paid model is available yet — it lets Google use submitted content, so testers are told; paid tier with no-training terms before production; AI_INTEGRATION §9) | All AI work | P4 |
 | OD-03 | Video calls: integrated vs external provider | Sessions | P3 |
 | OD-04 | Monetization | — | Later |
 | OD-05 | ~~Content licensing for user uploads~~ — **RESOLVED (2026-10-28):** makers keep ownership; publishing grants dodoi a non-exclusive, royalty-free licence to show the post on dodoi only, ending when the post or account is deleted; maker confirms it is their own work; takedown via Report ("Not my work") + support email. **Legal wording pending (OD-26 / pre-launch legal review)** | — | — |

@@ -75,7 +75,7 @@ const serverEnvSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
   // AI companion (P4-01, AI_INTEGRATION §13). Off unless AI_ENABLED is "true"; then the key and
-  // model are required. The free tier is for development only (PO): see the rule below.
+  // model are required. The free tier is for local and test environments only (PO, 2026-10-29).
   AI_ENABLED: z
     .enum(["true", "false"])
     .default("false")
@@ -86,7 +86,7 @@ const serverEnvSchema = z.object({
     .string()
     .optional()
     .transform((model) => model || undefined),
-  /** `free` lets Google use submitted content, so it is allowed only when APP_ENV is local. */
+  /** `free` lets Google use submitted content, so production needs `paid`; local and test may use `free`. */
   AI_TIER: z.enum(["free", "paid"]).default("free"),
   GEMINI_API_KEY: z
     .string()
@@ -131,12 +131,12 @@ const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
         });
       }
     }
-    if (env.AI_TIER === "free" && env.APP_ENV !== "local") {
+    if (env.AI_TIER === "free" && env.APP_ENV === "production") {
       context.addIssue({
         code: "custom",
         path: ["AI_TIER"],
         message:
-          "AI_TIER=free lets Google use submitted content, so it is for local development only; use AI_TIER=paid",
+          "AI_TIER=free lets Google use submitted content, so it is not allowed in production; use AI_TIER=paid",
       });
     }
   }
