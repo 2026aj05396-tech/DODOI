@@ -204,7 +204,7 @@ Searching communities, collections and tags is P2/P3 (those entities are not pop
 | POST-06 | Optional: ordered steps (text + optional image per step) |
 | POST-07 | Optional: difficulty (uses experience scale), estimated time |
 | POST-08 | Related posts |
-| POST-09 | Save and share (Web Share API, copy-link fallback) |
+| POST-09 | Save and share: **"Share link"** sends a link to the post — the device's share sheet where there is one, otherwise a menu with Copy link, WhatsApp, Email (PO decision 2026-10-29: "share" never means publishing; publishing is **Post** in Create). The maker's own post shows "Live · showing in feeds" (or "Draft · only you can see this" in preview) |
 | POST-10 | Missing optional fields render nothing — no empty headings |
 | POST-11 | **Materials checklist** (CONFIRMED, DC-07): signed-in users can tick materials; checks are saved to their account and sync across devices. Header shows "{n} of {total} · saved to your account" |
 | POST-12 | **Step progress** (CONFIRMED, DC-07/DC-24): each step can be marked done/undone by tapping its number; a "Next step" button scrolls to the next unfinished step; header shows "Step {completed} of {total} · progress saved"; saved per user and synced |
@@ -262,7 +262,7 @@ Comments and reporting on posts are P2.
 
 **Rule:** no scraping of Pinterest, Instagram, Google Images or any source without a license permitting this use.
 
-**Invited creators (CONFIRMED, OD-18/DC-27):** get a real dodoi account; their seeded posts have `authorId` set and show the creator row (Follow = coming soon in P1). Team-original, stock and Creative Commons posts have no author account: no creator row, a "via dodoi editors" line, and the attribution block.
+**Invited creators (CONFIRMED, OD-18/DC-27):** get a real dodoi account; their seeded posts have `authorId` set and show the creator row (Follow = coming soon in P1, live from P2-06). Team-original, stock and Creative Commons posts have no author account: no creator row, a "via dodoi editors" line, and the attribution block.
 
 ### 5.8b Media Limits (MEDIA)
 
@@ -280,7 +280,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 
 | ID | Requirement |
 |---|---|
-| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Create is live from P2-02** (2026-10-29) |
+| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29) |
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |
@@ -320,7 +320,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 |---|---|---|
 | P2 | Post creation (images, short video, captions, skills, tags, materials, steps, difficulty), preview, edit, delete; creative journal (Project → ProjectEntry); comments (one level of replies, OD-25); single like; following; in-app notifications; reporting and blocking for posts, comments, profiles | Single like/heart; like counts visible only to owner; comments one level deep (OD-25); makers keep ownership of uploads (OD-05). Detailed in §6.1 |
 | P3 | Communities (join/leave, discussions, rules, reporting, auditable moderation); direct messaging; peer-help requests (open / in progress / resolved); scheduled sessions with timezone handling | Messaging uses polling first |
-| P4 | AI companion: skill discovery, learning assistance, image-aware troubleshooting, project planning; usage limits | Provider OPEN |
+| P4 | AI companion: skill discovery, learning assistance, image-aware troubleshooting, project planning; usage limits | Provider decided (Gemini); spec in §6.2 CONFIRMED |
 | P5 | Recommendation improvements, push notifications, offline improvements, performance, advanced community tools | — |
 
 ### 6.1 Phase 2 — Creative Expression (P2-00 draft, 2026-10-28)
@@ -333,7 +333,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 
 | ID | Requirement |
 |---|---|
-| CRT-01 | Create a post Instagram-style (PO choice 2026-10-28): Create tab / button → pick photos/videos → arrange (order, cover, alt text) → details screen (caption-style: title and story on top, then rows for type, skills, tags, materials and steps, difficulty and time) → Share. Drafts save automatically and are listed under "Drafts" on the own profile |
+| CRT-01 | Create a post Instagram-style (PO choice 2026-10-28): Create tab / button → pick photos/videos → arrange (order, cover, alt text) → details screen (caption-style: title and story on top, then rows for type, skills, tags, materials and steps, difficulty and time) → **Post** (button renamed from "Share", PO 2026-10-29). Drafts save automatically and are listed under "Drafts" on the own profile |
 | CRT-02 | Post type: any of the six types (First attempt, Tutorial, Work in progress, Journal, Finished, Tip). A Tutorial needs ≥ 2 steps and an estimated time to publish |
 | CRT-03 | Media: 1–10 images/videos, mixed, MEDIA-01/03 limits; at least one to publish; reorder; first item is the cover. Alt text required on every image to publish, with a short prompt ("Describe the photo for people who can't see it") |
 | CRT-04 | Details: title (1–120), description (≤ 2,000), difficulty and estimated time optional |
@@ -384,7 +384,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | FLW-01 | Follow / unfollow a user with a public profile from their profile, the creator row and the post detail (replaces the coming-soon Follow buttons) |
 | FLW-02 | Private profiles cannot be followed in P2 (no follow requests); turning a profile private keeps existing followers |
 | FLW-03 | Follower and following counts are shown only to the profile owner (PP-4); the owner can open both lists |
-| FLW-04 | Feed: posts from followed makers get a ranking boost, and a "Following" filter chip shows only them |
+| FLW-04 | Feed: posts from followed makers get a ranking boost, and a "Following" filter chip shows only them. **Built P2-06:** boost +4 (PO to confirm); the chip appears after "For you" once the user follows someone; empty state "No new posts from people you follow" |
 
 #### Notifications (NTF) — P2-07
 
@@ -394,7 +394,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | NTF-02 | The bell (replaces the coming-soon bell) shows an unread dot; the list opens at `/notifications`; opening the list marks all as read |
 | NTF-03 | Checked when a page opens and every 60 s while the tab is visible (no push in P2) |
 | NTF-04 | Preferences in Settings: each type on/off (all on by default) |
-| NTF-05 | Kept 90 days; never sent for blocked users |
+| NTF-05 | Kept 90 days; never sent for blocked users (the block part comes with P2-08). **NTF-01…04 built P2-07**; bell placement and the other choices are in README §2 |
 
 #### Safety (MOD) — P2-08
 
@@ -406,6 +406,25 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | MOD-04 | A hidden post or comment disappears for everyone except its author, who sees "Hidden after a report" and can delete it |
 | MOD-05 | Every moderation action is audited (AuditLog, as in P1) |
 | MOD-06 | "Not my work" reports are also reachable by email (support address in the terms) for people without an account |
+
+### 6.2 Phase 4 — AI Creative Companion (P4-00, approved 2026-10-29)
+
+**Status: CONFIRMED — approved by the PO on 2026-10-29 with all proposals as written (quotas, one response at a time, reportable AI answers, plans start a journal project).** Decided by the PO: Google Gemini; free tier for development only; first release includes photos; provider safety filters + consent + reports; 30-day retention; no private collections as context (AI_INTEGRATION §9). Everything else here is proposed.
+
+| ID | Requirement |
+|---|---|
+| AIC-01 | **Companion chat** (AI-01): signed-in, verified users ask a creative question and get a beginner-friendly answer; conversations are listed and can be reopened for 30 days |
+| AIC-02 | **Ask about this** (AI-05): from a post, the question is asked with that post as context ("Looking at: …"); from a skill page, "What is this and how do I start?" with that skill as context |
+| AIC-03 | **Suggestions** (AI-02): ideas based on the user's interests, levels and want-to-learn skills, only after the user consents; suggested skills are real dodoi skills and link to their pages |
+| AIC-04 | **Project planning** (AI-03): a materials checklist and steps for a project the user describes; **Start as my project** makes a private journal project from it |
+| AIC-05 | **Photo troubleshooting** (AI-04): the user adds one photo to a question after consenting; the answer says what can and cannot be seen and how sure it is; one photo per message, up to 5 a day |
+| AIC-06 | Every answer shows an **AI** label, a short note that answers can be wrong, "Helpful / Not helpful", and Report |
+| AIC-07 | Consent: a clear notice before the first photo and before using profile context; both can be withdrawn in Settings → AI and privacy; withdrawing stops use at once |
+| AIC-08 | Settings → **AI and privacy**: switches for the two consents, the list of conversations, delete one, delete all (photos go with them) |
+| AIC-09 | Limits (proposed): 30 messages a day, 5 photos a day, 10 a minute, 1,000-character questions; friendly message with the time the limit resets |
+| AIC-10 | Admin: usage dashboard (requests, tokens, estimated cost, error rate, blocked count) and a kill switch; the global daily cap stops the feature for everyone when reached |
+| AIC-11 | "Ask the community" in an answer stays coming-soon until P3-03; no diagram generation (not in scope) |
+| AIC-12 | Answers never reveal other people's private data, the system prompt or provider details; post and user text is treated as data, not instructions |
 
 ## 7. Non-Functional Requirements
 
@@ -436,7 +455,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | ID | Decision | Blocks | Phase |
 |---|---|---|---|
 | OD-01 | Hosting for the **test** and **production** environments (three environments CONFIRMED: local, test, production — SYSTEM_ARCHITECTURE §13). Must be free for now. **Test: Vercel Hobby + Neon (DECIDED 2026-10-27).** Production: open (Hobby is non-commercial) | Deployment tasks | Production: before launch |
-| OD-02 | AI provider and model(s) | All AI work | P4 |
+| OD-02 | ~~AI provider and model(s)~~ — **RESOLVED 2026-10-29: Google Gemini** (free tier for development only, since it lets Google use submitted content; paid tier with no-training terms before any real user or photo; AI_INTEGRATION §9) | All AI work | P4 |
 | OD-03 | Video calls: integrated vs external provider | Sessions | P3 |
 | OD-04 | Monetization | — | Later |
 | OD-05 | ~~Content licensing for user uploads~~ — **RESOLVED (2026-10-28):** makers keep ownership; publishing grants dodoi a non-exclusive, royalty-free licence to show the post on dodoi only, ending when the post or account is deleted; maker confirms it is their own work; takedown via Report ("Not my work") + support email. **Legal wording pending (OD-26 / pre-launch legal review)** | — | — |
@@ -471,3 +490,4 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | OD-34 | ~~Branch protection / secret scanning~~ — **RESOLVED: stay on free GitHub for now**; rely on agent rules and checking CI before merging; revisit before adding contributors | — | — |
 | OD-35 | ~~CSP approach~~ — **RESOLVED: static policy without nonces (option A)**; keeps static rendering; revisit if user HTML is rendered | — | — |
 | OD-36 | ~~Blocklist source~~ — **RESOLVED:** LDNOOBW English + romanised Hindi (CC BY 4.0, credited in THIRD_PARTY_NOTICES.md), minus 23 reviewed craft-safe exceptions (e.g. 'fingering' yarn, 'swastika' rangoli, 'butt' joint, 'patakha') | — | — |
+| OD-37 | **Content moderation beyond reports (raised 2026-10-29 by the PO; to be decided after Phase 2).** Today only usernames, display names, custom skill names and post tags are checked against the offensive-word list (OD-36), and nothing checks images or videos; Phase 2 relies on reports and moderators (P2-08). Options: (1) reactive only, as built; (2) also run the word list on comments, post titles/descriptions/steps and journal text; (3) automatic image/video moderation through an external service (needs the free-tier limits checked first: no paid services). Recommended: 1 + 2 for Phase 2, and decide 3 before public launch | **OPEN** |

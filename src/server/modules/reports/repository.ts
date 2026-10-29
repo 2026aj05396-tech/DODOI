@@ -1,9 +1,9 @@
 import "server-only";
 
-import type { Prisma, ReportReason } from "@/generated/prisma/client";
+import type { Prisma, ReportReason, ReportTargetType } from "@/generated/prisma/client";
 import { db } from "@/server/db/client";
 
-type Target = { targetType: "SKILL" | "PROFILE"; targetId: string };
+type Target = { targetType: ReportTargetType; targetId: string };
 
 export async function findOpenReport(reporterId: string, target: Target) {
   return db.report.findFirst({
@@ -14,7 +14,7 @@ export async function findOpenReport(reporterId: string, target: Target) {
 
 export async function insertReport(data: {
   reporterId: string;
-  targetType: "SKILL" | "PROFILE";
+  targetType: ReportTargetType;
   targetId: string;
   reason: ReportReason;
   note: string | null;

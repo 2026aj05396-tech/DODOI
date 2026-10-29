@@ -533,7 +533,7 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 |---|---|
 | P2 | Specified in §9.1 (CONFIRMED, P2-00) |
 | P3 | Community, Membership, CommunityPost, Conversation, ConversationParticipant, Message, HelpRequest, HelpResponse, Session (rename to `CreativeSession` to avoid clashing with Auth.js `Session`) |
-| P4 | AIConversation, AIMessage, AIUsage (retention policy required) |
+| P4 | Specified in §9.2 (CONFIRMED, P4-00) |
 
 ### 9.1 Phase 2 models (CONFIRMED — P2-00 approved 2026-10-28)
 
@@ -581,7 +581,7 @@ model Comment {
   parentId  String?                              // set on replies; a reply's parent has parentId null (service-enforced, OD-25)
   body      String    @db.VarChar(1000)
   editedAt  DateTime?
-  deletedAt DateTime?                            // soft delete only when it has replies (CMT-02); otherwise hard delete
+  deletedAt DateTime?                            // soft delete only when it has replies (CMT-02); body is cleared and authorId set to null; otherwise hard delete
   hiddenAt  DateTime?                            // MOD-04
   createdAt DateTime  @default(now())
   post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -589,10 +589,11 @@ model Comment {
   parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies Comment[] @relation("Replies")
   @@index([postId, parentId, createdAt])
+  @@index([parentId, createdAt])               // replies under a comment (added when built, P2-04)
   @@index([authorId])
 }
 
-model PostLike {
+model PostLike {                                  // built P2-05; table post_like, snake_case columns like the rest
   postId    String
   userId    String
   createdAt DateTime @default(now())
@@ -602,7 +603,7 @@ model PostLike {
   @@index([userId])
 }
 
-model Follow {
+model Follow {                                    // built P2-06; table follow, snake_case columns; also indexed on (followerId, createdAt desc) for the Following list
   followerId String
   followeeId String
   createdAt  DateTime @default(now())
@@ -612,7 +613,7 @@ model Follow {
   @@index([followeeId, createdAt(sort: Desc)])
 }
 
-model Block {
+model Block {                                     // built P2-08; table block, snake_case columns
   blockerId String
   blockedId String
   createdAt DateTime @default(now())
@@ -672,7 +673,7 @@ model ProjectEntryMedia {
   @@unique([entryId, position])
 }
 
-model Notification {
+model Notification {                              // built P2-07; table notification, snake_case columns; also relations post and comment (onDelete Cascade, so a deleted post or comment takes its notifications), actor (SetNull) and indexes (recipientId, readAt) and (actorId)
   id          String           @id @default(cuid())
   recipientId String
   type        NotificationType
@@ -685,7 +686,7 @@ model Notification {
   @@index([recipientId, createdAt(sort: Desc)])
 }
 
-model NotificationPreference {                     // a row only when a type is switched off (NTF-04)
+model NotificationPreference {                    // built P2-07; table notification_preference                     // a row only when a type is switched off (NTF-04)
   userId  String
   type    NotificationType
   enabled Boolean @default(false)
@@ -698,6 +699,8 @@ model NotificationPreference {                     // a row only when a type is 
 
 **Built so far (P2-02, migration `20261028165443_user_posts_tags`):** `Post.ownWorkConfirmedAt`, `Tag`, `PostTag` as listed (`Tag.normalizedName` = the lowercased name; no separate display case). Tag names join skill names at weight C in `search_vector`. The other §9.1 models come with their tasks.
 
+**Built (P2-08, migrations `safety` and `blocks`, 2026-10-29):** `Role.MODERATOR`, `ReportTargetType.POST` / `COMMENT`, `ReportReason.NOT_MY_WORK`, `Post.hiddenAt`, `Block`. The published-post queries all exclude `hiddenAt` posts; an own post that is hidden is listed with the maker's drafts.
+
 **Rules**
 - **"Own post"** = `authorId` is the user **and** the post has no `PostAttribution` row: invited creators' seeded posts also have an author, but always attribution, and stay admin-managed. An own post an admin unpublished is listed with the maker's drafts and can be shared again.
 - Likes are grouped into one notification per post per day when read (NTF-01) at query time; rows stay one per like.
@@ -705,3 +708,75 @@ model NotificationPreference {                     // a row only when a type is 
 - Search: `Post.searchVector` adds tag names at weight C, with skill names.
 - Lifecycle additions to §7: notifications deleted after 90 days (daily job); deleting a post cascades comments, likes, tags and saves; account deletion removes likes, follows, blocks, notifications, projects and their media; the deletion job first turns the user's comments that have replies into "Comment deleted" (as CMT-02, so other people's replies stay) and deletes the rest.
 
+### 9.2 Phase 4 models (CONFIRMED — P4-00 approved 2026-10-29)
+
+Requirements: PRODUCT_REQUIREMENTS §6.2; rules: AI_INTEGRATION §10. Snake_case table and column names like the rest.
+
+```prisma
+enum AIContextType     { NONE POST SKILL }
+enum AIMessageRole     { USER ASSISTANT }
+enum AIMessageStatus   { OK BLOCKED ERROR }               // BLOCKED: provider safety filter; ERROR: provider failure
+enum AIUsageStatus     { OK BLOCKED ERROR QUOTA }
+enum ConsentType       { AI_IMAGES AI_PROFILE_CONTEXT }
+
+model AIConversation {
+  id          String        @id @default(cuid())
+  userId      String                                       // Cascade: account deletion removes it
+  contextType AIContextType @default(NONE)
+  contextId   String?                                      // post or skill id; no FK (the post may go)
+  title       String?       @db.VarChar(80)                // start of the first question
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt                     // last message: the 30-day clock
+  messages    AIMessage[]
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+model AIMessage {
+  id             String          @id @default(cuid())
+  conversationId String                                    // Cascade
+  role           AIMessageRole
+  content        String          @db.VarChar(8000)
+  imageMediaId   String?                                   // MediaAsset purpose `ai`; deleted with the conversation
+  promptVersion  String?                                   // assistant messages
+  status         AIMessageStatus @default(OK)
+  createdAt      DateTime        @default(now())
+  feedback       AIFeedback?
+  @@index([conversationId, createdAt])
+}
+
+model AIUsage {                                            // no message text, ever
+  id           String        @id @default(cuid())
+  userId       String?                                     // SetNull on account deletion
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costMicros   Int           @default(0)                   // millionths of a US dollar, from AI_*_PRICE_PER_M
+  latencyMs    Int
+  status       AIUsageStatus
+  hasImage     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+model AIFeedback {
+  messageId String   @id                                   // one per assistant message; Cascade
+  userId    String                                         // Cascade
+  helpful   Boolean
+  comment   String?  @db.VarChar(300)
+  createdAt DateTime @default(now())
+}
+
+model Consent {
+  userId        String                                     // Cascade
+  type          ConsentType
+  policyVersion String                                     // e.g. "ai-2026-1"
+  grantedAt     DateTime
+  revokedAt     DateTime?                                  // withdrawing stops use at once
+  @@id([userId, type])
+}
+```
+
+**Built (P4-01, migration `ai_companion`, 2026-10-29):** all five models as above, with `AIMessage.imageMediaId` → `MediaAsset` (SetNull; the orphan cleanups treat a photo referenced by a message as used), `AIUsage.userId` SetNull, the rest Cascade, an extra index on `AIConversation.updatedAt` for the retention job. Table names `ai_conversation`, `ai_message`, `ai_usage`, `ai_feedback`, `consent`.
+
+**Rules:** `AI_IMAGES` is needed before a message with a photo, `AI_PROFILE_CONTEXT` before interests and levels go into a prompt; a revoked or missing consent is the same as none. Quotas are counted from `AIUsage` and the rate-limit buckets (`ai-message`, `ai-message-minute`). The daily jobs delete conversations whose `updatedAt` is over 30 days old (with their photos) and `AIUsage` rows over 12 months old. `Media` gains purpose `ai` (images only, folder `ai/`, uploader-owned, counted as used while a message references it, removed by the orphan cleanup otherwise).

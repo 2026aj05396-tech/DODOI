@@ -7,7 +7,10 @@ import { OPEN_GRAPH_DEFAULTS, TWITTER_DEFAULTS } from "@/lib/constants/share-met
 import { getActor } from "@/server/auth";
 import { NotFoundError } from "@/server/lib/errors";
 import { orNotFound } from "@/server/lib/not-found";
+import { getCommentCount } from "@/server/modules/comments";
 import { getPostDetail, getPostProgress, getRelatedPosts } from "@/server/modules/content";
+import { getFollowState } from "@/server/modules/follows";
+import { getPostLikeState } from "@/server/modules/likes";
 
 type Params = PageProps<"/p/[id]">["params"];
 
@@ -51,12 +54,25 @@ export default function PostPage({ params }: PageProps<"/p/[id]">) {
 async function PostContent({ params }: { params: Params }) {
   const actor = await getActor();
   const { id } = await params;
-  const [post, related, progress] = await Promise.all([
+  const [post, related, progress, commentCount, like] = await Promise.all([
     orNotFound(getPostDetail(actor, id)),
     orNotFound(getRelatedPosts(actor, id)),
     actor ? orNotFound(getPostProgress(actor, id)) : null,
+    getCommentCount(id),
+    actor ? orNotFound(getPostLikeState(actor, id)) : null,
   ]);
-  return <PostDetail post={post} related={related} progress={progress} />;
+  const follow = actor && post.creator ? await getFollowState(actor, post.creator.username) : null;
+  return (
+    <PostDetail
+      post={post}
+      related={related}
+      progress={progress}
+      commentCount={commentCount}
+      isEmailVerified={actor?.isEmailVerified ?? false}
+      like={like}
+      follow={follow}
+    />
+  );
 }
 
 function PostSkeleton() {

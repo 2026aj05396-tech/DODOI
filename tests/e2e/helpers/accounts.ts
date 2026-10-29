@@ -24,6 +24,7 @@ export function createPasswordAccount(
     noPassword?: boolean;
     onboardingIncomplete?: boolean;
     admin?: boolean;
+    moderator?: boolean;
     /** Skill slugs added as interests. */
     interests?: string[];
   } = {},
@@ -38,9 +39,18 @@ export function createPasswordAccount(
     ...(options.noPassword ? ["--no-password"] : []),
     ...(options.onboardingIncomplete ? ["--onboarding-incomplete"] : []),
     ...(options.admin ? ["--admin"] : []),
+    ...(options.moderator ? ["--moderator"] : []),
     ...(options.interests ? [`--interests=${options.interests.join(",")}`] : []),
   ]);
   return { email, password: PASSWORD };
+}
+
+/**
+ * Gives an existing account a post of theirs with a comment and three likes from other makers, and
+ * a new follower, as notifications. Returns the post's title.
+ */
+export function createNotifications(email: string): string {
+  return run(["notifications", email]).trim();
 }
 
 /** A valid email-verification token for an existing account (stands in for the emailed link). */
@@ -59,16 +69,23 @@ export function resetRateLimits(): void {
 }
 
 /** A published (or draft) Creative Commons tutorial with every section, plus one related post. */
-export function createPost(options: { status?: "PUBLISHED" | "DRAFT" } = {}): {
+export function createPost(options: { status?: "PUBLISHED" | "DRAFT"; creator?: boolean } = {}): {
   id: string;
   relatedId: string;
+  creatorUsername?: string;
+  creatorName?: string;
 } {
   const output = execFileSync(
     "pnpm",
     ["exec", "tsx", join(__dirname, "create-post.ts"), JSON.stringify(options)],
     { encoding: "utf8" },
   );
-  return JSON.parse(output) as { id: string; relatedId: string };
+  return JSON.parse(output) as {
+    id: string;
+    relatedId: string;
+    creatorUsername?: string;
+    creatorName?: string;
+  };
 }
 
 /** A new skill (unique name, with a pitch) and `count` published posts on it, for feed tests. */

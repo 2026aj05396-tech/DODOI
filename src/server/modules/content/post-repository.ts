@@ -42,6 +42,7 @@ export type PostCardRow = Prisma.PostGetPayload<{ select: typeof cardSelect }>;
 const detailSelect = {
   ...cardSelect,
   status: true,
+  hiddenAt: true,
   createdAt: true,
   description: true,
   difficulty: true,
@@ -56,7 +57,8 @@ const detailSelect = {
 
 export type PostDetailRow = Prisma.PostGetPayload<{ select: typeof detailSelect }>;
 
-const PUBLISHED = { status: "PUBLISHED" } as const;
+/** Published and not hidden after a report (MOD-04). */
+const PUBLISHED = { status: "PUBLISHED", hiddenAt: null } as const;
 
 export async function findPostDetail(id: string): Promise<PostDetailRow | null> {
   return db.post.findUnique({ where: { id }, select: detailSelect });
@@ -111,6 +113,10 @@ export async function findRelatedCandidates(postId: string, skillIds: string[], 
 export async function findFeedCandidates(options: {
   excludeIds: string[];
   excludeAuthorId?: string;
+  /** Authors blocked either way with the viewer (MOD-02). */
+  excludeAuthorIds?: string[];
+  /** Only posts by these authors (the "Following" filter, FLW-04). */
+  authorIds?: string[];
   skillId?: string;
   take: number;
 }) {
@@ -119,9 +125,22 @@ export async function findFeedCandidates(options: {
       ...PUBLISHED,
       ...(options.excludeIds.length > 0 ? { id: { notIn: options.excludeIds } } : {}),
       // Posts without an author (team, stock, Creative Commons) have a null author_id.
-      ...(options.excludeAuthorId
-        ? { OR: [{ authorId: null }, { authorId: { not: options.excludeAuthorId } }] }
+      ...(options.excludeAuthorId || options.excludeAuthorIds?.length
+        ? {
+            OR: [
+              { authorId: null },
+              {
+                authorId: {
+                  notIn: [
+                    ...(options.excludeAuthorId ? [options.excludeAuthorId] : []),
+                    ...(options.excludeAuthorIds ?? []),
+                  ],
+                },
+              },
+            ],
+          }
         : {}),
+      ...(options.authorIds ? { authorId: { in: options.authorIds } } : {}),
       ...(options.skillId ? { skills: { some: { skillId: options.skillId } } } : {}),
       // Cards need a cover (P1-15); posts without media never reach a page.
       media: { some: {} },
@@ -130,6 +149,7 @@ export async function findFeedCandidates(options: {
     take: options.take,
     select: {
       id: true,
+      authorId: true,
       publishedAt: true,
       difficulty: true,
       skills: { select: { skillId: true, isPrimary: true } },
@@ -156,6 +176,24 @@ export async function countBeginnerPosts(skillIds: string[], maxMinutes: number)
 
 export async function isPublishedPost(id: string): Promise<boolean> {
   return (await db.post.count({ where: { id, ...PUBLISHED } })) > 0;
+}
+
+/** Titles of the published posts among `ids`. */
+export async function findPublishedPostTitles(
+  ids: string[],
+): Promise<{ id: string; title: string }[]> {
+  if (ids.length === 0) return [];
+  return db.post.findMany({
+    where: { id: { in: ids }, ...PUBLISHED },
+    select: { id: true, title: true },
+  });
+}
+
+/** The author of a published post: `{ authorId: null }` for team posts, null when not published. */
+export async function findPublishedPostAuthor(
+  id: string,
+): Promise<{ authorId: string | null } | null> {
+  return db.post.findFirst({ where: { id, ...PUBLISHED }, select: { authorId: true } });
 }
 
 const themeSelect = {
@@ -280,4 +318,17 @@ export async function countPublishedPostsBySkill() {
     where: { post: PUBLISHED },
     _count: { _all: true },
   });
+}
+
+/** Posts by id for the moderation queue (hidden ones included). */
+export async function findPostsForModeration(ids: string[]) {
+  if (ids.length === 0) return [];
+  return db.post.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, title: true, hiddenAt: true, status: true, authorId: true },
+  });
+}
+
+export async function updatePostHidden(id: string, hidden: boolean): Promise<void> {
+  await db.post.update({ where: { id }, data: { hiddenAt: hidden ? new Date() : null } });
 }

@@ -27,6 +27,14 @@ export async function findMediaById(id: string): Promise<MediaRow | null> {
   return db.mediaAsset.findUnique({ where: { id }, select: mediaSelect });
 }
 
+/** An image the owner uploaded, with the format the provider reports (photos sent to the AI). */
+export async function findOwnImage(id: string, ownerId: string) {
+  return db.mediaAsset.findFirst({
+    where: { id, ownerId, type: "IMAGE" },
+    select: { publicId: true, format: true },
+  });
+}
+
 /** Media rows by id; with `ownerId`, only those that user uploaded. */
 export async function findMediaByIds(ids: string[], ownerId?: string): Promise<MediaRow[]> {
   if (ids.length === 0) return [];
@@ -79,6 +87,8 @@ export async function findOrphanedMedia(cutoff: Date) {
       themeCovers: { none: {} },
       // Journal entry photos (P2-03) live on the media table's relation too.
       entryMedia: { none: {} },
+      // Photos sent to the companion (P4-01) stay until their conversation goes.
+      aiMessages: { none: {} },
     },
     select: { id: true, type: true, publicId: true },
   });

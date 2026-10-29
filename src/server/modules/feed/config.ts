@@ -13,6 +13,8 @@ export const FEED_CONFIG = {
     { maxAgeDays: 7, points: 2 },
     { maxAgeDays: 30, points: 1 },
   ],
+  /** followBoost: a post by a maker the user follows (FLW-04; PROPOSED, PO to confirm the size). */
+  followBoost: 4,
   /** saveAffinity: per post skill found in the user's recent saves. */
   saveAffinityPerSkill: 1,
   /** negativeFeedbackPenalty: per post skill of posts the user marked "Not interested". */

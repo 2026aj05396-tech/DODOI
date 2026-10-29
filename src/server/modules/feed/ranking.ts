@@ -3,11 +3,13 @@ import type { ExperienceLevel } from "@/lib/schemas/me";
 import { FEED_CONFIG } from "./config";
 
 // Feed ranking rules (SYSTEM_ARCHITECTURE §7), free of I/O so each rule has a unit test.
-// Score = interestMatch + levelFit + freshness + saveAffinity − notInterestedPenalty; then the
+// Score = interestMatch + levelFit + freshness + saveAffinity + followBoost − notInterestedPenalty; then the
 // discovery quota (For you only) and the diversity re-ordering.
 
 export type RankCandidate = {
   id: string;
+  /** Null for team, stock and Creative Commons posts. */
+  authorId: string | null;
   publishedAt: Date;
   difficulty: ExperienceLevel | null;
   skillIds: string[];
@@ -18,6 +20,8 @@ export type RankingContext = {
   interests: Set<string>;
   /** The user's level per skill, where they gave one. */
   levels: Map<string, ExperienceLevel>;
+  /** Makers the user follows (FLW-04). */
+  followedAuthors: Set<string>;
   /** Skills of posts saved recently. */
   savedSkills: Set<string>;
   /** Skills of posts marked "Not interested" recently. */
@@ -56,12 +60,17 @@ export function scoreCandidate(
   const fresh = freshnessPoints(candidate.publishedAt, context.now);
   if (mode === "newToYou") return fit + fresh;
 
+  const followed =
+    candidate.authorId && context.followedAuthors.has(candidate.authorId)
+      ? FEED_CONFIG.followBoost
+      : 0;
   const count = (skills: Set<string>) =>
     candidate.skillIds.filter((skillId) => skills.has(skillId)).length;
   return (
     count(context.interests) * FEED_CONFIG.interestMatchPerSkill +
     fit +
     fresh +
+    followed +
     count(context.savedSkills) * FEED_CONFIG.saveAffinityPerSkill -
     count(context.notInterestedSkills) * FEED_CONFIG.notInterestedPenaltyPerSkill
   );

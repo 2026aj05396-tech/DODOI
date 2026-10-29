@@ -21,6 +21,12 @@ const ALLOWED_PLACEHOLDERS = new Set([
   "http://localhost:3000",
   "dodoi <onboarding@resend.dev>",
   "smtp.gmail.com",
+  // AI companion defaults (P4-01).
+  "false",
+  "gemini",
+  "free",
+  "500",
+  "0",
 ]);
 
 const SECRET_PATTERNS: [string, RegExp][] = [

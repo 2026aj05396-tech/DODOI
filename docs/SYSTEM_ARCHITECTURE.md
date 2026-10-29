@@ -46,7 +46,7 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Local infra | Docker Compose (PostgreSQL) | CONFIRMED |
 | Hosting | Test: Vercel Hobby + Neon (DEPLOYMENT.md) | Test DECIDED 2026-10-27; production OPEN (OD-01) |
 | Messaging transport (P3) | Polling | CONFIRMED |
-| AI provider (P4) | — | OPEN (OD-02) |
+| AI provider (P4) | Google Gemini API, server-side key, behind `AIProvider` (`src/server/integrations/ai/`); the SDK (or plain REST) is added in P4-01 only; free tier for development only, paid tier before any real user (AI_INTEGRATION §9) | CONFIRMED provider (OD-02, 2026-10-29); version and package chosen in P4-01 |
 
 ## 3. Supporting Libraries (APPROVED before P0-02)
 
@@ -122,10 +122,12 @@ src/
 │   │   ├── collections/                # saves, collections
 │   │   ├── admin/                      # audit log, admin ops
 │   │   ├── (P2) content/ gains user posts + tags; journal/ (projects, entries — built P2-03; uses content for media and posts, skills, users);
-│   │   │   social/ (comments, likes, follows); notifications/; users/ gains blocks
+│   │   │   comments/ (built P2-04; uses content for the post's author, users for writers' profiles); likes/ (built P2-05; uses content for the post's author); follows/ (built P2-06; uses users for profiles; read by feed and library); notifications/ (built P2-07; called by comments, likes and follows; reads content and users; purged by the daily jobs); users/ gains blocks
 │   │   │   (`notBlockedWith`, used by every module that shows others' content); reports/ gains
-│   │   │   posts, comments and the MODERATOR role — no separate moderation/ module
-│   │   └── (P3+) communities/ messaging/ help/ sessions/ ai/
+│   │   │   posts, comments and the MODERATOR role (built P2-08) — no separate moderation/ module;
+│   │   │   blocks/ (built P2-08: block / unblock / list, over the block-table reads in users)
+│   │   ├── (P4) ai/ (conversations, messages, consents, usage, planning; talks to the provider only through server/integrations/ai; reads content for the post or skill in view, users for interests, journal to start a project from a plan)
+│   │   └── (P3+) communities/ messaging/ help/ sessions/
 │   ├── integrations/
 │   │   ├── email/   (resend and smtp implementations)
 │   │   ├── media/   (cloudinary implementation)
@@ -168,7 +170,7 @@ Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the P
 
 **Candidate pool:** published posts, excluding: posts the user hid ("not interested"), posts already served in this feed session, (P2: blocked users' posts).
 
-**Score** = `interestMatch` + `levelFit` + `freshness` + `saveAffinity` − `negativeFeedbackPenalty`, then **diversity re-ranking**.
+**Score** = `interestMatch` + `levelFit` + `freshness` + `saveAffinity` + `followBoost` − `negativeFeedbackPenalty`, then **diversity re-ranking**.
 
 | Signal | Rule (CONFIRMED) |
 |---|---|
@@ -177,6 +179,7 @@ Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the P
 | freshness | decays with post age (e.g. +2 if < 7 days, +1 if < 30 days) |
 | saveAffinity | +1 per post skill that appears in user's saves from the last 30 days (0 until saving exists, P1-24) |
 | negativeFeedbackPenalty | −2 per post skill of posts the user marked "not interested" in the last 30 days (those posts are hidden for good) |
+| followBoost | +4 per post by a maker the user follows (P2-06, FLW-04; PROPOSED size, PO to confirm; `FEED_CONFIG.followBoost`). The **Following** filter shows only followed makers' posts, with no discovery quota |
 | Discovery quota | ≥ 20% of each For you page drawn from posts with no skill among the user's interests (when such posts exist), replacing the lowest-ranked interest posts |
 | Diversity | no more than 2 consecutive items with the same primary skill |
 

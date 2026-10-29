@@ -200,14 +200,14 @@ Own full profile: `{ username, displayName, bio, avatar: Media|null, visibility,
 
 ### GET /api/profiles/{username} — User*
 Public profile: `{ username, displayName, bio, avatarUrl, skills: { interests[], canHelp[], wantsToLearn[] } (with levels), publicCollections: CollectionSummary[] }`.
-Full view also has `isPrivate: false`, `isOwner` and `visibility`; skills are active skills only; `publicCollections` are most recently changed first. Private profile (OD-10) → `{ username, displayName, avatarUrl, isPrivate: true }` only (the owner always gets the full view). Unknown, deactivated or hidden-after-report profiles → `404` (owners still see their own). **Never** includes email, DOB, role, internal IDs beyond what is needed.
+Full view also has `isPrivate: false`, `isOwner`, `visibility`, `follow` and (owner only) `followCounts`; skills are active skills only; `publicCollections` are most recently changed first. Private profile (OD-10) → `{ username, displayName, avatarUrl, isPrivate: true }` only (the owner always gets the full view). Unknown, deactivated or hidden-after-report profiles → `404` (owners still see their own). **Never** includes email, DOB, role, internal IDs beyond what is needed.
 
 ---
 
 ## 5. Feed, Posts, Themes, Search
 
 ### GET /api/feed — User
-Query: `filter` (`for-you` default · `skill:<slug>` (must be one of the actor's interests) · `new-to-you`), `cursor`, `limit`. A call without cursor creates a feed session bound to that filter; changing filter = new session.
+Query: `filter` (`for-you` default · `following` (P2-06) · `skill:<slug>` (must be one of the actor's interests) · `new-to-you`), `cursor`, `limit`. A call without cursor creates a feed session bound to that filter; changing filter = new session.
 Response: `{ items: FeedItem[], nextCursor }`. Cursor encodes feed session; no post repeats within a session (FEED-09).
 
 ```ts
@@ -298,7 +298,9 @@ Removes from this collection only; save remains. → `204`.
 ### POST /api/reports — User (verified email)
 `{ "targetType": "SKILL" | "PROFILE", "targetId": "…", "reason": "OFFENSIVE" | "SPAM" | "IMPERSONATION" | "OTHER", "note"?: "…" }` → `201` (also `201` if an open report by the same user already exists — idempotent). `targetId` is the skill id, or the **username** for a profile (public responses never expose user ids; the report stores the user id). Only custom skills (`400 NOT_REPORTABLE`); unverified → `403 EMAIL_NOT_VERIFIED`; yourself → `422 SELF_REPORT`. Rate limit 10 / day / user (`429`).
 
-### GET /api/admin/reports?status=OPEN|RESOLVED&cursor= — Admin
+**P2-08 (built 2026-10-29):** `targetType` also accepts `POST` (`targetId` = post id) and `COMMENT` (comment id); `reason` also `NOT_MY_WORK`. Only posts and comments the reporter can see (published, not hidden, not by someone blocked either way) → else `404`; your own → `422 SELF_REPORT`. `GET /api/admin/reports` and `POST /api/admin/reports/{id}/action` are open to **Moderators and Admins** (everyone else `404`); `HIDE_TARGET` / `RESTORE_TARGET` set `hiddenAt` on posts and comments (audited as `report.hide_target` / `report.restore_target` with `targetType` `post` / `comment`). Report groups for posts and comments show the title / the first 140 characters, link to `/p/{id}` (comments with `#comment-{id}`), and say "Post" / "Comment".
+
+### GET /api/admin/reports?status=OPEN|RESOLVED&cursor= — Moderator or Admin
 One row per reported target (PO decision, P1-28b): `{ reportId, targetType, target: { label, href, detail, isHidden }, reportCount, reasons: { REASON: n }, notes: [{ reason, note, createdAt }], latestAt, status }`, newest report first. Reporters are never included (RPT-05).
 
 ### POST /api/admin/reports/{id}/action — Admin
@@ -433,15 +435,17 @@ Share (JRN-05): the client creates the draft with `POST /api/me/posts` and `proj
 | `PATCH /api/comments/{id}` | Owner | `{ body }` → sets `editedAt` |
 | `DELETE /api/comments/{id}` | Owner, or the post's author | Soft or hard delete (CMT-02/03) → `204` |
 
+Built P2-04 (2026-10-29): all five routes need a signed-in user; reading and writing apply to **published posts only** (others → `404`). A `Comment` is `{ id, postId, parentId, body (null when deleted), isDeleted, author ({ username, displayName, avatarUrl } or null), createdAt, editedAt, isOwn, canDelete, replyCount, replies }`; lists are `{ items, nextCursor }`, 20 per page, oldest first. `GET …/replies` without a cursor starts from the first reply. Errors: `403 EMAIL_NOT_VERIFIED` (POST), `404` for a post that is not published, a comment that is not the caller's to edit or delete, or a `parentId` on another post; `422` replying to a deleted comment; `429` at 30 an hour. Deleting a reply also removes its parent when the parent is "Comment deleted" and this was its last reply. The public count is shown on the post page (comments and replies still shown), not an API field.
+
 **Likes, follows, blocks (P2-05, P2-06, P2-08)** — idempotent PUT/DELETE, `204`.
 
 | Method & path | Who | Purpose |
 |---|---|---|
-| `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author |
-| `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404` |
-| `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `isFollowing` and, for the owner, counts |
-| `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02) |
-| `GET /api/me/blocks?cursor=` | User | Block list |
+| `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author. **Built P2-05:** `204`; unlike needs only a signed-in user; `404` for a post that is not published; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour. `isLiked` and `likeCount` reach the post page from the server (not an API field); cards have no `isLiked` yet |
+| `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404`. **Built P2-06:** `204`, idempotent; unfollow needs only a signed-in user and works even if the profile went private since; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour (follows and unfollows together) |
+| `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `follow: { canFollow, isFollowing }` and, for the owner only, `followCounts: { followers, following }` (built P2-06). Lists are `{ items: [{ username, displayName, avatarUrl }], nextCursor }`, newest first, 20 per page; profiles that are hidden or deactivated are left out |
+| `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02). **Built P2-08:** `204`, idempotent; `422 SELF_BLOCK`; `404` unknown username; blocking removes follows and notifications between the two; nobody is told |
+| `GET /api/me/blocks?cursor=` | User | Block list: `{ items: [{ username, displayName }], nextCursor }`, newest first (hidden profiles stay listed so they can be unblocked). `PATCH /api/admin/users/{id}/role` `{ role: "USER" \| "MODERATOR" }` → `204`, Admin only, audited (`user.make_moderator` / `user.remove_moderator`); `422 ADMIN_ROLE_LOCKED` for an admin; no screen yet |
 
 **Notifications (P2-07)**
 
@@ -452,6 +456,29 @@ Share (JRN-05): the client creates the draft with `POST /api/me/posts` and `proj
 | `POST /api/notifications/read` | User | Mark all read → `204` |
 | `GET` / `PUT /api/me/notification-preferences` | User | `{ COMMENT: true, REPLY: true, FOLLOW: true, LIKE: true }` |
 
+Built P2-07 (2026-10-29): an item is `{ id, type, actors: [{ username, displayName, avatarUrl }] (up to 2, newest first), actorCount, post: { id, title } | null, commentId, isUnread, createdAt }`; the list reads 50 notifications at a time and groups likes on one post on one day within them, so a day's likes can split across two pages. Items about a post that is no longer published are left out. `PUT` takes any of the four booleans and answers `200` with all four. Comments (COMMENT to the post's author, REPLY to the comment replied to), likes and follows record a notification after they succeed; a failure to record one is logged and never fails the action.
+
 **Safety (P2-08)** — `POST /api/reports` accepts `targetType: "POST" | "COMMENT"` and `reason: "NOT_MY_WORK"`. `/api/admin/reports*` opens to `Moderator` (other `/api/admin/*` stays Admin); `HIDE_TARGET` sets `hiddenAt` on posts and comments. `PATCH /api/admin/users/{id}/role` `{ role: "USER" | "MODERATOR" }` — Admin, audited.
 
 **Feed (P2-06)** — `GET /api/feed?filter=following` (FLW-04); `/api/feed/filters` lists "Following" once the user follows someone.
+
+### 9.2 Phase 4 endpoints (CONFIRMED — P4-00 approved 2026-10-29)
+
+All need a signed-in, verified user unless noted; all answer `503 AI_UNAVAILABLE` when `AI_ENABLED` is off, the global cap is reached, the provider fails, or the tier rule is not met (free tier outside local). No provider detail is ever in a response.
+
+| Method & path | Purpose |
+|---|---|
+| `POST /api/ai/messages` (**built P4-01**) | `{ conversationId?, text (1–1,000), context?: { type: "POST" \| "SKILL", id }, imageMediaId? }` → `201 { conversation, userMessage, assistantMessage }`. Without `conversationId` a new conversation starts (the context is fixed for its life). `403 AI_CONSENT_REQUIRED` (photo without `AI_IMAGES`), `404` (context not visible to the user, or someone else's conversation or photo), `422 AI_BLOCKED` (provider safety filter; the message is stored with status BLOCKED), `429 AI_QUOTA` (with the reset time) or `429` (per-minute), `503 AI_UNAVAILABLE` |
+| `POST /api/ai/plan` | `{ text (1–1,000), skillId? }` → `200 { title, craft, materials: string[], steps: string[] }` (validated; one retry on invalid output). Counts as a message for the quota |
+| `GET /api/ai/conversations?cursor=` (**built P4-01**) | The user's conversations, newest activity first: `{ items: [{ id, title, contextType, context: { id, title } \| null, updatedAt }], nextCursor }` |
+| `GET /api/ai/conversations/{id}` (**built P4-01**) | Messages oldest first: `{ id, context, messages: [{ id, role, content, imageUrl, status, feedback: { helpful } \| null, createdAt }] }`; others' → `404` |
+| `DELETE /api/ai/conversations/{id}` / `DELETE /api/ai/conversations` (**built P4-01**) | Delete one / all, with their photos → `204` |
+| `PUT /api/ai/messages/{id}/feedback` (**built P4-01**) | `{ helpful, comment? (≤300) }` → `204`; assistant messages in your conversations only |
+| `GET /api/me/consents` / `PUT /api/me/consents` (**built P4-01**) | `{ AI_IMAGES: boolean, AI_PROFILE_CONTEXT: boolean }` → grant or withdraw (records policy version and time) |
+| `GET /api/admin/ai/usage?from=&to=` | Admin: `{ totals: { requests, inputTokens, outputTokens, costMicros, errors, blocked }, byDay: […] }` — no content |
+| `PUT /api/admin/ai/switch` | Admin: `{ enabled }` kill switch stored in the database, in addition to the `AI_ENABLED` env flag |
+
+Not built yet: `POST /api/ai/plan` (P4-03) and the admin endpoints (P4-05). Built details (P4-01): the quota errors are `429 AI_QUOTA` with `Retry-After` and `fields.resetAt` (ISO time); a blocked request answers `422 AI_BLOCKED` and stores the question as BLOCKED; context can only be a post the user can see (published, not hidden, not by someone blocked) or an active skill; the answer is capped at 8,000 characters.
+
+Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only).
+

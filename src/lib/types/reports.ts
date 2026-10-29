@@ -5,11 +5,11 @@ import type { ReportReason } from "@/lib/schemas/reports";
 export type ReportGroup = {
   /** Any report of the group; actions use it to find the target. */
   reportId: string;
-  targetType: "SKILL" | "PROFILE";
+  targetType: "SKILL" | "PROFILE" | "POST" | "COMMENT";
   target: {
-    /** Skill name or display name; null when the target no longer exists. */
+    /** Skill name, display name, post title or the start of a comment; null when it no longer exists. */
     label: string | null;
-    /** `/s/{slug}` or `/u/{username}` (opens only while visible). */
+    /** `/s/{slug}`, `/u/{username}` or `/p/{id}` (a comment opens at its post). */
     href: string | null;
     detail: string | null;
     isHidden: boolean;

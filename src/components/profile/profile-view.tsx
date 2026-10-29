@@ -4,8 +4,10 @@ import Link from "next/link";
 import { LogOutDialog } from "@/components/auth/log-out-dialog";
 import { CollectionTile } from "@/components/collections/collection-tile";
 import { ReportButton } from "@/components/reports/report-button";
+import { BlockButton } from "@/components/safety/block-button";
 import { Button } from "@/components/ui/button";
 import type { Paginated } from "@/lib/types/api";
+import type { FollowCounts, FollowState } from "@/lib/types/follows";
 import type { ProjectSummary } from "@/lib/types/journal";
 import type { ProfileSkill, ProfileView as ProfileViewData } from "@/lib/types/me";
 import type { OwnPostSummary, PostCard } from "@/lib/types/posts";
@@ -13,6 +15,7 @@ import { cn } from "@/lib/utils/cn";
 import { levelLabel } from "@/lib/utils/post-labels";
 
 import { Avatar } from "./avatar";
+import { FollowButton } from "./follow-button";
 import { ProfileTabs } from "./profile-tabs";
 import { UsernamePrompt } from "./username-prompt";
 
@@ -67,9 +70,15 @@ function SkillGroup({
 function Header({
   profile,
   isOwner,
+  follow,
+  followCounts,
 }: {
   profile: { displayName: string; username: string; avatarUrl: string | null };
   isOwner: boolean;
+  /** Follow button state for someone else's public profile (FLW-01, FLW-02). */
+  follow?: FollowState;
+  /** Owner only (FLW-03). */
+  followCounts?: FollowCounts | null;
 }) {
   return (
     <header className="flex flex-col gap-4">
@@ -80,15 +89,38 @@ function Header({
             {profile.displayName}
           </h1>
           <p className="text-body text-foreground-secondary">@{profile.username}</p>
+          {followCounts ? (
+            <p className="flex gap-3 text-body text-foreground-secondary">
+              <Link href="/profile/followers" className="hover:underline">
+                <span className="font-bold text-foreground">{followCounts.followers}</span>{" "}
+                {followCounts.followers === 1 ? "follower" : "followers"}
+              </Link>
+              <Link href="/profile/following" className="hover:underline">
+                <span className="font-bold text-foreground">{followCounts.following}</span>{" "}
+                following
+              </Link>
+            </p>
+          ) : null}
         </div>
       </div>
       {!isOwner ? (
-        <ReportButton
-          targetType="PROFILE"
-          targetId={profile.username}
-          targetLabel="this profile"
-          className="self-start"
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          {follow?.canFollow ? (
+            <FollowButton
+              username={profile.username}
+              displayName={profile.displayName}
+              initialFollowing={follow.isFollowing}
+              isSignedIn
+              returnTo={`/u/${profile.username}`}
+            />
+          ) : null}
+          <ReportButton
+            targetType="PROFILE"
+            targetId={profile.username}
+            targetLabel="this profile"
+          />
+          <BlockButton username={profile.username} />
+        </div>
       ) : null}
       {isOwner ? (
         <div className="flex flex-wrap gap-2">
@@ -179,7 +211,12 @@ export function ProfileView({
   const hasSkills = GROUPS.some((group) => profile.skills[group.key].length > 0);
   return (
     <div className="flex flex-col gap-6">
-      <Header profile={profile} isOwner={profile.isOwner} />
+      <Header
+        profile={profile}
+        isOwner={profile.isOwner}
+        follow={profile.follow}
+        followCounts={profile.followCounts}
+      />
       {profile.isOwner && profile.isHidden ? (
         <p
           role="status"

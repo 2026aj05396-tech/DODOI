@@ -17,12 +17,13 @@ import {
   getPostCards,
   isPostPublished,
 } from "@/server/modules/content";
+import { getFollowedUserIds } from "@/server/modules/follows";
 import {
   getActiveSkillSummaries,
   getSkillsBySlugs,
   getSuggestionCandidates,
 } from "@/server/modules/skills";
-import { getInterestProfile } from "@/server/modules/users";
+import { getBlockedUserIds, getInterestProfile } from "@/server/modules/users";
 
 import { FEED_CONFIG } from "./config";
 import { rankPage, type RankingContext } from "./ranking";
@@ -108,15 +109,18 @@ export async function getFeed(
   const skillId = await resolveSkillFilter(session.filter, profile);
 
   const since = new Date(Date.now() - FEED_CONFIG.recentSignalDays * DAY_MS);
-  const [served, alreadyOnPage, notInterested, savedSkills] = await Promise.all([
+  const [served, alreadyOnPage, notInterested, savedSkills, followed, blocked] = await Promise.all([
     findServedPostIds(session.id, session.page),
     findPagePostIds(session.id, session.page),
     findNotInterested(user.id, since),
     getRecentlySavedSkillIds(user.id, since),
+    getFollowedUserIds(user.id),
+    getBlockedUserIds(user.id),
   ]);
   const context: RankingContext = {
     interests: new Set(profile.interestIds),
     levels: profile.levels,
+    followedAuthors: followed,
     savedSkills,
     notInterestedSkills: new Set(notInterested.recentSkillIds),
     now: new Date(),
@@ -126,6 +130,10 @@ export async function getFeed(
     excludeIds: [...served, ...notInterested.postIds],
     // CRT-12: makers never see their own posts in their feed.
     excludeAuthorId: user.id,
+    // MOD-02: nobody blocked either way shows in the feed.
+    excludeAuthorIds: [...blocked],
+    // FLW-04: the Following filter shows only makers the user follows.
+    authorIds: session.filter === "following" ? [...followed] : undefined,
     skillId,
     take: FEED_CONFIG.candidateLimit,
   });
@@ -206,10 +214,16 @@ export async function getSkillSuggestion(
   return pickSuggestion(await loadProfile(user.id), provider);
 }
 
-/** GET /api/feed/filters: For you, up to 5 interests (most recently added first), New to you. */
+/**
+ * GET /api/feed/filters: For you, Following (once the user follows someone, FLW-04), up to 5
+ * interests (most recently added first), New to you.
+ */
 export async function getFeedFilters(actor: Actor): Promise<FeedFilterChip[]> {
   const user = requireSignedIn(actor);
-  const { interestIds } = await loadProfile(user.id);
+  const [{ interestIds }, followed] = await Promise.all([
+    loadProfile(user.id),
+    getFollowedUserIds(user.id),
+  ]);
   const skills = await getActiveSkillSummaries(interestIds);
   const chips = interestIds
     .flatMap((id) => skills.get(id) ?? [])
@@ -217,6 +231,7 @@ export async function getFeedFilters(actor: Actor): Promise<FeedFilterChip[]> {
     .map((skill) => ({ key: `skill:${skill.slug}`, label: skill.name }));
   return [
     { key: "for-you", label: "For you" },
+    ...(followed.size > 0 ? [{ key: "following", label: "Following" }] : []),
     ...chips,
     { key: "new-to-you", label: "New to you" },
   ];

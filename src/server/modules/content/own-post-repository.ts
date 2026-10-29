@@ -42,16 +42,31 @@ export async function findOwnPostSummaries(options: {
     where: {
       authorId,
       ...OWN,
-      ...(status === "PUBLISHED" ? { status: "PUBLISHED" } : {}),
-      ...(status === "DRAFT" ? { status: { in: ["DRAFT", "UNPUBLISHED"] } } : {}),
-      ...(after
-        ? {
-            OR: [
-              { updatedAt: { lt: after.updatedAt } },
-              { updatedAt: after.updatedAt, id: { lt: after.id } },
-            ],
-          }
-        : {}),
+      AND: [
+        // Posts hidden after a report are listed with the drafts, so their author can find them
+        // to read the notice and delete them (MOD-04).
+        ...(status === "PUBLISHED" ? [{ status: "PUBLISHED" as const, hiddenAt: null }] : []),
+        ...(status === "DRAFT"
+          ? [
+              {
+                OR: [
+                  { status: { in: ["DRAFT", "UNPUBLISHED"] as ("DRAFT" | "UNPUBLISHED")[] } },
+                  { hiddenAt: { not: null } },
+                ],
+              },
+            ]
+          : []),
+        ...(after
+          ? [
+              {
+                OR: [
+                  { updatedAt: { lt: after.updatedAt } },
+                  { updatedAt: after.updatedAt, id: { lt: after.id } },
+                ],
+              },
+            ]
+          : []),
+      ],
     },
     orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
     take,
@@ -60,6 +75,7 @@ export async function findOwnPostSummaries(options: {
       status: true,
       type: true,
       title: true,
+      hiddenAt: true,
       publishedAt: true,
       updatedAt: true,
       media: coverSelect,

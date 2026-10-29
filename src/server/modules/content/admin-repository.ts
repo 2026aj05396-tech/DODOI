@@ -277,6 +277,8 @@ export async function findUnusedMedia(ids: string[]) {
       themeCovers: { none: {} },
       // Journal entry photos (P2-03) live on the media table's relation too.
       entryMedia: { none: {} },
+      // Photos sent to the companion (P4-01) stay until their conversation goes.
+      aiMessages: { none: {} },
     },
     select: { id: true, type: true, publicId: true },
   });

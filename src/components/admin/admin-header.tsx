@@ -15,20 +15,27 @@ const SECTIONS = [
 ] as const;
 
 /** Admin top bar (not designed: built from the design system, P1-17). Scrolls sideways on phones. */
-export function AdminHeader() {
+export function AdminHeader({ isModerator = false }: { isModerator?: boolean }) {
   const pathname = usePathname();
+  // Moderators only work the reports queue (MOD-03).
+  const sections = isModerator
+    ? SECTIONS.filter((section) => section.href === "/admin/reports")
+    : SECTIONS;
   return (
     <header className="sticky top-0 z-20 border-b border-border-faint bg-background">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3 md:px-8">
-        <Link href="/admin/posts" className="flex shrink-0 items-center gap-2">
+        <Link
+          href={isModerator ? "/admin/reports" : "/admin/posts"}
+          className="flex shrink-0 items-center gap-2"
+        >
           <Wordmark />
           <span className="hidden rounded-full bg-inverse px-2 py-0.5 text-overline text-inverse-foreground uppercase sm:inline">
-            Admin
+            {isModerator ? "Moderator" : "Admin"}
           </span>
         </Link>
         <nav aria-label="Admin" className="min-w-0 flex-1 overflow-x-auto">
           <ul className="flex gap-1">
-            {SECTIONS.map((section) => {
+            {sections.map((section) => {
               const current = pathname.startsWith(section.href);
               return (
                 <li key={section.href}>

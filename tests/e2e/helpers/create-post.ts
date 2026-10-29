@@ -8,13 +8,15 @@ import { PrismaClient } from "@/generated/prisma/client";
 // Usage: tsx create-post.ts <json options>  → prints `{ "id", "relatedId" }`.
 // Creates a Creative Commons tutorial (three photos and a video, materials, steps) on the
 // predefined skill "crochet", plus one related post on the same skill, so the post page has every
-// section. Options: { "status": "PUBLISHED" | "DRAFT" }.
+// section. Options: { "status": "PUBLISHED" | "DRAFT", "creator": true } — `creator` gives the
+// tutorial an invited creator with a public profile and prints `creatorUsername` and `creatorName`.
 // Feed mode: { "feed": { "count": 30 } } → creates a new skill (unique name, with a pitch) and that
 // many published posts on it; prints `{ "skillSlug", "skillName", "ids" }`.
 
 async function main(): Promise<void> {
   const options = JSON.parse(process.argv[2] ?? "{}") as {
     status?: "PUBLISHED" | "DRAFT";
+    creator?: boolean;
     feed?: { count: number };
   };
   const databaseUrl =
@@ -92,12 +94,24 @@ async function main(): Promise<void> {
     const gallery = [await media(1), await media(2), await media(3), await media(4, "VIDEO")];
     const stepPhoto = await media(5);
     const publishedAt = options.status === "DRAFT" ? null : new Date();
+    const creator = options.creator
+      ? await db.user.create({
+          data: {
+            email: `creator-${key}@example.test`,
+            emailVerified: new Date(),
+            ageConfirmedAt: new Date(),
+            profile: { create: { username: `creator-${key}`, displayName: `Meera ${key}` } },
+          },
+          include: { profile: true },
+        })
+      : null;
 
     const post = await db.post.create({
       data: {
         type: "TUTORIAL",
         status: options.status ?? "PUBLISHED",
         publishedAt,
+        authorId: creator?.id,
         title: `Granny square ${key}`,
         description: "Four rounds, one colour.",
         difficulty: "BEGINNER",
@@ -113,7 +127,7 @@ async function main(): Promise<void> {
         },
         attribution: {
           create: {
-            sourceType: "CREATIVE_COMMONS",
+            sourceType: creator ? "INVITED_CREATOR" : "CREATIVE_COMMONS",
             license: "CC BY 4.0",
             attributionText: "Photo by Asha on Wikimedia Commons",
             originalAuthor: "Asha",
@@ -141,7 +155,14 @@ async function main(): Promise<void> {
         },
       },
     });
-    process.stdout.write(JSON.stringify({ id: post.id, relatedId: related.id }));
+    process.stdout.write(
+      JSON.stringify({
+        id: post.id,
+        relatedId: related.id,
+        creatorUsername: creator?.profile?.username,
+        creatorName: creator?.profile?.displayName,
+      }),
+    );
   } finally {
     await db.$disconnect();
   }

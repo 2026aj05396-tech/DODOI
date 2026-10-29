@@ -1,5 +1,6 @@
 import type { ExperienceLevel } from "@/lib/schemas/me";
 import type { CollectionSummary } from "@/lib/types/collections";
+import type { FollowCounts, FollowState } from "@/lib/types/follows";
 import type { Media } from "@/lib/types/media";
 import type { SkillSummary } from "@/lib/types/skills";
 
@@ -68,4 +69,8 @@ export type ProfileView =
       avatarUrl: string | null;
       skills: { interests: ProfileSkill[]; canHelp: ProfileSkill[]; wantsToLearn: ProfileSkill[] };
       publicCollections: CollectionSummary[];
+      /** The Follow button: shown to others on public profiles only (FLW-01, FLW-02). */
+      follow: FollowState;
+      /** Followers and following, for the profile's owner alone (FLW-03). */
+      followCounts: FollowCounts | null;
     };

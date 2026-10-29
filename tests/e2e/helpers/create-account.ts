@@ -8,10 +8,12 @@ import { PrismaClient } from "@/generated/prisma/client";
 // Run with tsx by accounts.ts (Playwright loads test files as CommonJS, but the generated Prisma
 // client is ESM-only). Usage:
 //   tsx create-account.ts account <email> <password> [--unverified] [--age-unconfirmed]
-//       [--no-password] [--onboarding-incomplete] [--admin] [--interests=slug,slug]
+//       [--no-password] [--onboarding-incomplete] [--admin] [--moderator] [--interests=slug,slug]
 //       (onboarding finished by default; --interests adds those skills as interests)
 //   tsx create-account.ts verification-token <email>   (prints a fresh raw token)
 //   tsx create-account.ts reset-token <email>          (prints a fresh raw token)
+//   tsx create-account.ts notifications <email>        (gives the account a post with a comment, three
+//       likes and a new follower, as three makers' notifications; prints the post title)
 //   tsx create-account.ts reset-rate-limits
 
 async function main(): Promise<void> {
@@ -52,13 +54,78 @@ async function main(): Promise<void> {
           emailVerified: flags.includes("--unverified") ? null : new Date(),
           ageConfirmedAt: flags.includes("--age-unconfirmed") ? null : new Date(),
           onboardingCompletedAt: flags.includes("--onboarding-incomplete") ? null : new Date(),
-          role: flags.includes("--admin") ? "ADMIN" : "USER",
+          role: flags.includes("--admin")
+            ? "ADMIN"
+            : flags.includes("--moderator")
+              ? "MODERATOR"
+              : "USER",
           // --no-password: like an account created with Google sign-in.
           passwordHash: flags.includes("--no-password")
             ? null
             : await argon2.hash(password, { type: argon2.argon2id }),
         },
       });
+    } else if (command === "notifications") {
+      const owner = await db.user.findUniqueOrThrow({ where: { email } });
+      const key = randomBytes(4).toString("hex");
+      const skill = await db.skill.findUniqueOrThrow({ where: { slug: "crochet" } });
+      const people = await Promise.all(
+        ["Asha", "Ravi", "Zoya"].map((name) =>
+          db.user.create({
+            data: {
+              email: `${name.toLowerCase()}-${key}@example.test`,
+              emailVerified: new Date(),
+              ageConfirmedAt: new Date(),
+              profile: { create: { username: `${name.toLowerCase()}-${key}`, displayName: name } },
+            },
+          }),
+        ),
+      );
+      const cover = await db.mediaAsset.create({
+        data: {
+          type: "IMAGE",
+          publicId: `dodoi/local/posts/e2e-notify-${key}`,
+          format: "jpg",
+          width: 1200,
+          height: 900,
+          bytes: 100_000,
+          altText: "Hoop",
+        },
+      });
+      const title = `Cherry blossom hoop ${key}`;
+      const post = await db.post.create({
+        data: {
+          authorId: owner.id,
+          type: "FINISHED",
+          status: "PUBLISHED",
+          publishedAt: new Date(),
+          title,
+          skills: { create: { skillId: skill.id, isPrimary: true } },
+          media: { create: { mediaId: cover.id, position: 0 } },
+        },
+      });
+      const comment = await db.comment.create({
+        data: { postId: post.id, authorId: people[0]?.id, body: "Lovely stitches!" },
+      });
+      await db.notification.createMany({
+        data: [
+          ...people.map((person) => ({
+            recipientId: owner.id,
+            type: "LIKE" as const,
+            actorId: person.id,
+            postId: post.id,
+          })),
+          {
+            recipientId: owner.id,
+            type: "COMMENT" as const,
+            actorId: people[0]?.id,
+            postId: post.id,
+            commentId: comment.id,
+          },
+          { recipientId: owner.id, type: "FOLLOW" as const, actorId: people[1]?.id },
+        ],
+      });
+      process.stdout.write(title);
     } else if (command === "verification-token" || command === "reset-token") {
       const user = await db.user.findUniqueOrThrow({ where: { email } });
       const rawToken = randomBytes(32).toString("base64url");

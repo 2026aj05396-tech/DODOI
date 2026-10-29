@@ -1,8 +1,8 @@
 # AI Integration — Creative Companion
 
-**Phase:** P4 (not part of the MVP). **Provider:** OPEN (OD-02).
+**Phase:** P4 (not part of the MVP). **Provider:** Google Gemini (OD-02, decided 2026-10-29 — see §9). **Status: P4-00 spec APPROVED by the PO on 2026-10-29 (all proposals confirmed as written).**
 
-This document defines capabilities, architecture, safety and cost controls in a **provider-agnostic** way. Nothing here may be implemented until the provider and the decisions in §9 are made. No AI SDK is to be installed before then.
+This document defines capabilities, architecture, safety and cost controls behind a provider-agnostic interface. The PO approved this P4-00 spec on 2026-10-29 (as P2-00 did for Phase 2); P4-01 onward implements it. Gemini is the first provider; the adapter keeps it replaceable.
 
 Markers: **CONFIRMED** / **PROPOSED** / **OPEN**.
 
@@ -122,18 +122,47 @@ Free-tier/zero-budget constraint applies until changed.
 - Cache responses for identical non-personal prompts (e.g. skill explainers) — PROPOSED.
 - Usage dashboard (admin) showing requests, tokens, estimated cost, error rate.
 
-## 9. Decisions Required Before P4
+## 9. Decisions (PO, 2026-10-29)
 
-| Decision | Notes |
+| Decision | Outcome | Status |
+|---|---|---|
+| Provider and model (OD-02) | **Google Gemini** via the Gemini API with a server-side key. The model is set by `AI_MODEL`. **First real calls, 2026-10-29 (local, free tier, synthetic prompts):** the key works; `gemini-2.5-flash` is closed to new users (404); `gemini-3.5-flash-lite` answers, handles photos and refuses unsafe or injected requests well and is the local default; `gemini-3.5-flash` also works but is slower and was often "high demand". Models must be **Gemini 3.x**: the adapter sends `thinkingLevel: minimal`, because at the default level hidden thinking tokens used 192 of a 200-token budget and cut the reply off after four words (`low` still did). Pricing is checked when the paid key is created. The PO's Google AI Pro subscription does **not** include API access, so the API key and billing are set up separately | CONFIRMED (provider) |
+| Free tier | **Development only (PO).** Google's terms let content sent through the free ("unpaid") quota be used to improve Google's products and be read by human reviewers, so it must never receive real users' prompts, photos or profile context. The server enforces it: `AI_TIER=free` works only when `APP_ENV=local`; any other environment needs `AI_TIER=paid` (billing enabled, no-training terms) or AI stays off. Free-tier limits are shown per project in Google AI Studio and are not published in the docs: record them in DEPLOYMENT when the key exists | CONFIRMED |
+| Scope of the first release | **Everything, including photos (PO)**: AI-01…AI-05 and AI-04 photo troubleshooting. AI-06 (current sources) stays deferred; AI-07 ("ideas from materials I have") is covered by chat, with no dedicated screen | CONFIRMED |
+| Photo safety (OD-37 for AI photos) | **Provider safety filters + explicit consent + reports (PO).** Gemini's built-in safety filtering is turned on for every request (block medium and above); an image is sent only after the user's consent; a blocked request shows a neutral message; users can report an answer. No separate moderation service. Moderation of photos users post as content stays OD-37 | CONFIRMED |
+| Conversation retention | **30 days, deletable anytime**; usage numbers (no text) kept 12 months. The PO asked what other platforms do: practice varies (some keep chats until deleted, some auto-delete after a set time) and no standard exists, so the proposed default was used | CONFIRMED |
+| Private collections as context | **Never in Phase 4 (PO).** Only interests, levels and want-to-learn skills (with consent and a settings disclosure) and the post or skill being asked about | CONFIRMED |
+| Quotas | Per user: 30 messages a day (photos count within them, at most 5 photos a day), 10 a minute; reply length 800 tokens; the last 10 messages as context; question text 1,000 characters. Global: `AI_DAILY_REQUEST_CAP` (default 500) and `AI_ENABLED` kill switch | CONFIRMED (PO, 2026-10-29) |
+| Streaming | One response per message, shown with a typing indicator (simplest and cheapest to test). Streaming can be added later behind the same interface | CONFIRMED (PO, 2026-10-29) |
+| Moderation of text | Gemini safety settings on every request plus input and output checks in our code (length, injection delimiters, refusals); no separate service | CONFIRMED (PO, 2026-10-29) |
+| Current-sources capability (AI-06) | Deferred; needs a retrieval source decision | OPEN (post-P4) |
+
+## 10. Data Model (approved; DATABASE_SCHEMA §9.2)
+
+`AIConversation` (id, userId, contextType NONE / POST / SKILL, contextId, title, createdAt, updatedAt) · `AIMessage` (id, conversationId, role USER / ASSISTANT, content, imageMediaId, promptVersion, status OK / BLOCKED / ERROR, createdAt) · `AIUsage` (id, userId, model, inputTokens, outputTokens, costMicros, latencyMs, status, hasImage, createdAt; **no content**) · `AIFeedback` (messageId, userId, helpful, comment) · `Consent` (userId, type AI_IMAGES / AI_PROFILE_CONTEXT, policyVersion, grantedAt, revokedAt). Deleting a conversation deletes its messages and photos for good. A daily job removes conversations 30 days after their last message and usage rows after 12 months.
+
+## 11. Project planning (AI-03)
+
+Planning is a separate structured request, not free text: `POST /api/ai/plan` asks the model for `{ title, craft, materials[], steps[] }` (validated with Zod; invalid output is retried once, then an error). The plan shows as a card with **Start as my project**, which creates a private journal project (title, craft, materials checklist) through the journal module. The journal's create-project call gains an optional materials list for this (approved change, built in P4-03).
+
+## 12. Suggestions and links (AI-02, AI-05)
+
+Suggestions use only a short list of **real dodoi skills** supplied in the prompt (names and slugs, never other users' content); the app turns exact skill names in an answer into links to `/s/{slug}`. "Ask about this" passes the one post or skill page in view as context (title, description, materials, steps, creator display name; nothing else about the creator).
+
+## 13. Environment
+
+`GEMINI_API_KEY` (server only), `AI_ENABLED` (default off), `AI_PROVIDER` (`gemini`), `AI_MODEL` (a Gemini 3.x model; `gemini-3.5-flash-lite` locally), `AI_TIER` (`free` or `paid`), `AI_DAILY_REQUEST_CAP`, `AI_INPUT_PRICE_PER_M` and `AI_OUTPUT_PRICE_PER_M` (for the cost estimate; 0 on the free tier). Added to `.env.example` and DEPLOYMENT in P4-01. No AI SDK is installed before P4-01; the Gemini adapter is the only code that may import it.
+
+## 14. Measured behaviour (P4-01, 2026-10-29)
+
+Free tier, `gemini-3.5-flash-lite` and `gemini-3.5-flash`, synthetic prompts, through the real adapter:
+
+| Check | Result |
 |---|---|
-| Provider and model(s) | Quality, vision support, free tier/pricing, data-use terms, latency |
-| Moderation approach | Provider-native vs separate service |
-| Conversation retention | Duration, user deletion, export |
-| Quotas | Per-user and global caps |
-| Streaming | Streamed responses vs single response |
-| Current-sources capability (AI-06) | Search/retrieval provider |
-| Use of private collections as context | Opt-in or never |
+| Plain beginner question | Good, on-brand answer, 200–290 output tokens, about 1,000 characters |
+| Photo (generated striped image) | Described correctly, with a hedge and a suggestion for a better photo (flash-lite; flash timed out once) |
+| Instruction hidden in a post's description | Ignored; the rules were not revealed |
+| Disallowed request | Refused politely by the model (the provider filter did not need to block) |
+| Latency | 3–30 s per reply on the free tier, with "high demand" 503s at times: much slower than a chat should be. Expect better on the paid tier, to be measured when it exists |
+| Hosting | A reply can take over 20 s, so the route sets `maxDuration = 60` and the adapter allows two tries of 25 s; check the function time limit of the chosen host (OD-01) |
 
-## 10. Data Model (to be finalized in P4)
-
-`AIConversation` (id, userId, contextType, contextId, createdAt, deletedAt) · `AIMessage` (id, conversationId, role, content, imageMediaId, promptVersion, createdAt) · `AIUsage` (id, userId, model, inputTokens, outputTokens, costEstimate, latencyMs, status, createdAt) · `AIFeedback` (messageId, helpful, comment) · `Consent` (userId, type, policyVersion, grantedAt, revokedAt).

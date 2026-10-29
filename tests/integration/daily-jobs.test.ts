@@ -67,6 +67,14 @@ describe("daily jobs", () => {
     });
     await createMedia();
 
+    const recipient = await createUser();
+    await db.notification.createMany({
+      data: [
+        { recipientId: recipient.id, type: "FOLLOW", createdAt: ago(91 * DAY_MS) },
+        { recipientId: recipient.id, type: "FOLLOW", createdAt: ago(89 * DAY_MS) },
+      ],
+    });
+
     const deletedUser = await createUser({ emailVerified: null });
     await db.user.update({ where: { id: deletedUser.id }, data: { createdAt: ago(31 * DAY_MS) } });
 
@@ -76,11 +84,15 @@ describe("daily jobs", () => {
       "delete-accounts": 1,
       "purge-auth-tokens": 2,
       "purge-feed-sessions": 1,
+      "purge-notifications": 1,
+      "purge-ai-conversations": 0,
+      "purge-ai-usage": 0,
       "purge-rate-limit-buckets": 1,
       "delete-orphaned-media": 1,
     });
     expect((await db.authToken.findMany()).map((row) => row.tokenHash)).toEqual(["valid"]);
     expect(await db.feedSession.count()).toBe(2);
+    expect(await db.notification.count()).toBe(1);
     expect(await db.feedImpression.count({ where: { sessionId: longExpired.id } })).toBe(0);
     expect((await db.rateLimitBucket.findMany()).map((row) => row.key)).toEqual([
       "reports:current",

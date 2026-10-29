@@ -1,21 +1,27 @@
-import { Pencil, Sparkles } from "lucide-react";
+import { EyeOff, Pencil, Sparkles } from "lucide-react";
 import Link from "next/link";
 
+import { CommentsSection } from "@/components/comments/comments-section";
 import { StartProjectButton } from "@/components/journal/start-project-button";
+import { PostMenu } from "@/components/safety/post-menu";
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/chip";
+import type { FollowState } from "@/lib/types/follows";
+import type { PostLikeState } from "@/lib/types/likes";
 import type {
   PostCard as PostCardData,
   PostDetail as PostDetailData,
   PostProgress,
 } from "@/lib/types/posts";
+import { cn } from "@/lib/utils/cn";
 import { formatMinutes, levelLabel } from "@/lib/utils/post-labels";
 
 import { AttributionBlock } from "./attribution-block";
 import { ComingSoonAction } from "./coming-soon-action";
 import { CreatorRow } from "./creator-row";
+import { LikeButton } from "./like-button";
 import { PostCard } from "./post-card";
 import { PostGallery } from "./post-gallery";
 import { SaveToCollectionButton } from "./save-to-collection-button";
@@ -47,11 +53,23 @@ export function PostDetail({
   post,
   related,
   progress,
+  commentCount,
+  isEmailVerified,
+  like,
+  follow,
 }: {
   post: PostDetailData;
   related: PostCardData[];
   /** The signed-in user's ticks; null for signed-out visitors. */
   progress: PostProgress | null;
+  /** Comments and replies shown on the post (CMT-04, public). */
+  commentCount: number;
+  /** Writing comments needs a verified email (OD-08). */
+  isEmailVerified: boolean;
+  /** The viewer's like; null for signed-out visitors. */
+  like: PostLikeState | null;
+  /** Follow button state for the creator; null for signed-out visitors. */
+  follow: FollowState | null;
 }) {
   const path = `/p/${post.id}`;
   const skills = [...post.skills].sort(
@@ -82,6 +100,18 @@ export function PostDetail({
         </div>
 
         <div className="flex flex-col gap-6 px-5 pt-5 md:px-0 md:pt-7 lg:pt-0">
+          {post.isHidden ? (
+            <p
+              role="status"
+              className="flex items-start gap-2.5 rounded-card bg-destructive-surface p-4 text-body text-foreground"
+            >
+              <EyeOff aria-hidden className="mt-0.5 size-4.5 shrink-0" />
+              <span>
+                <span className="font-bold">Hidden after a report.</span> Only its author and our
+                team can see this post.
+              </span>
+            </p>
+          ) : null}
           <header className="flex flex-col gap-3">
             <ul className="flex flex-wrap gap-1.5" aria-label="About this post">
               {skills.map((skill) => (
@@ -103,10 +133,47 @@ export function PostDetail({
             <h1 className="text-title text-balance text-foreground md:text-title-web">
               {post.title}
             </h1>
-            <CreatorRow creator={post.creator} isOwn={post.isOwn} />
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <CreatorRow
+                  creator={post.creator}
+                  isOwn={post.isOwn}
+                  follow={follow}
+                  returnTo={path}
+                />
+              </div>
+              {like !== null && !post.isOwn ? (
+                <PostMenu
+                  postId={post.id}
+                  creator={
+                    post.creator
+                      ? { username: post.creator.username, displayName: post.creator.displayName }
+                      : null
+                  }
+                />
+              ) : null}
+            </div>
+            {post.isOwn ? (
+              // Your own post says whether others can see it (PO decision 2026-10-29).
+              <p className="inline-flex items-center gap-2 text-meta text-foreground-secondary">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "size-2 rounded-full",
+                    post.isPublished ? "bg-success" : "bg-border-strong",
+                  )}
+                />
+                {post.isPublished ? "Live · showing in feeds" : "Draft · only you can see this"}
+              </p>
+            ) : null}
           </header>
 
-          <div className="hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2.5 md:grid">
+          <div className="hidden grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2.5 md:grid">
+            <LikeButton
+              postId={post.id}
+              initialLiked={like?.isLiked ?? false}
+              isSignedIn={like !== null}
+            />
             <SaveToCollectionButton
               postId={post.id}
               postTitle={post.title}
@@ -131,6 +198,12 @@ export function PostDetail({
             <ShareButton title={post.title} path={path} variant="outline" />
           </div>
 
+          {like?.likeCount != null ? (
+            <p className="text-body text-foreground-secondary">
+              {like.likeCount === 1 ? "1 like" : `${like.likeCount} likes`}
+            </p>
+          ) : null}
+
           {post.description ? (
             <p className="text-body-lg whitespace-pre-line text-foreground md:text-body-lg-web">
               {post.description}
@@ -145,6 +218,14 @@ export function PostDetail({
           />
 
           {post.attribution ? <AttributionBlock attribution={post.attribution} /> : null}
+
+          <CommentsSection
+            postId={post.id}
+            initialCount={commentCount}
+            isSignedIn={progress !== null}
+            isVerified={isEmailVerified}
+            placement="column"
+          />
         </div>
       </article>
 
@@ -169,7 +250,20 @@ export function PostDetail({
         </section>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-2 gap-3 border-t border-muted bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
+      <CommentsSection
+        postId={post.id}
+        initialCount={commentCount}
+        isSignedIn={progress !== null}
+        isVerified={isEmailVerified}
+        placement="page"
+      />
+
+      <div className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-[auto_1fr_1fr] items-center gap-3 border-t border-muted bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden">
+        <LikeButton
+          postId={post.id}
+          initialLiked={like?.isLiked ?? false}
+          isSignedIn={like !== null}
+        />
         {post.isOwn ? (
           <EditPostLink postId={post.id} className="h-13 px-3" />
         ) : post.type === "TUTORIAL" ? (

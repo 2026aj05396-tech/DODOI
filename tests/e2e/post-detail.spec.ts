@@ -7,7 +7,7 @@ import { createPasswordAccount, createPost } from "./helpers/accounts";
 // Media URLs point at the fake "e2e-cloud" Cloudinary account, so images don't load; alt texts and
 // layout still do.
 
-// Without the Web Share API (desktop Chrome), Share copies the link.
+// Without the Web Share API (desktop Chrome), "Share link" opens Copy link / WhatsApp / Email.
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", { value: undefined });
@@ -84,7 +84,7 @@ test("the gallery steps through photos and plays a video when tapped", async ({
   await expect(gallery.locator("video")).toBeVisible();
 });
 
-test("Share copies the link, and Start as my project asks a visitor to sign in", async ({
+test("Share link copies the link, and Start as my project asks a visitor to sign in", async ({
   page,
   context,
 }) => {
@@ -92,7 +92,9 @@ test("Share copies the link, and Start as my project asks a visitor to sign in",
   const { id } = createPost();
   await page.goto(`/p/${id}`);
 
-  await page.getByRole("button", { name: "Share" }).filter({ visible: true }).click();
+  await page.getByRole("button", { name: "Share link" }).filter({ visible: true }).click();
+  await expect(page.getByRole("menuitem", { name: "WhatsApp" })).toBeVisible();
+  await page.getByRole("menuitem", { name: "Copy link" }).click();
   // The toast text is also in its screen-reader announcement.
   await expect(page.getByText("Link copied").first()).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(

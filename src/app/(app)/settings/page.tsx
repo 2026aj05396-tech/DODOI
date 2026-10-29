@@ -1,4 +1,4 @@
-import { ChevronRight, Lock, Sparkles, User, UserCog } from "lucide-react";
+import { Ban, Bell, ChevronRight, Lock, Sparkles, User, UserCog } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -26,6 +26,18 @@ const SECTIONS = [
     icon: Lock,
     title: "Privacy",
     description: "Who can see your profile",
+  },
+  {
+    href: "/settings/notifications",
+    icon: Bell,
+    title: "Notifications",
+    description: "Comments, replies, followers, likes",
+  },
+  {
+    href: "/settings/blocked",
+    icon: Ban,
+    title: "Blocked accounts",
+    description: "People you blocked",
   },
   {
     href: "/settings/account",

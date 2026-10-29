@@ -29,10 +29,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
 async function AdminFrame({ children }: { children: ReactNode }) {
   const actor = await getActor();
-  if (actor?.role !== "ADMIN") notFound();
+  if (actor?.role !== "ADMIN" && actor?.role !== "MODERATOR") notFound();
   return (
     <div className="min-h-dvh">
-      <AdminHeader />
+      <AdminHeader isModerator={actor.role === "MODERATOR"} />
       <main className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-10">{children}</main>
     </div>
   );

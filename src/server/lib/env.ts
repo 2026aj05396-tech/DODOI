@@ -74,6 +74,29 @@ const serverEnvSchema = z.object({
     .url()
     .optional()
     .or(z.literal("").transform(() => undefined)),
+  // AI companion (P4-01, AI_INTEGRATION §13). Off unless AI_ENABLED is "true"; then the key and
+  // model are required. The free tier is for development only (PO): see the rule below.
+  AI_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  AI_PROVIDER: z.enum(["gemini"]).default("gemini"),
+  /** Gemini model id (a model that supports images), chosen when the key is created. */
+  AI_MODEL: z
+    .string()
+    .optional()
+    .transform((model) => model || undefined),
+  /** `free` lets Google use submitted content, so it is allowed only when APP_ENV is local. */
+  AI_TIER: z.enum(["free", "paid"]).default("free"),
+  GEMINI_API_KEY: z
+    .string()
+    .optional()
+    .transform((key) => key || undefined),
+  /** Requests a day for everyone; the companion stops for the rest of the day when reached. */
+  AI_DAILY_REQUEST_CAP: z.coerce.number().int().positive().default(500),
+  /** US dollars per million tokens, for the cost estimate; 0 on the free tier. */
+  AI_INPUT_PRICE_PER_M: z.coerce.number().min(0).default(0),
+  AI_OUTPUT_PRICE_PER_M: z.coerce.number().min(0).default(0),
 });
 
 const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
@@ -97,6 +120,25 @@ const serverEnvWithRulesSchema = serverEnvSchema.superRefine((env, context) => {
       path: ["CRON_SECRET"],
       message: "CRON_SECRET is required outside local development (daily jobs)",
     });
+  }
+  if (env.AI_ENABLED) {
+    for (const name of ["GEMINI_API_KEY", "AI_MODEL"] as const) {
+      if (!env[name]) {
+        context.addIssue({
+          code: "custom",
+          path: [name],
+          message: `${name} is required when AI_ENABLED is true`,
+        });
+      }
+    }
+    if (env.AI_TIER === "free" && env.APP_ENV !== "local") {
+      context.addIssue({
+        code: "custom",
+        path: ["AI_TIER"],
+        message:
+          "AI_TIER=free lets Google use submitted content, so it is for local development only; use AI_TIER=paid",
+      });
+    }
   }
   if (Boolean(env.SMTP_USER) !== Boolean(env.SMTP_PASSWORD)) {
     context.addIssue({

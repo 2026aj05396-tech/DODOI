@@ -19,7 +19,16 @@ const validEnv = {
 
 describe("parseServerEnv", () => {
   it("accepts a complete, valid environment", () => {
-    expect(parseServerEnv(validEnv)).toEqual({ ...validEnv, SMTP_HOST: "smtp.gmail.com" });
+    expect(parseServerEnv(validEnv)).toEqual({
+      ...validEnv,
+      SMTP_HOST: "smtp.gmail.com",
+      AI_ENABLED: false,
+      AI_PROVIDER: "gemini",
+      AI_TIER: "free",
+      AI_DAILY_REQUEST_CAP: 500,
+      AI_INPUT_PRICE_PER_M: 0,
+      AI_OUTPUT_PRICE_PER_M: 0,
+    });
   });
 
   it("names every missing variable in one error", () => {
@@ -96,5 +105,40 @@ describe("parseServerEnv", () => {
     expect(() => parseServerEnv({ ...validEnv, DATABASE_URL: "localhost" })).toThrow(
       /DATABASE_URL/,
     );
+  });
+
+  describe("AI companion (P4-01)", () => {
+    const ai = { AI_ENABLED: "true", GEMINI_API_KEY: "key", AI_MODEL: "a-model" };
+    const hosted = {
+      ...validEnv,
+      APP_ENV: "test",
+      CRON_SECRET,
+      RESEND_API_KEY: "re_test_key_value",
+    };
+
+    it("is off by default and needs no key", () => {
+      expect(parseServerEnv(validEnv)).toMatchObject({ AI_ENABLED: false });
+    });
+
+    it("needs the key and the model when switched on", () => {
+      expect(() => parseServerEnv({ ...validEnv, AI_ENABLED: "true" })).toThrow(
+        /GEMINI_API_KEY[\s\S]*AI_MODEL/,
+      );
+      expect(parseServerEnv({ ...validEnv, ...ai })).toMatchObject({ AI_ENABLED: true });
+    });
+
+    it("allows the free tier only in local development (it lets Google use submitted content)", () => {
+      expect(parseServerEnv({ ...validEnv, ...ai, AI_TIER: "free" })).toMatchObject({
+        AI_TIER: "free",
+      });
+      expect(() => parseServerEnv({ ...hosted, ...ai, AI_TIER: "free" })).toThrow(/AI_TIER/);
+      expect(parseServerEnv({ ...hosted, ...ai, AI_TIER: "paid" })).toMatchObject({
+        AI_TIER: "paid",
+      });
+    });
+
+    it("does not check the tier while the companion is off", () => {
+      expect(parseServerEnv({ ...hosted, AI_TIER: "free" })).toMatchObject({ AI_ENABLED: false });
+    });
   });
 });

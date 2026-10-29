@@ -50,7 +50,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === ADMIN_PATH || pathname.startsWith(`${ADMIN_PATH}/`)) {
-    return token?.role === "ADMIN"
+    // Moderators work the reports queue only (MOD-03); the rest of /admin is for admins.
+    const isReportsPage = pathname === "/admin/reports" || pathname.startsWith("/admin/reports/");
+    const mayOpen = token?.role === "ADMIN" || (token?.role === "MODERATOR" && isReportsPage);
+    return mayOpen
       ? NextResponse.next()
       : NextResponse.rewrite(new URL(NOT_FOUND_PATH, request.url));
   }
@@ -88,10 +91,11 @@ export const config = {
     "/saved/:path*",
     "/create/:path*",
     "/journal/:path*",
+    "/notifications/:path*",
     "/projects/:path*",
     "/u/:path*",
     "/onboarding/:path*",
-    "/profile",
+    "/profile/:path*",
     "/settings/:path*",
     "/admin/:path*",
     "/account-deletion",

@@ -87,10 +87,10 @@ test("E2E-20: a maker keeps a project, finishes it, shows it on the profile and 
   await page.getByRole("tab", { name: "Projects" }).click();
   await expect(page.getByRole("tabpanel").getByText("Granny square blanket")).toBeVisible();
 
-  // Share (JRN-05): a draft post from the latest entry, opened on Details.
+  // Post (JRN-05): a draft post from the latest entry, opened on Details.
   await page.goto(projectUrl);
   await page.waitForLoadState("networkidle");
-  await page.getByRole("button", { name: "Share" }).filter({ visible: true }).click();
+  await page.getByRole("button", { name: "Post", exact: true }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/create\/[a-z0-9]+$/);
   await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("Granny square blanket");
   await expect(page.getByRole("button", { name: /^Type/ })).toContainText("Finished");

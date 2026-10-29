@@ -4,9 +4,10 @@ import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "@/lib/constants/pagination";
 
 // Feed API contracts (API_SPECIFICATION §5, FEED-13).
 
-/** `for-you` · `new-to-you` · `skill:<slug>` (one of the user's interests). */
+/** `for-you` · `following` · `new-to-you` · `skill:<slug>` (one of the user's interests). */
 export const feedFilterSchema = z.union([
   z.literal("for-you"),
+  z.literal("following"),
   z.literal("new-to-you"),
   z.string().startsWith("skill:").min(7).max(100),
 ]);

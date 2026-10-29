@@ -37,7 +37,7 @@ import { usePostDraft, type SaveState } from "./use-post-draft";
 import { useUploads } from "./use-uploads";
 
 // Create post, Instagram-style (P2-02; USER_FLOWS F-17, UI_UX_GUIDELINES §8.1): Pick → Arrange →
-// Details → Share. Uploads start on pick, a draft saves itself, and sharing ends in one short
+// Details → Post. Uploads start on pick, a draft saves itself, and posting ends in one short
 // celebration. A published post opens on Details and saves with "Save" instead.
 
 type Screen = "pick" | "arrange" | "details";
@@ -192,7 +192,7 @@ export function CreatePostFlow({
       return;
     }
     const found: FieldProblems = { ...needed };
-    if (needsOwnWork && !ownWork) found.ownWork = "Tick this to share your post.";
+    if (needsOwnWork && !ownWork) found.ownWork = "Tick this to post it.";
     if (Object.keys(found).length > 0) {
       showProblems(found);
       return;
@@ -206,7 +206,7 @@ export function CreatePostFlow({
       } else {
         showToast({
           message:
-            error instanceof ApiRequestError ? error.message : "We couldn't share it. Try again.",
+            error instanceof ApiRequestError ? error.message : "We couldn't post it. Try again.",
         });
       }
     } finally {
@@ -260,7 +260,8 @@ export function CreatePostFlow({
     action = { label: "Save", onClick: () => void save(), disabled: !draft.isDirty };
   } else {
     action = {
-      label: isSharing ? "Sharing…" : "Share",
+      // "Post", not "Share": sharing means sending a link (PO decision 2026-10-29).
+      label: isSharing ? "Posting…" : "Post",
       onClick: () => void share(),
       disabled: isSharing,
     };

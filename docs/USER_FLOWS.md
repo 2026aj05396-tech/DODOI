@@ -175,8 +175,8 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 2. `[Pick]` big preview of the selected item, thumbnail strip below (progress ring on each until uploaded, "+" to add more, × to remove) → "Next" (top right). A photo can be opened in **Edit photo** (crop shape, zoom, drag, rotate → "Use this photo" uploads the edited version in its place); small photos show a "Small photo" note but are never refused.
 3. `[Arrange]` drag (or arrows) to reorder; first is the cover ("Cover" badge); tap a photo → alt text ("Describe the photo for people who can't see it"), with "2 of 3 photos described" → "Next". Each photo also has "Edit photo".
 4. `[Details]` caption-style screen (each step in Materials and steps can get a photo, which needs a description): cover thumbnail beside the title and story fields; below, tappable rows that open sheets — **Type** (six illustrated choices; Tutorial adds the steps and time rows) · **Skills** (search, 1–5, main one marked; suggested from interests) · **Tags** · **Materials and steps** (optional; required steps for a Tutorial) · **Difficulty and time**. Each row shows its value once set; rows still needed for publishing show a dot. "Preview" link shows the post as others see it.
-5. "Share" (top right; bottom bar on phones). First time: "This is my own work, and I'm happy for dodoi to show it" checkbox (link to terms) → published → short confetti moment and "Posted! Share it?" (Web Share) → post page.
-6. ⚠ Something missing → Share is still tappable; the row with the problem is highlighted and its sheet opens (photos without a description → Arrange; the own-work tick scrolls into view). ⚠ Leaving mid-way → the draft stays; `/create` lists drafts under "Pick up where you left off", and the own profile's Posts tab shows them under "Your drafts"; either reopens a draft on Details.
+5. **"Post"** (top right; bottom bar on phones; was "Share" until 2026-10-29). First time: "This is my own work, and I'm happy for dodoi to show it" checkbox (link to terms) → published → short confetti moment and "Posted!" with "Share link" / "See your post" → post page, which shows "Live · showing in feeds" to its maker.
+6. ⚠ Something missing → Post is still tappable; the row with the problem is highlighted and its sheet opens (photos without a description → Arrange; the own-work tick scrolls into view). ⚠ Leaving mid-way → the draft stays; `/create` lists drafts under "Pick up where you left off", and the own profile's Posts tab shows them under "Your drafts"; either reopens a draft on Details.
 7. Own post page: "Edit post" (in place of "Start as my project" from 768px and "Ask about this" on phones; no Follow on your own creator row) opens Details at `/create/{id}`; changes are live on Save ("Unsaved changes" until then). "Delete post" at the bottom of Details → "Delete this post? Comments, likes and saves go with it." → profile with toast.
 
 ### F-18 Creative journal (JRN-01…07, design `1g`) — built 2026-10-29
@@ -184,32 +184,56 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 1. `[Journal]` (sidebar and `/journal`; on phones via the profile's Projects tab) → "In progress" then "Finished" project cards → "New project" → name and, optionally, one of your crafts → the project page `/projects/{id}`.
 2. Tutorial page → "Start as my project" (from 768px beside Save; on phones in place of "Ask about this") → private project named after the tutorial, on its main craft, its materials as a checklist ("Started from …") → project page. Signed-out visitors are asked to sign in first.
 3. Project page (`1g`, full screen on phones): "Project · in progress" label, title, "{craft} · started {when} · {n} entries" (+ "Only you" while private); materials checklist; entries as a timeline, newest first ("Entry n · today", title, photos, text). "Add progress entry" → sheet: title (optional), what happened, up to 4 photos → added. Each entry: edit / delete.
-4. "Share" (needs an entry) → a draft post from the latest entry (Work in progress, or Finished once the project is) opens in Create on Details (F-17 step 4). Project menu ⋯: Rename · Mark as finished / Reopen · Show on my profile / Make private · Delete project ("Posts you shared from it stay").
+4. "Post" (needs an entry; design `1g` says "Share", renamed 2026-10-29) → a draft post from the latest entry (Work in progress, or Finished once the project is) opens in Create on Details (F-17 step 4). Project menu ⋯: Rename · Mark as finished / Reopen · Show on my profile / Make private · Delete project ("Posts you shared from it stay").
 5. Public projects show on the profile's Projects tab; private ones only to the owner (with a lock).
 
 ### F-19 Comment and reply (CMT-01…05)
 
 1. Post page → "Comments (n)" section below related posts on mobile, below steps on desktop → field "Add a comment" → Post → appears at the end.
 2. "Reply" under a comment → field under it, starting with @username → reply shown under that comment. Replies on a reply go to the same comment.
-3. Own comment menu: Edit (shows "edited"), Delete ("Comment deleted" stays if it has replies). Post author's menu on others' comments: Delete. Everyone else: Report, Block.
+3. Own comment menu: Edit (shows "edited"), Delete ("Comment deleted" stays if it has replies). Post author's menu on others' comments: Delete. Everyone else: Report, Block (P2-08; until then no menu).
+4. Signed-out visitors see the count and "Sign in to read and join the comments" (OD-29); a signed-in user without a verified email can read and sees "Verify your email to comment." (OD-08). A deleted comment gets no new replies.
 
 ### F-20 Like and follow (LIKE-01…03, FLW-01…04)
 
-1. Heart on post detail (and the card menu) → filled at once (optimistic); the author sees "{n} likes" on their own post only.
-2. Follow on a profile, creator row or post → "Following"; unfollow from the same button. Private profiles show no Follow button.
-3. Feed → "Following" chip (once you follow someone) shows only their posts. Own profile → "Followers · Following" (owner only) → lists.
+1. Heart on post detail (built P2-05; the card menu has no heart yet) → filled at once (optimistic); the author sees "{n} likes" on their own post only. Signed-out visitors go to sign-in and return; unverified users get "Verify your email to like posts."
+2. Follow on a profile or the creator row on a post → "Following" at once; unfollow from the same button. Private profiles and your own show no Follow button; signed-out visitors go to sign-in; unverified users get "Verify your email to follow people."
+3. Feed → "Following" chip (once you follow someone) shows only their posts. Own profile → "{n} followers · {n} following" (owner only) → lists at `/profile/followers` and `/profile/following`; unfollow from the Following list.
 
 ### F-21 Notifications (NTF-01…05)
 
-1. Bell shows a dot when something is new (checked on page open and every 60 s) → `/notifications` → list newest first ("Asha commented on Cherry blossom hoop", "Ravi and 3 others liked …", "Meera followed you") → all marked read.
-2. Each item opens the post, comment (scrolled to) or profile. `[Settings] → Notifications` → four switches.
+1. Bell (phone header; feed header from 768px) shows a dot when something is new (checked on page open and every 60 s) → `/notifications` → list newest first ("Asha commented on Cherry blossom hoop", "Ravi and 3 others liked …", "Meera followed you") → all marked read.
+2. Each item opens the post, comment (scrolled to; replies beyond the first 3 under a comment are not) or profile; likes on one post on one day are one line ("Ravi and 3 others liked …"). `[Settings] → Notifications` → four switches (comments, replies, new followers, likes), saved as you flip them.
 
 ### F-22 Report and block (MOD-01…06)
 
-1. Post, comment or profile menu → Report → reason (Offensive · Spam · Impersonation · Not my work · Other) + optional note → "Thanks for letting us know" (as P1).
+1. Post (⋯ next to the creator row), comment (⋯) or profile (Report button) → Report → reason (Offensive · Spam · Impersonation · Not my work · Other) + optional note → "Thanks for letting us know" (as P1).
 2. Menu → Block → "Block @name? You won't see each other's posts, comments or profile, and follows are removed. They won't be told." → Block → back to the previous page with toast; their content disappears.
-3. `[Settings] → Blocked accounts` → Unblock.
-4. Moderator: `/admin/reports` (moderators see only Reports) → Hide post / comment / profile / skill, Dismiss, Show again; author sees "Hidden after a report" on their hidden item.
+3. `[Settings] → Blocked accounts` → Unblock (follows and notifications that were removed do not come back). Profile: a Block button beside Report; post: ⋯ → Block @name; comment: ⋯ → Block @name.
+4. Moderator: `/admin/reports` (moderators see only Reports; admins assign the role through the API for now) → Hide post / comment / profile / skill, Dismiss, Show again; the author sees "Hidden after a report" on their hidden post or comment (a hidden post is listed with their drafts so they can delete it).
+
+### F-23 Ask the companion (AIC-01…03, AIC-06, approved 2026-10-29)
+
+1. Entry points: **Ask dodoi** (pill on phones and tablet, sidebar card on desktop) → `/companion`; **Ask about this** on a post (phones: sticky bar; tablet/desktop: beside the actions) → new chat "Looking at: {post title}"; skill page → **What is this and how do I start?** → new chat about that skill. Signed-out visitors go to sign-in; unverified users are asked to verify.
+2. Chat: field "Ask about a technique…", reply with an **AI** label, "Answers can be wrong", **Helpful / Not helpful**, Report. Skill names the assistant mentions are links. While waiting: a typing indicator. Past chats: list at `/companion` (30 days), reopen, delete.
+3. Desktop (≥ 1280): on a post or skill page the companion docks on the right ("Talking about: {title}") and the sidebar becomes the icon rail (`2c`); elsewhere `/companion` is a two-pane page (list | chat). Phones: list → full-screen chat (`1f`).
+4. Suggestions ("what should I try next?"): the first time, a notice asks to use interests and levels; Allow / Not now. Answers name real dodoi skills.
+5. Limits: at 30 messages a day the field says "You've used today's questions. They reset at {time}."; per-minute limit shows "Slow down a little". AI off or over the global cap: "The companion is resting. Try again later." Blocked by safety filters: "I can't help with that one."
+
+### F-24 Photo troubleshooting (AIC-05, AIC-07, approved 2026-10-29)
+
+1. In the chat field → **Add a photo** (one photo; JPEG, PNG or WebP up to 10 MB) → first time only: consent notice ("Your photo is sent to our AI provider to answer this question. It is kept with this chat for 30 days, and you can delete it any time.") → Allow / Cancel.
+2. The photo uploads at once; the message is sent with it; the answer says what can and cannot be seen and how sure it is, and suggests a better photo if needed (design `1f`).
+3. Withdraw: Settings → AI and privacy → switch off "Use my photos in the companion" (stops at once; existing chats stay until deleted).
+
+### F-25 Plan a project (AIC-04, approved 2026-10-29)
+
+1. In the chat, **Plan a project** (or the same words typed) → short form: what you want to make (and craft, optional) → plan card: title, craft, materials checklist, steps.
+2. **Start as my project** → private journal project with the materials as a checklist → project page (F-18). The plan stays in the chat.
+
+### F-26 AI and privacy settings (AIC-07, AIC-08, approved 2026-10-29)
+
+Settings → **AI and privacy**: two switches (photos; interests and levels), "Your conversations" list with Delete, **Delete all conversations** (confirmation; photos go too), and a note on retention (30 days).
 
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 
