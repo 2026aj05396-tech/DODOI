@@ -88,6 +88,7 @@ export const config = {
     "/saved/:path*",
     "/create/:path*",
     "/journal/:path*",
+    "/notifications/:path*",
     "/projects/:path*",
     "/u/:path*",
     "/onboarding/:path*",

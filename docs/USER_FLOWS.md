@@ -202,8 +202,8 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 
 ### F-21 Notifications (NTF-01…05)
 
-1. Bell shows a dot when something is new (checked on page open and every 60 s) → `/notifications` → list newest first ("Asha commented on Cherry blossom hoop", "Ravi and 3 others liked …", "Meera followed you") → all marked read.
-2. Each item opens the post, comment (scrolled to) or profile. `[Settings] → Notifications` → four switches.
+1. Bell (phone header; feed header from 768px) shows a dot when something is new (checked on page open and every 60 s) → `/notifications` → list newest first ("Asha commented on Cherry blossom hoop", "Ravi and 3 others liked …", "Meera followed you") → all marked read.
+2. Each item opens the post, comment (scrolled to; replies beyond the first 3 under a comment are not) or profile; likes on one post on one day are one line ("Ravi and 3 others liked …"). `[Settings] → Notifications` → four switches (comments, replies, new followers, likes), saved as you flip them.
 
 ### F-22 Report and block (MOD-01…06)
 

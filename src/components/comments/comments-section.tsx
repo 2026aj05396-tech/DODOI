@@ -7,7 +7,7 @@ import {
   type InfiniteData,
 } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
@@ -154,6 +154,15 @@ function CommentsThread({
     const result = await comments.fetchNextPage();
     if (result.isError) failed(result.error, "We couldn't load more comments.");
   }
+
+  // A notification opens `#comment-{id}` (NTF-02): scroll there once the comments are on screen.
+  useEffect(() => {
+    if (status !== "ready") return;
+    const { hash } = window.location;
+    if (hash.startsWith("#comment-")) {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ block: "center" });
+    }
+  }, [status]);
 
   /** Changes the comments already loaded, keeping the pages as they came. */
   function patchItems(change: (items: Comment[]) => Comment[]) {

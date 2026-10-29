@@ -4,8 +4,13 @@ import { db } from "@/server/db/client";
 
 // follow table. People belong to the users module: only user ids are stored and read here.
 
-export async function insertFollow(followerId: string, followeeId: string): Promise<void> {
-  await db.follow.createMany({ data: [{ followerId, followeeId }], skipDuplicates: true });
+/** True when the follow is new (following again changes nothing). */
+export async function insertFollow(followerId: string, followeeId: string): Promise<boolean> {
+  const { count } = await db.follow.createMany({
+    data: [{ followerId, followeeId }],
+    skipDuplicates: true,
+  });
+  return count > 0;
 }
 
 export async function deleteFollow(followerId: string, followeeId: string): Promise<void> {

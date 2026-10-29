@@ -394,7 +394,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | NTF-02 | The bell (replaces the coming-soon bell) shows an unread dot; the list opens at `/notifications`; opening the list marks all as read |
 | NTF-03 | Checked when a page opens and every 60 s while the tab is visible (no push in P2) |
 | NTF-04 | Preferences in Settings: each type on/off (all on by default) |
-| NTF-05 | Kept 90 days; never sent for blocked users |
+| NTF-05 | Kept 90 days; never sent for blocked users (the block part comes with P2-08). **NTF-01…04 built P2-07**; bell placement and the other choices are in README §2 |
 
 #### Safety (MOD) — P2-08
 

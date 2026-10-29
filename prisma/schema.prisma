@@ -148,26 +148,29 @@ model User {
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
 
-  profile         Profile?
-  accounts        Account[]
-  authTokens      AuthToken[]
-  skills          UserSkill[]
-  createdSkills   Skill[]        @relation("SkillCreator")
-  authoredPosts   Post[]
-  ownedMedia      MediaAsset[]
-  saves           Save[]
-  collections     Collection[]
-  feedSessions    FeedSession[]
-  feedFeedback    FeedFeedback[]
-  postProgress    PostProgress[]
-  auditLogs       AuditLog[]
-  reportsFiled    Report[]       @relation("ReportReporter")
-  reportsResolved Report[]       @relation("ReportResolver")
-  projects        Project[]
-  comments        Comment[]
-  likes           PostLike[]
-  following       Follow[]       @relation("Following")
-  followers       Follow[]       @relation("Followers")
+  profile                 Profile?
+  accounts                Account[]
+  authTokens              AuthToken[]
+  skills                  UserSkill[]
+  createdSkills           Skill[]                  @relation("SkillCreator")
+  authoredPosts           Post[]
+  ownedMedia              MediaAsset[]
+  saves                   Save[]
+  collections             Collection[]
+  feedSessions            FeedSession[]
+  feedFeedback            FeedFeedback[]
+  postProgress            PostProgress[]
+  auditLogs               AuditLog[]
+  reportsFiled            Report[]                 @relation("ReportReporter")
+  reportsResolved         Report[]                 @relation("ReportResolver")
+  projects                Project[]
+  comments                Comment[]
+  likes                   PostLike[]
+  following               Follow[]                 @relation("Following")
+  followers               Follow[]                 @relation("Followers")
+  notificationsReceived   Notification[]           @relation("NotificationsReceived")
+  notificationsCaused     Notification[]           @relation("NotificationsCaused")
+  notificationPreferences NotificationPreference[]
 
   @@map("user")
 }
@@ -347,6 +350,7 @@ model Post {
   tags            PostTag[]
   comments        Comment[]
   likes           PostLike[]
+  notifications   Notification[]
   project         Project?         @relation("ProjectPosts", fields: [projectId], references: [id], onDelete: SetNull)
   /// Projects started from this tutorial ("Start as my project", JRN-03).
   startedProjects Project[]        @relation("ProjectSource")
@@ -794,10 +798,11 @@ model Comment {
   hiddenAt  DateTime? @map("hidden_at")
   createdAt DateTime  @default(now()) @map("created_at")
 
-  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author  User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies Comment[] @relation("Replies")
+  post          Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author        User?          @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  parent        Comment?       @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]      @relation("Replies")
+  notifications Notification[]
 
   @@index([postId, parentId, createdAt])
   @@index([parentId, createdAt])
@@ -832,4 +837,52 @@ model Follow {
   @@index([followeeId, createdAt(sort: Desc)])
   @@index([followerId, createdAt(sort: Desc)])
   @@map("follow")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (P2-07, NTF-01…05)
+// ---------------------------------------------------------------------------
+
+enum NotificationType {
+  COMMENT
+  REPLY
+  FOLLOW
+  LIKE
+}
+
+/// One in-app notification for `recipientId` (NTF-01). Likes stay one row each and are grouped
+/// per post per day when read. Kept 90 days (NTF-05).
+model Notification {
+  id          String           @id @default(cuid())
+  recipientId String           @map("recipient_id")
+  type        NotificationType
+  /// Who commented, replied, followed or liked; null once their account is deleted.
+  actorId     String?          @map("actor_id")
+  /// The post, and for COMMENT / REPLY the comment; both go with the post or comment.
+  postId      String?          @map("post_id")
+  commentId   String?          @map("comment_id")
+  readAt      DateTime?        @map("read_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  recipient User     @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor     User?    @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, createdAt(sort: Desc)])
+  @@index([recipientId, readAt])
+  @@index([actorId])
+  @@map("notification")
+}
+
+/// A row exists only for a type the user switched off (NTF-04); all types are on by default.
+model NotificationPreference {
+  userId  String           @map("user_id")
+  type    NotificationType
+  enabled Boolean          @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+  @@map("notification_preference")
 }

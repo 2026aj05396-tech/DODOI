@@ -28,6 +28,7 @@ import {
   findRelatedCandidates,
   findThemePostIds,
   findPublishedPostAuthor,
+  findPublishedPostTitles,
   isPublishedPost,
   searchPublishedPostIds,
   updatePostSearchVector,
@@ -314,6 +315,12 @@ export async function getBeginnerProjectCounts(
 
 export async function isPostPublished(id: string): Promise<boolean> {
   return isPublishedPost(id);
+}
+
+/** Titles of the published posts among `ids`, keyed by id (notifications). */
+export async function getPublishedPostTitles(ids: string[]): Promise<Map<string, string>> {
+  const rows = await findPublishedPostTitles([...new Set(ids)]);
+  return new Map(rows.map((row) => [row.id, row.title]));
 }
 
 /** Who wrote a published post, for comment permissions; null when the post is not published. */

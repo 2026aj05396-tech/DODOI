@@ -673,7 +673,7 @@ model ProjectEntryMedia {
   @@unique([entryId, position])
 }
 
-model Notification {
+model Notification {                              // built P2-07; table notification, snake_case columns; also relations post and comment (onDelete Cascade, so a deleted post or comment takes its notifications), actor (SetNull) and indexes (recipientId, readAt) and (actorId)
   id          String           @id @default(cuid())
   recipientId String
   type        NotificationType
@@ -686,7 +686,7 @@ model Notification {
   @@index([recipientId, createdAt(sort: Desc)])
 }
 
-model NotificationPreference {                     // a row only when a type is switched off (NTF-04)
+model NotificationPreference {                    // built P2-07; table notification_preference                     // a row only when a type is switched off (NTF-04)
   userId  String
   type    NotificationType
   enabled Boolean @default(false)

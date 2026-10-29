@@ -11,6 +11,7 @@ import { ForbiddenError, NotFoundError, UnauthenticatedError } from "@/server/li
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { avatarUrl } from "@/server/modules/content";
+import { notify, withdrawNotification } from "@/server/modules/notifications";
 import { getCreatorProfiles, getProfileForView, getUserIdByUsername } from "@/server/modules/users";
 
 import {
@@ -67,7 +68,9 @@ export async function followUser(actor: Actor, username: string): Promise<void> 
   }
   const followeeId = await resolveFollowable(user, username);
   await enforceRateLimit(FOLLOW_RATE_LIMIT, user.id);
-  await insertFollow(user.id, followeeId);
+  if (await insertFollow(user.id, followeeId)) {
+    await notify({ type: "FOLLOW", recipientId: followeeId, actorId: user.id });
+  }
 }
 
 /** DELETE /api/follows/{username}: idempotent. Works even if the profile went private since. */
@@ -77,6 +80,7 @@ export async function unfollowUser(actor: Actor, username: string): Promise<void
   if (!followeeId) throw profileNotFound();
   await enforceRateLimit(FOLLOW_RATE_LIMIT, user.id);
   await deleteFollow(user.id, followeeId);
+  await withdrawNotification({ type: "FOLLOW", recipientId: followeeId, actorId: user.id });
 }
 
 /** Whether the Follow button shows for this profile and what it says (creator row, profile). */

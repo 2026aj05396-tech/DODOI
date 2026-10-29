@@ -20,6 +20,7 @@ import {
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { avatarUrl, getPublishedPostAuthor } from "@/server/modules/content";
+import { notify } from "@/server/modules/notifications";
 import { getCreatorProfiles } from "@/server/modules/users";
 
 import { canDeleteComment, canEditComment } from "./policies";
@@ -194,6 +195,7 @@ export async function createComment(
   const post = await requirePublishedPost(postId);
 
   let parentId: string | null = null;
+  let repliedToAuthorId: string | null = null;
   if (input.parentId) {
     const target = await findComment(input.parentId);
     if (!target || target.postId !== postId) throw commentNotFound();
@@ -202,10 +204,19 @@ export async function createComment(
     }
     // A reply to a reply answers the comment above it (OD-25).
     parentId = target.parentId ?? target.id;
+    repliedToAuthorId = target.authorId;
   }
 
   await enforceRateLimit(COMMENT_RATE_LIMIT, user.id);
   const row = await insertComment({ postId, authorId: user.id, parentId, body: input.body });
+  // The comment answered gets a REPLY; the post's author a COMMENT, unless that is the same person.
+  const about = { actorId: user.id, postId, commentId: row.id };
+  if (repliedToAuthorId) {
+    await notify({ type: "REPLY", recipientId: repliedToAuthorId, ...about });
+  }
+  if (post.authorId && post.authorId !== repliedToAuthorId) {
+    await notify({ type: "COMMENT", recipientId: post.authorId, ...about });
+  }
   const [view] = await toCommentViews(user, [row], post.authorId);
   if (!view) throw new Error("Comment view missing");
   return view;

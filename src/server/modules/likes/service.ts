@@ -5,6 +5,7 @@ import type { Actor, AuthenticatedActor } from "@/server/lib/actor";
 import { ForbiddenError, NotFoundError, UnauthenticatedError } from "@/server/lib/errors";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { getPublishedPostAuthor } from "@/server/modules/content";
+import { notify, withdrawNotification } from "@/server/modules/notifications";
 
 import { countLikes, deleteLike, hasLike, insertLike } from "./repository";
 
@@ -43,15 +44,26 @@ export async function likePost(actor: Actor, postId: string): Promise<void> {
   if (!user.isEmailVerified) {
     throw new ForbiddenError("Verify your email to like posts.", { code: "EMAIL_NOT_VERIFIED" });
   }
-  await requirePublishedPost(postId);
+  const post = await requirePublishedPost(postId);
   await enforceRateLimit(LIKE_RATE_LIMIT, user.id);
-  await insertLike(postId, user.id);
+  const isNew = await insertLike(postId, user.id);
+  if (isNew && post.authorId) {
+    await notify({ type: "LIKE", recipientId: post.authorId, actorId: user.id, postId });
+  }
 }
 
 /** DELETE /api/posts/{postId}/like: idempotent. */
 export async function unlikePost(actor: Actor, postId: string): Promise<void> {
   const user = requireSignedIn(actor);
-  await requirePublishedPost(postId);
+  const post = await requirePublishedPost(postId);
   await enforceRateLimit(LIKE_RATE_LIMIT, user.id);
   await deleteLike(postId, user.id);
+  if (post.authorId) {
+    await withdrawNotification({
+      type: "LIKE",
+      recipientId: post.authorId,
+      actorId: user.id,
+      postId,
+    });
+  }
 }

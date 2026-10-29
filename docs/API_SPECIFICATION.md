@@ -454,6 +454,8 @@ Built P2-04 (2026-10-29): all five routes need a signed-in user; reading and wri
 | `POST /api/notifications/read` | User | Mark all read → `204` |
 | `GET` / `PUT /api/me/notification-preferences` | User | `{ COMMENT: true, REPLY: true, FOLLOW: true, LIKE: true }` |
 
+Built P2-07 (2026-10-29): an item is `{ id, type, actors: [{ username, displayName, avatarUrl }] (up to 2, newest first), actorCount, post: { id, title } | null, commentId, isUnread, createdAt }`; the list reads 50 notifications at a time and groups likes on one post on one day within them, so a day's likes can split across two pages. Items about a post that is no longer published are left out. `PUT` takes any of the four booleans and answers `200` with all four. Comments (COMMENT to the post's author, REPLY to the comment replied to), likes and follows record a notification after they succeed; a failure to record one is logged and never fails the action.
+
 **Safety (P2-08)** — `POST /api/reports` accepts `targetType: "POST" | "COMMENT"` and `reason: "NOT_MY_WORK"`. `/api/admin/reports*` opens to `Moderator` (other `/api/admin/*` stays Admin); `HIDE_TARGET` sets `hiddenAt` on posts and comments. `PATCH /api/admin/users/{id}/role` `{ role: "USER" | "MODERATOR" }` — Admin, audited.
 
 **Feed (P2-06)** — `GET /api/feed?filter=following` (FLW-04); `/api/feed/filters` lists "Following" once the user follows someone.

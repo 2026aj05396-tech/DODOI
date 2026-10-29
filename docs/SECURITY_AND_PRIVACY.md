@@ -94,7 +94,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Like | Own state: liker; count: post's author | Verified | — | Liker |
 | Follow | Lists: profile owner | Verified (public profiles only) | — | Follower |
 | Block | Blocker | User | — | Blocker |
-| Notification / preferences | Recipient | System | Recipient | System (90 days) |
+| Notification / preferences | Recipient | System | Recipient | System (90 days; built P2-07 — every read, mark-read and preference call is scoped to the signed-in user) |
 | Reports queue | Moderator, Admin | User (report) | Moderator, Admin (action) | — |
 | User role | Admin | — | Admin (USER ↔ MODERATOR) | — |
 | Media asset (post, entry) | Via parent resource | User (own) | Owner | Owner |

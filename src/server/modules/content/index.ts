@@ -23,6 +23,7 @@ export {
   getPostCards,
   getPostDetail,
   getPublishedPostAuthor,
+  getPublishedPostTitles,
   getRelatedPosts,
   getTheme,
   isPostPublished,

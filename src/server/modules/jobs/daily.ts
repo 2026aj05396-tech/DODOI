@@ -5,6 +5,7 @@ import { logger } from "@/server/lib/logger";
 import { purgeExpiredRateLimitBuckets } from "@/server/lib/rate-limit";
 import { deleteOrphanedMedia } from "@/server/modules/content";
 import { purgeExpiredFeedSessions } from "@/server/modules/feed";
+import { purgeOldNotifications } from "@/server/modules/notifications";
 import { purgeSpentAuthTokens } from "@/server/modules/users";
 
 import { deleteAccountsDue } from "./account-cleanup";
@@ -23,6 +24,8 @@ const DAILY_JOBS: { name: string; run: (context: JobContext) => Promise<number> 
   { name: "delete-accounts", run: ({ now, provider }) => deleteAccountsDue({ now, provider }) },
   { name: "purge-auth-tokens", run: ({ now }) => purgeSpentAuthTokens(now) },
   { name: "purge-feed-sessions", run: ({ now }) => purgeExpiredFeedSessions(now) },
+  // NTF-05: notifications are kept 90 days.
+  { name: "purge-notifications", run: ({ now }) => purgeOldNotifications(now) },
   {
     name: "purge-rate-limit-buckets",
     run: ({ now }) => purgeExpiredRateLimitBuckets(LONGEST_RATE_LIMIT_WINDOW_SECONDS, { now }),

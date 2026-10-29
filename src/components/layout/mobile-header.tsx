@@ -1,13 +1,12 @@
-import { Bell, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import Link from "next/link";
 
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Wordmark } from "@/components/ui/wordmark";
 
-import { ComingSoonTrigger } from "./coming-soon-trigger";
 import { HOME, SAVED } from "./nav-items";
 
-/** Top bar on mobile (`1c`): wordmark, Saved, and notifications (coming soon). */
+/** Top bar on mobile (`1c`): wordmark, Saved, and notifications (P2-07). */
 export function MobileHeader() {
   return (
     <header className="flex items-center justify-between px-5 pt-2 md:hidden">
@@ -22,13 +21,7 @@ export function MobileHeader() {
         >
           <Bookmark aria-hidden className="size-5.5" strokeWidth={1.7} />
         </Link>
-        <ComingSoonTrigger
-          label="Notifications"
-          className="relative flex size-11 items-center justify-center rounded-full text-muted-foreground"
-        >
-          <Bell aria-hidden className="size-5.5" strokeWidth={1.7} />
-          <ComingSoonBadge size="dot" decorative className="absolute top-2.5 right-2.5" />
-        </ComingSoonTrigger>
+        <NotificationBell className="size-11 hover:bg-muted" iconClassName="size-5.5" />
       </div>
     </header>
   );

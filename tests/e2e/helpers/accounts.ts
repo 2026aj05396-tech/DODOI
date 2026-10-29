@@ -43,6 +43,14 @@ export function createPasswordAccount(
   return { email, password: PASSWORD };
 }
 
+/**
+ * Gives an existing account a post of theirs with a comment and three likes from other makers, and
+ * a new follower, as notifications. Returns the post's title.
+ */
+export function createNotifications(email: string): string {
+  return run(["notifications", email]).trim();
+}
+
 /** A valid email-verification token for an existing account (stands in for the emailed link). */
 export function createVerificationToken(email: string): string {
   return run(["verification-token", email]).trim();
