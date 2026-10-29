@@ -127,18 +127,24 @@ describe("parseServerEnv", () => {
       expect(parseServerEnv({ ...validEnv, ...ai })).toMatchObject({ AI_ENABLED: true });
     });
 
-    it("allows the free tier only in local development (it lets Google use submitted content)", () => {
+    it("allows the free tier in local and test, but not in production (it lets Google use submitted content)", () => {
+      const production = { ...hosted, APP_ENV: "production" };
       expect(parseServerEnv({ ...validEnv, ...ai, AI_TIER: "free" })).toMatchObject({
         AI_TIER: "free",
       });
-      expect(() => parseServerEnv({ ...hosted, ...ai, AI_TIER: "free" })).toThrow(/AI_TIER/);
-      expect(parseServerEnv({ ...hosted, ...ai, AI_TIER: "paid" })).toMatchObject({
+      expect(parseServerEnv({ ...hosted, ...ai, AI_TIER: "free" })).toMatchObject({
+        AI_TIER: "free",
+      });
+      expect(() => parseServerEnv({ ...production, ...ai, AI_TIER: "free" })).toThrow(/AI_TIER/);
+      expect(parseServerEnv({ ...production, ...ai, AI_TIER: "paid" })).toMatchObject({
         AI_TIER: "paid",
       });
     });
 
     it("does not check the tier while the companion is off", () => {
-      expect(parseServerEnv({ ...hosted, AI_TIER: "free" })).toMatchObject({ AI_ENABLED: false });
+      expect(parseServerEnv({ ...hosted, APP_ENV: "production", AI_TIER: "free" })).toMatchObject({
+        AI_ENABLED: false,
+      });
     });
   });
 });

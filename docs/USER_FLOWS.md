@@ -222,6 +222,7 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 
 ### F-24 Photo troubleshooting (AIC-05, AIC-07, approved 2026-10-29)
 
+0. While the companion runs on the free tier (local and test), the chat shows a line "Test version: Google may read your questions and photos. Don't share anything personal." and the photo consent sheet repeats it.
 1. In the chat field → **Add a photo** (one photo; JPEG, PNG or WebP up to 10 MB) → first time only: consent notice ("Your photo is sent to our AI provider to answer this question. It is kept with this chat for 30 days, and you can delete it any time.") → Allow / Cancel.
 2. The photo uploads at once; the message is sent with it; the answer says what can and cannot be seen and how sure it is, and suggests a better photo if needed (design `1f`).
 3. Withdraw: Settings → AI and privacy → switch off "Use my photos in the companion" (stops at once; existing chats stay until deleted).

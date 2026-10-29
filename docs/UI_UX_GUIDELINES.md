@@ -395,6 +395,7 @@ Built from designs `1f` (mobile chat, image troubleshooting) and `2c` (docked co
 | Photo | Thumbnail in the user bubble; consent sheet before the first photo (sheet on phones, centred from 768px) |
 | Plan card | Title, craft chip, materials checklist (read-only), numbered steps, **Start as my project** |
 | Docked panel | From 1280px on post and skill pages: right column, "Talking about: {title}"; the sidebar becomes the 76px icon rail (DC-12) |
+| Free-tier notice | While `AI_TIER=free` (local, test) a muted line under the chat header: "Test version: Google may read your questions and photos. Don't share anything personal."; also in the photo consent sheet. Hidden on a paid tier |
 | States | Typing indicator; empty ("Ask me about a craft, a technique or what to try next"); quota, off, blocked and error messages (F-23 step 5); offline: the field is disabled with "You're offline" |
 | Not built | "Show me a diagram" (in `1f`, not in scope); "Ask the crochet community" is a coming-soon button until P3-03 |
 | Accessibility | Chat log is an `aria-live="polite"` region; the field keeps focus after sending; all controls 44px; reduced motion removes the typing animation |

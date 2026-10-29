@@ -213,7 +213,7 @@ Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed wi
 
 ### AI companion safety and privacy (P4-00, approved 2026-10-29)
 
-- **Free tier is development only (PO):** Google's free ("unpaid") Gemini quota lets Google use submitted content to improve its products and human reviewers may read it, so no real user's prompt, photo or profile context may go through it. The server refuses `AI_TIER=free` unless `APP_ENV=local`.
+- **Free tier: local and test only (PO, changed 2026-10-29 from "local only"):** Google's free ("unpaid") Gemini quota lets Google use submitted content to improve its products and human reviewers may read it. The test site may use it with testers who are told so (a notice in the companion and in the consent sheets while `AI_TIER=free`); no real users' data goes through it, because the test site has none. The server refuses `AI_TIER=free` when `APP_ENV=production`, which needs `AI_TIER=paid` (no-training terms).
 - Provider keys are server-only; the browser never calls the provider. Logs never contain prompt text, answers or images (usage rows hold counts only).
 - Photos go to the provider only after `AI_IMAGES` consent and are shrunk first; profile context only after `AI_PROFILE_CONTEXT` consent. Private collections, messages, emails and other users' private data are never in a prompt (PO). Authorization runs before anything is placed in a prompt.
 - Provider safety filters are on for every request (block medium and above). A blocked request returns a neutral message, is stored as BLOCKED and counted in usage.

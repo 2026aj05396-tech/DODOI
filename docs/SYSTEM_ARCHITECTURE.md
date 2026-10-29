@@ -46,7 +46,7 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Local infra | Docker Compose (PostgreSQL) | CONFIRMED |
 | Hosting | Test: Vercel Hobby + Neon (DEPLOYMENT.md) | Test DECIDED 2026-10-27; production OPEN (OD-01) |
 | Messaging transport (P3) | Polling | CONFIRMED |
-| AI provider (P4) | Google Gemini API, server-side key, behind `AIProvider` (`src/server/integrations/ai/`); the SDK (or plain REST) is added in P4-01 only; free tier for development only, paid tier before any real user (AI_INTEGRATION §9) | CONFIRMED provider (OD-02, 2026-10-29); version and package chosen in P4-01 |
+| AI provider (P4) | Google Gemini API, server-side key, behind `AIProvider` (`src/server/integrations/ai/`); the SDK (or plain REST) is added in P4-01 only; free tier for local and test only, paid tier before production (AI_INTEGRATION §9) | CONFIRMED provider (OD-02, 2026-10-29); version and package chosen in P4-01 |
 
 ## 3. Supporting Libraries (APPROVED before P0-02)
 
