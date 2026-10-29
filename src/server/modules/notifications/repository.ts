@@ -107,3 +107,15 @@ export async function deleteNotificationsBefore(cutoff: Date): Promise<number> {
   const { count } = await db.notification.deleteMany({ where: { createdAt: { lt: cutoff } } });
   return count;
 }
+
+/** Takes away notifications between two people, both ways (on block, MOD-02). */
+export async function deleteNotificationsBetween(a: string, b: string): Promise<void> {
+  await db.notification.deleteMany({
+    where: {
+      OR: [
+        { recipientId: a, actorId: b },
+        { recipientId: b, actorId: a },
+      ],
+    },
+  });
+}

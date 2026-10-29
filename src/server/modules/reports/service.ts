@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import type { ReportTargetType } from "@/generated/prisma/client";
 import type {
   AdminReportsQuery,
   CreateReportInput,
@@ -10,7 +11,12 @@ import type {
 } from "@/lib/schemas/reports";
 import type { Paginated } from "@/lib/types/api";
 import type { ReportGroup } from "@/lib/types/reports";
-import { requireAdmin, type Actor, type AuthenticatedActor } from "@/server/lib/actor";
+import {
+  requireAdmin,
+  requireModerator,
+  type Actor,
+  type AuthenticatedActor,
+} from "@/server/lib/actor";
 import {
   ForbiddenError,
   NotFoundError,
@@ -21,11 +27,20 @@ import {
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { recordAudit } from "@/server/modules/admin";
+import { getCommentsForModeration, setCommentHidden } from "@/server/modules/comments";
+import {
+  getPostsForModeration,
+  getPublishedPostAuthor,
+  setPostHidden,
+} from "@/server/modules/content";
 import { getSkillsForModeration, setSkillHidden } from "@/server/modules/skills";
 import {
   getProfilesForModeration,
   getUserIdByUsername,
+  getUserRole,
+  isBlockedEitherWay,
   setProfileHidden,
+  setUserRole,
 } from "@/server/modules/users";
 
 import {
@@ -37,9 +52,9 @@ import {
   resolveOpenReports,
 } from "./repository";
 
-// Reports (RPT-01…05, API_SPECIFICATION §6b). Verified users report custom skills and profiles;
-// admins see one row per reported target (PO decision, P1-28b) and hide it, dismiss its reports,
-// or show it again later. Reporters are never shown to anyone. Every admin action is audited.
+// Reports (RPT-01…05, MOD-01…05, API_SPECIFICATION §6b). Verified users report custom skills,
+// profiles, posts and comments; admins and moderators see one row per reported target (PO
+// decision, P1-28b) and hide it, dismiss its reports, or show it again later. Reporters are never shown to anyone. Every admin action is audited.
 
 /** SECURITY_AND_PRIVACY §6: reports, 10 per day per user. */
 export const REPORT_RATE_LIMIT: RateLimitRule = {
@@ -51,7 +66,7 @@ export const REPORT_RATE_LIMIT: RateLimitRule = {
 const PAGE_SIZE = 20;
 const cursorSchema = z.object({ offset: z.number().int().min(0) });
 
-type Target = { targetType: "SKILL" | "PROFILE"; targetId: string };
+type Target = { targetType: ReportTargetType; targetId: string };
 
 function requireVerified(actor: Actor): AuthenticatedActor {
   if (!actor) throw new UnauthenticatedError();
@@ -77,6 +92,29 @@ async function resolveTarget(user: AuthenticatedActor, input: CreateReportInput)
       });
     }
     return { targetType: "SKILL", targetId: skill.id };
+  }
+  if (input.targetType === "POST") {
+    // Only posts the reporter can see (published, not hidden, not by someone blocked).
+    const post = await getPublishedPostAuthor(input.targetId);
+    if (!post || (post.authorId && (await isBlockedEitherWay(user.id, post.authorId)))) {
+      throw notFound();
+    }
+    if (post.authorId === user.id) {
+      throw new UnprocessableError("You can't report your own post.", { code: "SELF_REPORT" });
+    }
+    return { targetType: "POST", targetId: input.targetId };
+  }
+  if (input.targetType === "COMMENT") {
+    const comment = (await getCommentsForModeration([input.targetId])).get(input.targetId);
+    if (!comment || comment.isHidden || comment.isDeleted) throw notFound();
+    if (!(await getPublishedPostAuthor(comment.postId))) throw notFound();
+    if (comment.authorId && (await isBlockedEitherWay(user.id, comment.authorId))) {
+      throw notFound();
+    }
+    if (comment.authorId === user.id) {
+      throw new UnprocessableError("You can't report your own comment.", { code: "SELF_REPORT" });
+    }
+    return { targetType: "COMMENT", targetId: input.targetId };
   }
   const userId = await getUserIdByUsername(input.targetId);
   if (!userId) throw notFound();
@@ -108,7 +146,7 @@ export async function listReportGroups(
   actor: Actor,
   query: AdminReportsQuery,
 ): Promise<Paginated<ReportGroup>> {
-  requireAdmin(actor);
+  requireModerator(actor);
   const offset = query.cursor ? decodeCursor(query.cursor, cursorSchema).offset : 0;
   const statuses =
     query.status === "OPEN" ? (["OPEN"] as const) : (["ACTIONED", "DISMISSED"] as const);
@@ -119,12 +157,14 @@ export async function listReportGroups(
   });
   const page = groups.slice(0, PAGE_SIZE);
   const targets = page.map(({ targetType, targetId }) => ({ targetType, targetId }));
-  const [reports, skills, profiles] = await Promise.all([
+  const idsOf = (type: ReportTargetType) =>
+    targets.flatMap((t) => (t.targetType === type ? t.targetId : []));
+  const [reports, skills, profiles, posts, comments] = await Promise.all([
     findReportsForTargets(targets, [...statuses]),
-    getSkillsForModeration(targets.flatMap((t) => (t.targetType === "SKILL" ? t.targetId : []))),
-    getProfilesForModeration(
-      targets.flatMap((t) => (t.targetType === "PROFILE" ? t.targetId : [])),
-    ),
+    getSkillsForModeration(idsOf("SKILL")),
+    getProfilesForModeration(idsOf("PROFILE")),
+    getPostsForModeration(idsOf("POST")),
+    getCommentsForModeration(idsOf("COMMENT")),
   ]);
 
   const items = page.map((group): ReportGroup => {
@@ -135,7 +175,11 @@ export async function listReportGroups(
     for (const report of mine) reasons[report.reason] = (reasons[report.reason] ?? 0) + 1;
     const skill = group.targetType === "SKILL" ? skills.get(group.targetId) : undefined;
     const profile = group.targetType === "PROFILE" ? profiles.get(group.targetId) : undefined;
-    const isHidden = skill ? skill.status === "HIDDEN" : (profile?.isHidden ?? false);
+    const post = group.targetType === "POST" ? posts.get(group.targetId) : undefined;
+    const comment = group.targetType === "COMMENT" ? comments.get(group.targetId) : undefined;
+    const isHidden = skill
+      ? skill.status === "HIDDEN"
+      : (profile?.isHidden ?? post?.isHidden ?? comment?.isHidden ?? false);
     return {
       reportId: mine[0]?.id ?? "",
       targetType: group.targetType,
@@ -153,7 +197,16 @@ export async function listReportGroups(
               detail: `@${profile.username}`,
               isHidden,
             }
-          : { label: null, href: null, detail: null, isHidden: false },
+          : post
+            ? { label: post.title, href: `/p/${group.targetId}`, detail: "Post", isHidden }
+            : comment
+              ? {
+                  label: comment.isDeleted ? null : comment.body.slice(0, 140),
+                  href: `/p/${comment.postId}#comment-${group.targetId}`,
+                  detail: "Comment",
+                  isHidden,
+                }
+              : { label: null, href: null, detail: null, isHidden: false },
       reportCount: group._count._all,
       reasons,
       notes: mine.flatMap((report) =>
@@ -178,9 +231,24 @@ export async function listReportGroups(
 }
 
 async function setHidden(target: Target, hidden: boolean): Promise<void> {
-  if (target.targetType === "SKILL") await setSkillHidden(target.targetId, hidden);
-  else await setProfileHidden(target.targetId, hidden);
+  switch (target.targetType) {
+    case "SKILL":
+      return setSkillHidden(target.targetId, hidden);
+    case "PROFILE":
+      return setProfileHidden(target.targetId, hidden);
+    case "POST":
+      return setPostHidden(target.targetId, hidden);
+    case "COMMENT":
+      return setCommentHidden(target.targetId, hidden);
+  }
 }
+
+const AUDIT_TARGET = {
+  SKILL: "skill",
+  PROFILE: "user",
+  POST: "post",
+  COMMENT: "comment",
+} as const;
 
 /**
  * POST /api/admin/reports/{id}/action: HIDE_TARGET (hide it, resolve its open reports as
@@ -191,7 +259,7 @@ export async function actOnReport(
   reportId: string,
   input: ReportActionInput,
 ): Promise<void> {
-  const admin = requireAdmin(actor);
+  const admin = requireModerator(actor);
   const report = await findReport(reportId);
   if (!report) throw new NotFoundError("We couldn't find that report.");
   const target: Target = { targetType: report.targetType, targetId: report.targetId };
@@ -212,8 +280,35 @@ export async function actOnReport(
       DISMISS: "report.dismiss",
       RESTORE_TARGET: "report.restore_target",
     }[input.action],
-    targetType: target.targetType === "SKILL" ? "skill" : "user",
+    targetType: AUDIT_TARGET[target.targetType],
     targetId: target.targetId,
     metadata: { reportId, resolvedReports: resolved },
+  });
+}
+
+/**
+ * PATCH /api/admin/users/{id}/role (MOD-03): admins make someone a Moderator or take it back.
+ * Admins' own roles never change here. Audited.
+ */
+export async function changeModeratorRole(
+  actor: Actor,
+  userId: string,
+  role: "USER" | "MODERATOR",
+): Promise<void> {
+  const admin = requireAdmin(actor);
+  const current = await getUserRole(userId);
+  if (!current) throw new NotFoundError("We couldn't find that user.");
+  if (current === "ADMIN") {
+    throw new UnprocessableError("An admin's role can't be changed here.", {
+      code: "ADMIN_ROLE_LOCKED",
+    });
+  }
+  if (current === role) return;
+  await setUserRole(userId, role);
+  await recordAudit({
+    actorId: admin.id,
+    action: role === "MODERATOR" ? "user.make_moderator" : "user.remove_moderator",
+    targetType: "user",
+    targetId: userId,
   });
 }

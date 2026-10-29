@@ -80,7 +80,7 @@ export async function allowSignIn({
 const sessionClaimsSchema = z.object({
   sub: z.string().min(1),
   sv: z.number().int(),
-  role: z.enum(["USER", "ADMIN"]),
+  role: z.enum(["USER", "MODERATOR", "ADMIN"]),
   ev: z.boolean(),
   ac: z.boolean(),
   // Optional: cookies issued before P1-11 lack it; they refresh on the next session read.

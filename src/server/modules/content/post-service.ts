@@ -12,7 +12,7 @@ import { NotFoundError, UnauthenticatedError } from "@/server/lib/errors";
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { getSavedPostIds } from "@/server/modules/collections";
 import { getActiveSkillSummaries, getSkillBySlug } from "@/server/modules/skills";
-import { getCreatorProfiles } from "@/server/modules/users";
+import { getBlockedUserIds, getCreatorProfiles } from "@/server/modules/users";
 
 import { avatarUrl, toMedia } from "./media-service";
 import {
@@ -27,7 +27,9 @@ import {
   findPublishedThemes,
   findRelatedCandidates,
   findThemePostIds,
+  findPostsForModeration,
   findPublishedPostAuthor,
+  updatePostHidden,
   findPublishedPostTitles,
   isPublishedPost,
   searchPublishedPostIds,
@@ -63,7 +65,11 @@ async function toCards(
   rows: PostCardRow[],
   provider: MediaProvider,
 ): Promise<PostCard[]> {
-  const withCover = rows.filter((row) => row.media[0]);
+  // People blocked either way never show up (MOD-02).
+  const blocked = actor ? await getBlockedUserIds(actor.id) : new Set<string>();
+  const withCover = rows.filter(
+    (row) => row.media[0] && !(row.authorId && blocked.has(row.authorId)),
+  );
   const [skills, creators, saved] = await Promise.all([
     getActiveSkillSummaries([
       ...new Set(withCover.flatMap((row) => row.skills.map((s) => s.skillId))),
@@ -108,13 +114,19 @@ async function toCards(
 
 async function findVisiblePost(actor: Actor, postId: string) {
   const row = await findPostDetail(postId);
-  // Admins and the post's own author (CRT-09 Preview) also see drafts.
+  const isAuthor = actor !== null && row?.authorId === actor.id;
+  const isModerator = actor?.role === "ADMIN" || actor?.role === "MODERATOR";
+  // Admins and the post's own author (CRT-09 Preview) also see drafts; a post hidden after a
+  // report stays visible to its author and moderators only (MOD-04).
   const visible =
     row &&
-    (row.status === "PUBLISHED" ||
+    ((row.status === "PUBLISHED" && (!row.hiddenAt || isAuthor || isModerator)) ||
       actor?.role === "ADMIN" ||
-      (actor !== null && row.authorId === actor.id));
+      isAuthor);
   if (!row || !visible) throw new NotFoundError("We couldn't find that post.");
+  if (actor && row.authorId && !isAuthor && (await getBlockedUserIds(actor.id)).has(row.authorId)) {
+    throw new NotFoundError("We couldn't find that post.");
+  }
   return row;
 }
 
@@ -142,6 +154,7 @@ export async function getPostDetail(
     // The maker's own post (not an invited creator's seeded one): Edit instead of Follow (F-17).
     isOwn: actor !== null && row.authorId === actor.id && !row.attribution,
     isPublished: row.status === "PUBLISHED",
+    isHidden: row.hiddenAt !== null,
   };
 }
 
@@ -269,6 +282,7 @@ export type FeedCandidate = {
 export async function getFeedCandidates(options: {
   excludeIds: string[];
   excludeAuthorId?: string;
+  excludeAuthorIds?: string[];
   authorIds?: string[];
   skillId?: string;
   take: number;
@@ -350,4 +364,22 @@ export async function getBeginnerPostIds(take: number): Promise<string[]> {
 export async function getPublishedPostCountsBySkill(): Promise<Map<string, number>> {
   const rows = await countPublishedPostsBySkill();
   return new Map(rows.map((row) => [row.skillId, row._count._all]));
+}
+
+/** Posts for the moderation queue, keyed by id (hidden ones included). */
+export async function getPostsForModeration(
+  ids: string[],
+): Promise<Map<string, { title: string; isHidden: boolean; authorId: string | null }>> {
+  const rows = await findPostsForModeration([...new Set(ids)]);
+  return new Map(
+    rows.map((row) => [
+      row.id,
+      { title: row.title, isHidden: row.hiddenAt !== null, authorId: row.authorId },
+    ]),
+  );
+}
+
+/** Hides or shows a post after a report (MOD-04). The caller checks the moderator and audits. */
+export async function setPostHidden(id: string, hidden: boolean): Promise<void> {
+  await updatePostHidden(id, hidden);
 }

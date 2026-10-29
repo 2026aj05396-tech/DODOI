@@ -207,10 +207,10 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 
 ### F-22 Report and block (MOD-01…06)
 
-1. Post, comment or profile menu → Report → reason (Offensive · Spam · Impersonation · Not my work · Other) + optional note → "Thanks for letting us know" (as P1).
+1. Post (⋯ next to the creator row), comment (⋯) or profile (Report button) → Report → reason (Offensive · Spam · Impersonation · Not my work · Other) + optional note → "Thanks for letting us know" (as P1).
 2. Menu → Block → "Block @name? You won't see each other's posts, comments or profile, and follows are removed. They won't be told." → Block → back to the previous page with toast; their content disappears.
-3. `[Settings] → Blocked accounts` → Unblock.
-4. Moderator: `/admin/reports` (moderators see only Reports) → Hide post / comment / profile / skill, Dismiss, Show again; author sees "Hidden after a report" on their hidden item.
+3. `[Settings] → Blocked accounts` → Unblock (follows and notifications that were removed do not come back). Profile: a Block button beside Report; post: ⋯ → Block @name; comment: ⋯ → Block @name.
+4. Moderator: `/admin/reports` (moderators see only Reports; admins assign the role through the API for now) → Hide post / comment / profile / skill, Dismiss, Show again; the author sees "Hidden after a report" on their hidden post or comment (a hidden post is listed with their drafts so they can delete it).
 
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 

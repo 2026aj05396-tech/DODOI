@@ -7,6 +7,7 @@ export {
   notify,
   NOTIFICATION_RETENTION_DAYS,
   purgeOldNotifications,
+  removeNotificationsBetween,
   updateNotificationPreferences,
   withdrawNotification,
 } from "./service";

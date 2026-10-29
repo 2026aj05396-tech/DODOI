@@ -45,6 +45,8 @@ export type PostDetail = PostCard & {
   isOwn: boolean;
   /** False only when the author (or an admin) previews a draft. */
   isPublished: boolean;
+  /** Hidden after a report: only its author and moderators can open it (MOD-04). */
+  isHidden: boolean;
 };
 
 export type ThemeSummary = {
@@ -94,4 +96,6 @@ export type OwnPostSummary = {
   coverMedia: Media | null;
   publishedAt: string | null;
   updatedAt: string;
+  /** Hidden after a report: shown with the drafts, with a notice, until deleted (MOD-04). */
+  isHidden: boolean;
 };

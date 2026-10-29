@@ -56,7 +56,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 
 ## 3. Authorization
 
-- Roles: `USER`, `ADMIN` (P1). `MODERATOR` (P2).
+- Roles: `USER`, `ADMIN` (P1). `MODERATOR` (P2, built P2-08): works the reports queue only; everything else in `/admin` and `/api/admin/*` answers 404 to moderators; the proxy lets moderators open `/admin/reports` only. Blocks hide content both ways (profile, posts, comments, feed, search, notifications) and are read through the users module.
 - **Every service function checks authorization** using the actor and the resource (ownership, visibility, role). Route handlers never rely on client-provided user IDs or roles.
 - Policy functions live in `server/modules/<module>/policies.ts` and are unit tested.
 - Resources not visible to the actor return **404** (private collections, unpublished posts, admin routes for non-admins).

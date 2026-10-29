@@ -23,9 +23,17 @@ export type CommentRow = Prisma.CommentGetPayload<{ select: typeof commentSelect
 
 export type CommentPosition = { createdAt: Date; id: string };
 
-/** Hidden comments show only to the writer (MOD-04). */
-function visibleTo(viewerId: string) {
-  return { OR: [{ hiddenAt: null }, { authorId: viewerId }] } satisfies Prisma.CommentWhereInput;
+/**
+ * Hidden comments show only to the writer (MOD-04); comments by people blocked either way with the
+ * viewer never show (MOD-02). `notIn` would drop rows without a writer, so they are kept explicitly.
+ */
+function visibleTo(viewerId: string, blockedIds: string[]) {
+  return {
+    AND: [
+      { OR: [{ hiddenAt: null }, { authorId: viewerId }] },
+      { OR: [{ authorId: null }, { authorId: { notIn: blockedIds } }] },
+    ],
+  } satisfies Prisma.CommentWhereInput;
 }
 
 /** Comments after a position, oldest first (keyset, stable when two share a timestamp). */
@@ -47,11 +55,12 @@ const oldestFirst = [
 export async function findTopLevel(
   postId: string,
   viewerId: string,
+  blockedIds: string[],
   position: CommentPosition | null,
   take: number,
 ): Promise<CommentRow[]> {
   return db.comment.findMany({
-    where: { postId, parentId: null, AND: [visibleTo(viewerId), after(position)] },
+    where: { postId, parentId: null, AND: [visibleTo(viewerId, blockedIds), after(position)] },
     orderBy: oldestFirst,
     take,
     select: commentSelect,
@@ -61,11 +70,12 @@ export async function findTopLevel(
 export async function findReplies(
   parentId: string,
   viewerId: string,
+  blockedIds: string[],
   position: CommentPosition | null,
   take: number,
 ): Promise<CommentRow[]> {
   return db.comment.findMany({
-    where: { parentId, AND: [visibleTo(viewerId), after(position)] },
+    where: { parentId, AND: [visibleTo(viewerId, blockedIds), after(position)] },
     orderBy: oldestFirst,
     take,
     select: commentSelect,
@@ -76,11 +86,12 @@ export async function findReplies(
 export async function countReplies(
   parentIds: string[],
   viewerId: string,
+  blockedIds: string[],
 ): Promise<Map<string, number>> {
   if (parentIds.length === 0) return new Map();
   const rows = await db.comment.groupBy({
     by: ["parentId"],
-    where: { parentId: { in: parentIds }, ...visibleTo(viewerId) },
+    where: { parentId: { in: parentIds }, ...visibleTo(viewerId, blockedIds) },
     _count: { _all: true },
   });
   return new Map(rows.flatMap((row) => (row.parentId ? [[row.parentId, row._count._all]] : [])));
@@ -133,4 +144,17 @@ export async function findCommentsByAuthor(
   tx: Tx,
 ): Promise<{ id: string; parentId: string | null }[]> {
   return tx.comment.findMany({ where: { authorId }, select: { id: true, parentId: true } });
+}
+
+/** Comments by id for the moderation queue (hidden ones included). */
+export async function findCommentsForModeration(ids: string[]) {
+  if (ids.length === 0) return [];
+  return db.comment.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, postId: true, body: true, hiddenAt: true, deletedAt: true, authorId: true },
+  });
+}
+
+export async function updateCommentHidden(id: string, hidden: boolean): Promise<void> {
+  await db.comment.update({ where: { id }, data: { hiddenAt: hidden ? new Date() : null } });
 }

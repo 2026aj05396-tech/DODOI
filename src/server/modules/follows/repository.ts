@@ -95,3 +95,15 @@ export async function findFollowing(
   });
   return rows.map((row) => ({ userId: row.followeeId, createdAt: row.createdAt }));
 }
+
+/** Takes away follows in both directions between two people (on block, MOD-02). */
+export async function deleteFollowsBetween(a: string, b: string): Promise<void> {
+  await db.follow.deleteMany({
+    where: {
+      OR: [
+        { followerId: a, followeeId: b },
+        { followerId: b, followeeId: a },
+      ],
+    },
+  });
+}

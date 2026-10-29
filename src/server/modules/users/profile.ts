@@ -14,6 +14,7 @@ import {
 } from "@/server/lib/errors";
 import { containsOffensiveWords, getActiveSkillSummaries } from "@/server/modules/skills";
 
+import { isBlockedEitherWay } from "./blocks";
 import {
   findOwnProfile,
   findProfileByUsername,
@@ -135,7 +136,9 @@ export async function getProfileForView(actor: Actor, username: string): Promise
   const user = requireSignedIn(actor);
   const row = await findProfileByUsername(username.trim().toLowerCase());
   const isOwner = row?.userId === user.id;
-  if (!row || (!isOwner && (row.isHidden || row.user.deletionRequestedAt))) {
+  // A blocked profile is gone for both sides (MOD-02).
+  const isBlocked = row && !isOwner ? await isBlockedEitherWay(user.id, row.userId) : false;
+  if (!row || isBlocked || (!isOwner && (row.isHidden || row.user.deletionRequestedAt))) {
     throw new NotFoundError("We couldn't find that profile.");
   }
   return {

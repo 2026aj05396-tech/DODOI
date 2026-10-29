@@ -2,15 +2,22 @@ import { z } from "zod";
 
 // Reports API contracts (API_SPECIFICATION §6b, RPT-01…05).
 
-export const reportReasonSchema = z.enum(["OFFENSIVE", "SPAM", "IMPERSONATION", "OTHER"]);
+export const reportReasonSchema = z.enum([
+  "OFFENSIVE",
+  "SPAM",
+  "IMPERSONATION",
+  "NOT_MY_WORK",
+  "OTHER",
+]);
 export type ReportReason = z.output<typeof reportReasonSchema>;
 
 /**
- * POST /api/reports. `targetId` is the skill id for a SKILL and the **username** for a PROFILE
- * (public profiles never show internal ids, PRF-08).
+ * POST /api/reports. `targetId` is the skill id for a SKILL, the post id for a POST, the comment
+ * id for a COMMENT and the **username** for a PROFILE (public profiles never show internal ids,
+ * PRF-08).
  */
 export const createReportSchema = z.object({
-  targetType: z.enum(["SKILL", "PROFILE"]),
+  targetType: z.enum(["SKILL", "PROFILE", "POST", "COMMENT"]),
   targetId: z.string().trim().min(1).max(40),
   reason: reportReasonSchema,
   /** Optional; an empty note is the same as none. */

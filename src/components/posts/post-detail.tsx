@@ -1,8 +1,9 @@
-import { Pencil, Sparkles } from "lucide-react";
+import { EyeOff, Pencil, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { CommentsSection } from "@/components/comments/comments-section";
 import { StartProjectButton } from "@/components/journal/start-project-button";
+import { PostMenu } from "@/components/safety/post-menu";
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,18 @@ export function PostDetail({
         </div>
 
         <div className="flex flex-col gap-6 px-5 pt-5 md:px-0 md:pt-7 lg:pt-0">
+          {post.isHidden ? (
+            <p
+              role="status"
+              className="flex items-start gap-2.5 rounded-card bg-destructive-surface p-4 text-body text-foreground"
+            >
+              <EyeOff aria-hidden className="mt-0.5 size-4.5 shrink-0" />
+              <span>
+                <span className="font-bold">Hidden after a report.</span> Only its author and our
+                team can see this post.
+              </span>
+            </p>
+          ) : null}
           <header className="flex flex-col gap-3">
             <ul className="flex flex-wrap gap-1.5" aria-label="About this post">
               {skills.map((skill) => (
@@ -120,7 +133,26 @@ export function PostDetail({
             <h1 className="text-title text-balance text-foreground md:text-title-web">
               {post.title}
             </h1>
-            <CreatorRow creator={post.creator} isOwn={post.isOwn} follow={follow} returnTo={path} />
+            <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <CreatorRow
+                  creator={post.creator}
+                  isOwn={post.isOwn}
+                  follow={follow}
+                  returnTo={path}
+                />
+              </div>
+              {like !== null && !post.isOwn ? (
+                <PostMenu
+                  postId={post.id}
+                  creator={
+                    post.creator
+                      ? { username: post.creator.username, displayName: post.creator.displayName }
+                      : null
+                  }
+                />
+              ) : null}
+            </div>
             {post.isOwn ? (
               // Your own post says whether others can see it (PO decision 2026-10-29).
               <p className="inline-flex items-center gap-2 text-meta text-foreground-secondary">

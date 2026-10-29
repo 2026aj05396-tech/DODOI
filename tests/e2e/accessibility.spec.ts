@@ -108,6 +108,7 @@ test("signed-in screens", async ({ page }) => {
     { name: "notification settings", path: "/settings/notifications" },
     { name: "followers", path: "/profile/followers" },
     { name: "following", path: "/profile/following" },
+    { name: "blocked accounts", path: "/settings/blocked" },
   ]);
 
   expect(problems).toEqual([]);

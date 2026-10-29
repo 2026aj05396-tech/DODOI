@@ -152,7 +152,7 @@ export async function getAuthUserByAccount(
 
 export type SessionUser = {
   id: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "MODERATOR" | "ADMIN";
   sessionVersion: number;
   isEmailVerified: boolean;
   isAgeConfirmed: boolean;

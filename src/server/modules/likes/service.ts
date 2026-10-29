@@ -6,6 +6,7 @@ import { ForbiddenError, NotFoundError, UnauthenticatedError } from "@/server/li
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { getPublishedPostAuthor } from "@/server/modules/content";
 import { notify, withdrawNotification } from "@/server/modules/notifications";
+import { isBlockedEitherWay } from "@/server/modules/users";
 
 import { countLikes, deleteLike, hasLike, insertLike } from "./repository";
 
@@ -21,16 +22,21 @@ function requireSignedIn(actor: Actor): AuthenticatedActor {
 }
 
 /** Throws 404 unless the post is published; returns who wrote it. */
-async function requirePublishedPost(postId: string): Promise<{ authorId: string | null }> {
+async function requirePublishedPost(
+  user: AuthenticatedActor,
+  postId: string,
+): Promise<{ authorId: string | null }> {
   const post = await getPublishedPostAuthor(postId);
-  if (!post) throw new NotFoundError("We couldn't find that post.");
+  // A post by someone blocked either way is gone for the viewer (MOD-02).
+  const isBlocked = post?.authorId ? await isBlockedEitherWay(user.id, post.authorId) : false;
+  if (!post || isBlocked) throw new NotFoundError("We couldn't find that post.");
   return post;
 }
 
 /** The viewer's like on a post and, for the post's author, how many likes it has. */
 export async function getPostLikeState(actor: Actor, postId: string): Promise<PostLikeState> {
   const user = requireSignedIn(actor);
-  const post = await requirePublishedPost(postId);
+  const post = await requirePublishedPost(user, postId);
   const [isLiked, likeCount] = await Promise.all([
     hasLike(postId, user.id),
     post.authorId === user.id ? countLikes(postId) : null,
@@ -44,7 +50,7 @@ export async function likePost(actor: Actor, postId: string): Promise<void> {
   if (!user.isEmailVerified) {
     throw new ForbiddenError("Verify your email to like posts.", { code: "EMAIL_NOT_VERIFIED" });
   }
-  const post = await requirePublishedPost(postId);
+  const post = await requirePublishedPost(user, postId);
   await enforceRateLimit(LIKE_RATE_LIMIT, user.id);
   const isNew = await insertLike(postId, user.id);
   if (isNew && post.authorId) {
@@ -55,7 +61,7 @@ export async function likePost(actor: Actor, postId: string): Promise<void> {
 /** DELETE /api/posts/{postId}/like: idempotent. */
 export async function unlikePost(actor: Actor, postId: string): Promise<void> {
   const user = requireSignedIn(actor);
-  const post = await requirePublishedPost(postId);
+  const post = await requirePublishedPost(user, postId);
   await enforceRateLimit(LIKE_RATE_LIMIT, user.id);
   await deleteLike(postId, user.id);
   if (post.authorId) {

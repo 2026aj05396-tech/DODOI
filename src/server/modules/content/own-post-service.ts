@@ -261,6 +261,7 @@ export async function listOwnPosts(
       coverMedia: row.media[0] ? toMedia(row.media[0].media, provider) : null,
       publishedAt: row.publishedAt?.toISOString() ?? null,
       updatedAt: row.updatedAt.toISOString(),
+      isHidden: row.hiddenAt !== null,
     })),
     nextCursor:
       rows.length > query.limit && last

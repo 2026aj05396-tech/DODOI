@@ -7,5 +7,6 @@ export {
   getOwnFollowCounts,
   listOwnFollowers,
   listOwnFollowing,
+  removeFollowsBetween,
   unfollowUser,
 } from "./service";

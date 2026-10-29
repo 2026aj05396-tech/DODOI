@@ -17,7 +17,7 @@ import type { ReportGroup } from "@/lib/types/reports";
 
 import { StatusBadge } from "./status-badge";
 
-// Admin reports (RPT-04, P1-28b; built from the system): one card per reported skill or profile
+// Admin reports (RPT-04, P1-28b; built from the system): one card per reported skill, profile, post or comment
 // with the number of reports, reasons and notes (never who reported). Open: Hide or Dismiss
 // (resolves all its open reports); Resolved: Show again for hidden targets. Every action is
 // audited on the server.
@@ -26,6 +26,7 @@ const REASON_LABELS: Record<ReportReason, string> = {
   OFFENSIVE: "Offensive",
   SPAM: "Spam",
   IMPERSONATION: "Impersonation",
+  NOT_MY_WORK: "Not my work",
   OTHER: "Other",
 };
 
@@ -42,7 +43,9 @@ function GroupCard({
   onAct: (action: "HIDE_TARGET" | "DISMISS" | "RESTORE_TARGET") => void;
   isBusy: boolean;
 }) {
-  const kind = group.targetType === "SKILL" ? "Skill" : "Profile";
+  const kind = { SKILL: "Skill", PROFILE: "Profile", POST: "Post", COMMENT: "Comment" }[
+    group.targetType
+  ];
   const label = group.target.label ?? "Deleted";
   return (
     <li className="flex flex-col gap-3 rounded-card border border-border bg-background p-4">

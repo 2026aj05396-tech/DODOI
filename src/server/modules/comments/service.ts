@@ -21,7 +21,7 @@ import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { avatarUrl, getPublishedPostAuthor } from "@/server/modules/content";
 import { notify } from "@/server/modules/notifications";
-import { getCreatorProfiles } from "@/server/modules/users";
+import { getBlockedUserIds, getCreatorProfiles, isBlockedEitherWay } from "@/server/modules/users";
 
 import { canDeleteComment, canEditComment } from "./policies";
 import {
@@ -31,11 +31,13 @@ import {
   deleteCommentRow,
   findComment,
   findCommentsByAuthor,
+  findCommentsForModeration,
   findReplies,
   findTopLevel,
   insertComment,
   softDeleteComment,
   updateCommentBody,
+  updateCommentHidden,
   type CommentPosition,
   type CommentRow,
 } from "./repository";
@@ -75,9 +77,14 @@ function nextCursor(rows: CommentRow[], pageSize: number): string | null {
 }
 
 /** Throws 404 unless the post is published; returns who wrote it. */
-async function requirePublishedPost(postId: string): Promise<{ authorId: string | null }> {
+async function requirePublishedPost(
+  user: AuthenticatedActor,
+  postId: string,
+): Promise<{ authorId: string | null }> {
   const post = await getPublishedPostAuthor(postId);
-  if (!post) throw new NotFoundError("We couldn't find that post.");
+  // A post by someone blocked either way is gone for the viewer (MOD-02).
+  const isBlocked = post?.authorId ? await isBlockedEitherWay(user.id, post.authorId) : false;
+  if (!post || isBlocked) throw new NotFoundError("We couldn't find that post.");
   return post;
 }
 
@@ -113,6 +120,7 @@ async function toCommentViews(
       createdAt: row.createdAt.toISOString(),
       editedAt: row.editedAt?.toISOString() ?? null,
       isOwn: row.authorId === actor.id,
+      isHidden: row.hiddenAt !== null,
       canDelete: !isDeleted && canDeleteComment(actor, row, postAuthorId),
       replyCount: extra.replyCounts?.get(row.id) ?? 0,
       replies,
@@ -134,18 +142,25 @@ export async function listComments(
   query: CommentPageQuery,
 ): Promise<Paginated<Comment>> {
   const user = requireSignedIn(actor);
-  const post = await requirePublishedPost(postId);
-  const rows = await findTopLevel(postId, user.id, toPosition(query.cursor), DEFAULT_PAGE_SIZE + 1);
+  const post = await requirePublishedPost(user, postId);
+  const blocked = [...(await getBlockedUserIds(user.id))];
+  const rows = await findTopLevel(
+    postId,
+    user.id,
+    blocked,
+    toPosition(query.cursor),
+    DEFAULT_PAGE_SIZE + 1,
+  );
   const page = rows.slice(0, DEFAULT_PAGE_SIZE);
 
   const ids = page.map((row) => row.id);
-  const replyCounts = await countReplies(ids, user.id);
+  const replyCounts = await countReplies(ids, user.id, blocked);
   const replies = new Map<string, CommentRow[]>();
   await Promise.all(
     page
       .filter((row) => (replyCounts.get(row.id) ?? 0) > 0)
       .map(async (row) => {
-        replies.set(row.id, await findReplies(row.id, user.id, null, INLINE_REPLY_COUNT));
+        replies.set(row.id, await findReplies(row.id, user.id, blocked, null, INLINE_REPLY_COUNT));
       }),
   );
 
@@ -164,10 +179,13 @@ export async function listReplies(
   const user = requireSignedIn(actor);
   const parent = await findComment(commentId);
   if (!parent || parent.parentId) throw commentNotFound();
-  const post = await requirePublishedPost(parent.postId);
+  const post = await requirePublishedPost(user, parent.postId);
+  const blocked = [...(await getBlockedUserIds(user.id))];
+  if (parent.authorId && blocked.includes(parent.authorId)) throw commentNotFound();
   const rows = await findReplies(
     commentId,
     user.id,
+    blocked,
     toPosition(query.cursor),
     DEFAULT_PAGE_SIZE + 1,
   );
@@ -192,13 +210,17 @@ export async function createComment(
   if (!user.isEmailVerified) {
     throw new ForbiddenError("Verify your email to comment.", { code: "EMAIL_NOT_VERIFIED" });
   }
-  const post = await requirePublishedPost(postId);
+  const post = await requirePublishedPost(user, postId);
 
   let parentId: string | null = null;
   let repliedToAuthorId: string | null = null;
   if (input.parentId) {
     const target = await findComment(input.parentId);
     if (!target || target.postId !== postId) throw commentNotFound();
+    // Nobody blocked either way can be answered (MOD-02).
+    if (target.authorId && (await isBlockedEitherWay(user.id, target.authorId))) {
+      throw commentNotFound();
+    }
     if (target.deletedAt) {
       throw new UnprocessableError("That comment was deleted, so it can't get new replies.");
     }
@@ -226,9 +248,11 @@ export async function updateComment(actor: Actor, id: string, body: string): Pro
   const user = requireSignedIn(actor);
   const comment = await findComment(id);
   if (!comment || comment.deletedAt || !canEditComment(user, comment)) throw commentNotFound();
-  const post = await requirePublishedPost(comment.postId);
+  const post = await requirePublishedPost(user, comment.postId);
   const row = await updateCommentBody(id, body);
-  const replyCounts = comment.parentId ? undefined : await countReplies([id], user.id);
+  const replyCounts = comment.parentId
+    ? undefined
+    : await countReplies([id], user.id, [...(await getBlockedUserIds(user.id))]);
   const [view] = await toCommentViews(user, [row], post.authorId, { replyCounts });
   if (!view) throw new Error("Comment view missing");
   return view;
@@ -255,7 +279,7 @@ export async function deleteComment(actor: Actor, id: string): Promise<void> {
   const user = requireSignedIn(actor);
   const comment = await findComment(id);
   if (!comment || comment.deletedAt) throw commentNotFound();
-  const post = await requirePublishedPost(comment.postId);
+  const post = await requirePublishedPost(user, comment.postId);
   if (!canDeleteComment(user, comment, post.authorId)) throw commentNotFound();
   await db.$transaction((tx) => removeComment(comment, tx));
 }
@@ -275,4 +299,33 @@ export async function deleteCommentsOfUser(
     const row = await findComment(id, tx);
     if (row && !row.deletedAt) await removeComment(row, tx);
   }
+}
+
+/** Comments for the moderation queue, keyed by id (hidden ones included). */
+export async function getCommentsForModeration(
+  ids: string[],
+): Promise<
+  Map<
+    string,
+    { postId: string; body: string; isHidden: boolean; isDeleted: boolean; authorId: string | null }
+  >
+> {
+  const rows = await findCommentsForModeration(ids);
+  return new Map(
+    rows.map((row) => [
+      row.id,
+      {
+        postId: row.postId,
+        body: row.body,
+        isHidden: row.hiddenAt !== null,
+        isDeleted: row.deletedAt !== null,
+        authorId: row.authorId,
+      },
+    ]),
+  );
+}
+
+/** Hides or shows a comment after a report (MOD-04). The caller checks the moderator and audits. */
+export async function setCommentHidden(id: string, hidden: boolean): Promise<void> {
+  await updateCommentHidden(id, hidden);
 }

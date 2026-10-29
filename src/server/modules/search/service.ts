@@ -27,7 +27,12 @@ import {
   getSkillsToTry,
   listSkills,
 } from "@/server/modules/skills";
-import { getInterestProfile, searchCreators } from "@/server/modules/users";
+import {
+  getBlockedUserIds,
+  getInterestProfile,
+  getUsernames,
+  searchCreators,
+} from "@/server/modules/users";
 
 // Search and Explore (SRCH-01…08, API_SPECIFICATION §5). This module owns no tables: each query
 // lives in the module that owns the data (posts in content, makers in users, skills in skills,
@@ -86,11 +91,18 @@ function toPage<T>(rows: T[], offset: number, limit: number): Paginated<T> {
 }
 
 async function findCreators(
+  actor: AuthenticatedActor,
   term: string,
   page: { offset: number; take: number },
   provider: MediaProvider,
 ): Promise<CreatorSummary[]> {
-  const rows = await searchCreators(term, page);
+  const [found, blocked] = await Promise.all([
+    searchCreators(term, page),
+    getBlockedUserIds(actor.id),
+  ]);
+  // Blocked people are left out both ways (MOD-02).
+  const blockedNames = new Set((await getUsernames([...blocked])).values());
+  const rows = found.filter((row) => !blockedNames.has(row.username));
   return rows.map((row) => ({
     username: row.username,
     displayName: row.displayName,
@@ -125,7 +137,7 @@ export async function search(
     const [posts, skills, creators] = await Promise.all([
       findPosts(user, term, page, provider),
       listSkills(user, { q: term, limit: ALL_LIMIT }),
-      findCreators(term, page, provider),
+      findCreators(user, term, page, provider),
     ]);
     const results: SearchAll = { posts, skills: skills.items, creators };
     return results;
@@ -138,7 +150,7 @@ export async function search(
   if (query.type === "posts") {
     return toPage(await findPosts(user, term, page, provider), offset, query.limit);
   }
-  return toPage(await findCreators(term, page, provider), offset, query.limit);
+  return toPage(await findCreators(user, term, page, provider), offset, query.limit);
 }
 
 /** Skill ids by how often their posts were saved lately, then by how many posts they have. */

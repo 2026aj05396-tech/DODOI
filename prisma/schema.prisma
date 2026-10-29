@@ -17,6 +17,7 @@ datasource db {
 
 enum Role {
   USER
+  MODERATOR
   ADMIN
 }
 
@@ -98,6 +99,8 @@ enum FeedbackType {
 enum ReportTargetType {
   SKILL
   PROFILE
+  POST
+  COMMENT
 }
 
 enum ReportReason {
@@ -105,6 +108,7 @@ enum ReportReason {
   SPAM
   IMPERSONATION
   OTHER
+  NOT_MY_WORK
 }
 
 enum ReportStatus {
@@ -171,6 +175,8 @@ model User {
   notificationsReceived   Notification[]           @relation("NotificationsReceived")
   notificationsCaused     Notification[]           @relation("NotificationsCaused")
   notificationPreferences NotificationPreference[]
+  blocking                Block[]                  @relation("Blocking")
+  blockedBy               Block[]                  @relation("BlockedBy")
 
   @@map("user")
 }
@@ -330,6 +336,8 @@ model Post {
   projectId          String?                  @map("project_id")
   /// Set when a user publishes their own post and confirms it is their own work (CRT-08, OD-05).
   ownWorkConfirmedAt DateTime?                @map("own_work_confirmed_at")
+  /// Hidden after a report (MOD-04): gone for everyone except its author and moderators.
+  hiddenAt           DateTime?                @map("hidden_at")
   createdAt          DateTime                 @default(now()) @map("created_at")
   updatedAt          DateTime                 @updatedAt @map("updated_at")
   /// Full-text vector ('simple' config): title weight A, description B, skill names C.
@@ -885,4 +893,19 @@ model NotificationPreference {
 
   @@id([userId, type])
   @@map("notification_preference")
+}
+
+/// `blockerId` blocked `blockedId` (MOD-02): neither sees the other's profile, posts or comments,
+/// and neither can follow, like or comment on the other. The blocked user is not told.
+model Block {
+  blockerId String   @map("blocker_id")
+  blockedId String   @map("blocked_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blocker User @relation("Blocking", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("block")
 }

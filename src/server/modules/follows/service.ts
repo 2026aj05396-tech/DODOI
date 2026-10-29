@@ -18,6 +18,7 @@ import {
   countFollowers,
   countFollowing,
   deleteFollow,
+  deleteFollowsBetween,
   findFolloweeIds,
   findFollowers,
   findFollowing,
@@ -93,6 +94,11 @@ export async function getFollowState(actor: Actor, username: string): Promise<Fo
     if (error instanceof NotFoundError) return { canFollow: false, isFollowing: false };
     throw error;
   }
+}
+
+/** Follows in both directions between two people go when one blocks the other (MOD-02). */
+export async function removeFollowsBetween(a: string, b: string): Promise<void> {
+  await deleteFollowsBetween(a, b);
 }
 
 /** The makers a user follows, for the feed's boost and "Following" filter (FLW-04). */

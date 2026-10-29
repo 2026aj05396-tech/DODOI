@@ -5,7 +5,9 @@ export {
   deleteComment,
   deleteCommentsOfUser,
   getCommentCount,
+  getCommentsForModeration,
   listComments,
   listReplies,
+  setCommentHidden,
   updateComment,
 } from "./service";

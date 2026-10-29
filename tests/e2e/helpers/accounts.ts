@@ -24,6 +24,7 @@ export function createPasswordAccount(
     noPassword?: boolean;
     onboardingIncomplete?: boolean;
     admin?: boolean;
+    moderator?: boolean;
     /** Skill slugs added as interests. */
     interests?: string[];
   } = {},
@@ -38,6 +39,7 @@ export function createPasswordAccount(
     ...(options.noPassword ? ["--no-password"] : []),
     ...(options.onboardingIncomplete ? ["--onboarding-incomplete"] : []),
     ...(options.admin ? ["--admin"] : []),
+    ...(options.moderator ? ["--moderator"] : []),
     ...(options.interests ? [`--interests=${options.interests.join(",")}`] : []),
   ]);
   return { email, password: PASSWORD };

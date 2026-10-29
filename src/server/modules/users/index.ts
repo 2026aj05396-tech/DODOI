@@ -11,6 +11,14 @@ export {
   REAUTHENTICATION_WINDOW_SECONDS,
   requestAccountDeletion,
 } from "./account-deletion";
+export {
+  addBlock,
+  findBlockedByUser,
+  getBlockedUserIds,
+  isBlockedEitherWay,
+  removeBlock,
+} from "./blocks";
+export { getUserRole, setUserRole } from "./roles";
 export { confirmAge } from "./age-check";
 export {
   getCreatorProfiles,

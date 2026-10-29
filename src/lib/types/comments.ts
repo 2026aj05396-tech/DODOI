@@ -16,6 +16,8 @@ export type Comment = {
   /** Set once the writer edited it ("edited"). */
   editedAt: string | null;
   isOwn: boolean;
+  /** Hidden after a report; only its writer sees this, with "Hidden after a report" (MOD-04). */
+  isHidden: boolean;
   /** Owner, or the post's author (CMT-03). */
   canDelete: boolean;
   /** Top-level comments only. */

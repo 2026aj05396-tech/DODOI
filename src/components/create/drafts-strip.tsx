@@ -29,7 +29,7 @@ export function DraftsStrip({ drafts, heading }: { drafts: OwnPostSummary[]; hea
                   <PatternTile accent="blush" className="size-full rounded-none" />
                 )}
                 <span className="absolute top-1.5 left-1.5 rounded-full bg-background px-2 py-0.5 text-badge-sm text-foreground uppercase">
-                  Draft
+                  {draft.isHidden ? "Hidden after a report" : "Draft"}
                 </span>
               </span>
               <span className="truncate text-meta font-bold text-foreground">

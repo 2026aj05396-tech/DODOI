@@ -298,7 +298,9 @@ Removes from this collection only; save remains. → `204`.
 ### POST /api/reports — User (verified email)
 `{ "targetType": "SKILL" | "PROFILE", "targetId": "…", "reason": "OFFENSIVE" | "SPAM" | "IMPERSONATION" | "OTHER", "note"?: "…" }` → `201` (also `201` if an open report by the same user already exists — idempotent). `targetId` is the skill id, or the **username** for a profile (public responses never expose user ids; the report stores the user id). Only custom skills (`400 NOT_REPORTABLE`); unverified → `403 EMAIL_NOT_VERIFIED`; yourself → `422 SELF_REPORT`. Rate limit 10 / day / user (`429`).
 
-### GET /api/admin/reports?status=OPEN|RESOLVED&cursor= — Admin
+**P2-08 (built 2026-10-29):** `targetType` also accepts `POST` (`targetId` = post id) and `COMMENT` (comment id); `reason` also `NOT_MY_WORK`. Only posts and comments the reporter can see (published, not hidden, not by someone blocked either way) → else `404`; your own → `422 SELF_REPORT`. `GET /api/admin/reports` and `POST /api/admin/reports/{id}/action` are open to **Moderators and Admins** (everyone else `404`); `HIDE_TARGET` / `RESTORE_TARGET` set `hiddenAt` on posts and comments (audited as `report.hide_target` / `report.restore_target` with `targetType` `post` / `comment`). Report groups for posts and comments show the title / the first 140 characters, link to `/p/{id}` (comments with `#comment-{id}`), and say "Post" / "Comment".
+
+### GET /api/admin/reports?status=OPEN|RESOLVED&cursor= — Moderator or Admin
 One row per reported target (PO decision, P1-28b): `{ reportId, targetType, target: { label, href, detail, isHidden }, reportCount, reasons: { REASON: n }, notes: [{ reason, note, createdAt }], latestAt, status }`, newest report first. Reporters are never included (RPT-05).
 
 ### POST /api/admin/reports/{id}/action — Admin
@@ -442,8 +444,8 @@ Built P2-04 (2026-10-29): all five routes need a signed-in user; reading and wri
 | `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author. **Built P2-05:** `204`; unlike needs only a signed-in user; `404` for a post that is not published; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour. `isLiked` and `likeCount` reach the post page from the server (not an API field); cards have no `isLiked` yet |
 | `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404`. **Built P2-06:** `204`, idempotent; unfollow needs only a signed-in user and works even if the profile went private since; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour (follows and unfollows together) |
 | `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `follow: { canFollow, isFollowing }` and, for the owner only, `followCounts: { followers, following }` (built P2-06). Lists are `{ items: [{ username, displayName, avatarUrl }], nextCursor }`, newest first, 20 per page; profiles that are hidden or deactivated are left out |
-| `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02) |
-| `GET /api/me/blocks?cursor=` | User | Block list |
+| `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02). **Built P2-08:** `204`, idempotent; `422 SELF_BLOCK`; `404` unknown username; blocking removes follows and notifications between the two; nobody is told |
+| `GET /api/me/blocks?cursor=` | User | Block list: `{ items: [{ username, displayName }], nextCursor }`, newest first (hidden profiles stay listed so they can be unblocked). `PATCH /api/admin/users/{id}/role` `{ role: "USER" \| "MODERATOR" }` → `204`, Admin only, audited (`user.make_moderator` / `user.remove_moderator`); `422 ADMIN_ROLE_LOCKED` for an admin; no screen yet |
 
 **Notifications (P2-07)**
 

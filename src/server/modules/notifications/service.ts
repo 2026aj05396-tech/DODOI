@@ -18,10 +18,11 @@ import { UnauthenticatedError } from "@/server/lib/errors";
 import { logger } from "@/server/lib/logger";
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { avatarUrl, getPublishedPostTitles } from "@/server/modules/content";
-import { getCreatorProfiles } from "@/server/modules/users";
+import { getCreatorProfiles, isBlockedEitherWay } from "@/server/modules/users";
 
 import {
   deleteNotificationsBefore,
+  deleteNotificationsBetween,
   deleteNotificationsBy,
   findDisabledTypes,
   findNotifications,
@@ -65,6 +66,8 @@ type NotifyInput = {
 export async function notify(input: NotifyInput): Promise<void> {
   if (input.recipientId === input.actorId) return;
   try {
+    // NTF-05: never for people blocked either way.
+    if (await isBlockedEitherWay(input.recipientId, input.actorId)) return;
     if ((await findDisabledTypes(input.recipientId)).includes(input.type)) return;
     await insertNotification(input);
   } catch (error) {
@@ -208,6 +211,11 @@ export async function updateNotificationPreferences(
     if (enabled !== undefined) await setPreference(user.id, type, enabled);
   }
   return getNotificationPreferences(user);
+}
+
+/** Notifications between two people go when one blocks the other (MOD-02). */
+export async function removeNotificationsBetween(a: string, b: string): Promise<void> {
+  await deleteNotificationsBetween(a, b);
 }
 
 /** Daily cleanup (NTF-05): notifications older than 90 days. Returns how many were removed. */

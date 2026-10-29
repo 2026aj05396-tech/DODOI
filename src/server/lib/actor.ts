@@ -3,7 +3,7 @@ import { NotFoundError } from "./errors";
 // The authenticated user performing an action, passed explicitly to every service function
 // (CODE_QUALITY §4.3). `null` means signed out. Built from the Auth.js session (src/server/auth).
 
-export type Role = "USER" | "ADMIN";
+export type Role = "USER" | "MODERATOR" | "ADMIN";
 
 export type AuthenticatedActor = {
   id: string;
@@ -35,5 +35,14 @@ export type Actor = AuthenticatedActor | null;
  */
 export function requireAdmin(actor: Actor): AuthenticatedActor {
   if (actor?.role !== "ADMIN") throw new NotFoundError();
+  return actor;
+}
+
+/**
+ * The reports queue is open to moderators as well as admins (MOD-03); everything else in the
+ * admin area stays admin-only and answers 404 to moderators.
+ */
+export function requireModerator(actor: Actor): AuthenticatedActor {
+  if (actor?.role !== "ADMIN" && actor?.role !== "MODERATOR") throw new NotFoundError();
   return actor;
 }

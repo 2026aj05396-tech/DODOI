@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogOutDialog } from "@/components/auth/log-out-dialog";
 import { CollectionTile } from "@/components/collections/collection-tile";
 import { ReportButton } from "@/components/reports/report-button";
+import { BlockButton } from "@/components/safety/block-button";
 import { Button } from "@/components/ui/button";
 import type { Paginated } from "@/lib/types/api";
 import type { FollowCounts, FollowState } from "@/lib/types/follows";
@@ -118,6 +119,7 @@ function Header({
             targetId={profile.username}
             targetLabel="this profile"
           />
+          <BlockButton username={profile.username} />
         </div>
       ) : null}
       {isOwner ? (

@@ -613,7 +613,7 @@ model Follow {                                    // built P2-06; table follow, 
   @@index([followeeId, createdAt(sort: Desc)])
 }
 
-model Block {
+model Block {                                     // built P2-08; table block, snake_case columns
   blockerId String
   blockedId String
   createdAt DateTime @default(now())
@@ -698,6 +698,8 @@ model NotificationPreference {                    // built P2-07; table notifica
 **Built (P2-03, migration `creative_journal`, 2026-10-29):** `Project`, `ProjectMaterial`, `ProjectEntry` (plus an optional `title` VarChar(80), design `1g`), `ProjectEntryMedia` (indexed on `media_id`), `Post.projectId` (SetNull) with the `ProjectPosts` / `ProjectSource` relations. The content module's orphan and unused-media queries treat entry photos as used (`entryMedia: { none: {} }`).
 
 **Built so far (P2-02, migration `20261028165443_user_posts_tags`):** `Post.ownWorkConfirmedAt`, `Tag`, `PostTag` as listed (`Tag.normalizedName` = the lowercased name; no separate display case). Tag names join skill names at weight C in `search_vector`. The other §9.1 models come with their tasks.
+
+**Built (P2-08, migrations `safety` and `blocks`, 2026-10-29):** `Role.MODERATOR`, `ReportTargetType.POST` / `COMMENT`, `ReportReason.NOT_MY_WORK`, `Post.hiddenAt`, `Block`. The published-post queries all exclude `hiddenAt` posts; an own post that is hidden is listed with the maker's drafts.
 
 **Rules**
 - **"Own post"** = `authorId` is the user **and** the post has no `PostAttribution` row: invited creators' seeded posts also have an author, but always attribution, and stay admin-managed. An own post an admin unpublished is listed with the maker's drafts and can be shared again.

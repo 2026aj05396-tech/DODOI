@@ -1,10 +1,12 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Ban, Flag, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 
+import { ReportDialog } from "@/components/reports/report-button";
+import { BlockDialog } from "@/components/safety/block-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +21,7 @@ import { relativeDay } from "@/lib/utils/relative-day";
 import { CommentComposer } from "./comment-composer";
 
 // One comment or reply (F-19, CMT-01…03). Own comments have Edit and Delete in a ⋯ menu; the
-// post's author can delete others'. Report and Block arrive with P2-08.
+// post's author can delete others'; everyone else's comments offer Report and Block (P2-08).
 
 const MENU_ITEM =
   "flex min-h-11 cursor-pointer items-center gap-2.5 rounded-sm px-3 text-control text-foreground outline-none data-highlighted:bg-muted";
@@ -65,6 +67,7 @@ export function CommentItem({
   const [isEditing, setIsEditing] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [dialog, setDialog] = useState<"report" | "block" | null>(null);
 
   if (comment.isDeleted) {
     return (
@@ -75,7 +78,6 @@ export function CommentItem({
   }
 
   const name = comment.author?.displayName ?? "A dodoi member";
-  const hasMenu = comment.isOwn || comment.canDelete;
 
   async function confirmDelete() {
     setIsDeleting(true);
@@ -105,7 +107,7 @@ export function CommentItem({
             {relativeDay(comment.createdAt)}
             {comment.editedAt ? " · edited" : ""}
           </p>
-          {hasMenu ? (
+          {canReply || comment.isOwn || comment.canDelete ? (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger
                 aria-label={`Options for ${name}'s comment`}
@@ -125,13 +127,27 @@ export function CommentItem({
                       Edit
                     </DropdownMenu.Item>
                   ) : null}
-                  <DropdownMenu.Item
-                    className={MENU_ITEM}
-                    onSelect={() => setIsConfirmingDelete(true)}
-                  >
-                    <Trash2 aria-hidden className="size-4.5" />
-                    Delete
-                  </DropdownMenu.Item>
+                  {comment.isOwn || comment.canDelete ? (
+                    <DropdownMenu.Item
+                      className={MENU_ITEM}
+                      onSelect={() => setIsConfirmingDelete(true)}
+                    >
+                      <Trash2 aria-hidden className="size-4.5" />
+                      Delete
+                    </DropdownMenu.Item>
+                  ) : null}
+                  {comment.isOwn ? null : (
+                    <DropdownMenu.Item className={MENU_ITEM} onSelect={() => setDialog("report")}>
+                      <Flag aria-hidden className="size-4.5" />
+                      Report
+                    </DropdownMenu.Item>
+                  )}
+                  {comment.isOwn || !comment.author ? null : (
+                    <DropdownMenu.Item className={MENU_ITEM} onSelect={() => setDialog("block")}>
+                      <Ban aria-hidden className="size-4.5" />
+                      Block @{comment.author.username}
+                    </DropdownMenu.Item>
+                  )}
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
@@ -153,9 +169,14 @@ export function CommentItem({
             />
           </div>
         ) : (
-          <p className="mt-0.5 text-body break-words whitespace-pre-line text-foreground">
-            {comment.body}
-          </p>
+          <>
+            {comment.isHidden ? (
+              <p className="mt-0.5 text-meta font-bold text-destructive">Hidden after a report</p>
+            ) : null}
+            <p className="mt-0.5 text-body break-words whitespace-pre-line text-foreground">
+              {comment.body}
+            </p>
+          </>
         )}
 
         {canReply && !isEditing ? (
@@ -169,6 +190,18 @@ export function CommentItem({
           </button>
         ) : null}
       </div>
+
+      {dialog === "report" ? (
+        <ReportDialog
+          targetType="COMMENT"
+          targetId={comment.id}
+          targetLabel="this comment"
+          onClose={() => setDialog(null)}
+        />
+      ) : null}
+      {dialog === "block" && comment.author ? (
+        <BlockDialog username={comment.author.username} onClose={() => setDialog(null)} />
+      ) : null}
 
       <Dialog open={isConfirmingDelete} onOpenChange={setIsConfirmingDelete}>
         <DialogContent>
