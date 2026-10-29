@@ -18,7 +18,7 @@ Each environment has its own accounts and keys; nothing is shared with local or 
 
 1. **Neon** (neon.tech): create a project `dodoi-test`, region **AWS Asia Pacific (Singapore)**, Postgres 16+. From *Connect*, copy two connection strings: **pooled** (host contains `-pooler`) → `DATABASE_URL`, and **direct** (pooling off) → `DIRECT_DATABASE_URL`. Both end with `?sslmode=require`.
 2. **Google OAuth** (Google Cloud console → APIs & Services → Credentials): a new *Web application* client `dodoi test`. Authorized redirect URI: `https://<your-project>.vercel.app/api/auth/callback/google` (fill in after step 5 gives the address, then redeploy). → `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
-3. **Cloudinary**: a separate product environment (or account) for test → `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Uploads go to `dodoi/test/…`.
+3. **Cloudinary**: a separate product environment (or account) for test → `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Uploads go to `dodoi/test/…` (`posts/`, `covers/`, `avatars/`, and from Phase 2 `entries/` for journal photos); the folders are created on first upload, nothing to set up. From Phase 2 every signed-in user can upload (P2-01), so keep an eye on the free plan's monthly credits (Cloudinary → Dashboard); unattached uploads are removed by the daily jobs after 24 hours.
 4. **Email.** Until a sending domain is verified in Resend, Resend only delivers to the Resend account owner's address, and `*.vercel.app` can't be verified (you can't add DNS records to it). So the test site sends through **Gmail SMTP** instead (PO, 2026-10-28):
    - Create a Gmail account just for the test site (e.g. `dodoi.test@gmail.com`); an App Password can send mail as the whole account, so not your personal one.
    - On it, turn on 2-Step Verification, then Google Account → Security → **App passwords** → create one named `dodoi test`.
@@ -58,8 +58,9 @@ Never set `AUTH_GOOGLE_ISSUER` or `CLOUDINARY_API_BASE` here: they are for autom
 
 ## Checking a deploy
 
-- Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`.
+- Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`. The first deploy with Phase 2 applies `…_user_posts_tags`, `…_creative_journal`, `…_comments` and `…_post_likes`; no new environment variables are needed.
 - `/robots.txt` says `Disallow: /`.
 - Sign up with any address, verify from the email, onboard, open the feed, save a post, sign out.
 - On a phone over HTTPS: the install banner after a save, and offline mode (visit the feed, turn on airplane mode, reopen).
+- Phase 2 (P2-02, P2-03, P2-04): Create → pick a phone photo (it uploads at once), Edit photo, describe it, add a craft, tick "my own work", Share → "Posted!"; the post shows on your profile's Posts tab. Journal → New project → add an entry with a photo → Share opens Create pre-filled. On a tutorial, "Start as my project" copies its materials. On any post, add a comment, reply to it, edit it (shows "edited"), delete it ("Comment deleted" stays while it has a reply). Tap the heart on a post, reload: it stays filled.
 - Vercel → Settings → Cron Jobs lists `/api/cron/daily`; "Run" triggers it, and the function log shows each job's count.

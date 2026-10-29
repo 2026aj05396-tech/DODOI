@@ -122,7 +122,7 @@ src/
 │   │   ├── collections/                # saves, collections
 │   │   ├── admin/                      # audit log, admin ops
 │   │   ├── (P2) content/ gains user posts + tags; journal/ (projects, entries — built P2-03; uses content for media and posts, skills, users);
-│   │   │   social/ (comments, likes, follows); notifications/; users/ gains blocks
+│   │   │   comments/ (built P2-04; uses content for the post's author, users for writers' profiles); likes/ (built P2-05; uses content for the post's author); social/ (follows); notifications/; users/ gains blocks
 │   │   │   (`notBlockedWith`, used by every module that shows others' content); reports/ gains
 │   │   │   posts, comments and the MODERATOR role — no separate moderation/ module
 │   │   └── (P3+) communities/ messaging/ help/ sessions/ ai/

@@ -204,7 +204,7 @@ Searching communities, collections and tags is P2/P3 (those entities are not pop
 | POST-06 | Optional: ordered steps (text + optional image per step) |
 | POST-07 | Optional: difficulty (uses experience scale), estimated time |
 | POST-08 | Related posts |
-| POST-09 | Save and share (Web Share API, copy-link fallback) |
+| POST-09 | Save and share: **"Share link"** sends a link to the post — the device's share sheet where there is one, otherwise a menu with Copy link, WhatsApp, Email (PO decision 2026-10-29: "share" never means publishing; publishing is **Post** in Create). The maker's own post shows "Live · showing in feeds" (or "Draft · only you can see this" in preview) |
 | POST-10 | Missing optional fields render nothing — no empty headings |
 | POST-11 | **Materials checklist** (CONFIRMED, DC-07): signed-in users can tick materials; checks are saved to their account and sync across devices. Header shows "{n} of {total} · saved to your account" |
 | POST-12 | **Step progress** (CONFIRMED, DC-07/DC-24): each step can be marked done/undone by tapping its number; a "Next step" button scrolls to the next unfinished step; header shows "Step {completed} of {total} · progress saved"; saved per user and synced |
@@ -333,7 +333,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 
 | ID | Requirement |
 |---|---|
-| CRT-01 | Create a post Instagram-style (PO choice 2026-10-28): Create tab / button → pick photos/videos → arrange (order, cover, alt text) → details screen (caption-style: title and story on top, then rows for type, skills, tags, materials and steps, difficulty and time) → Share. Drafts save automatically and are listed under "Drafts" on the own profile |
+| CRT-01 | Create a post Instagram-style (PO choice 2026-10-28): Create tab / button → pick photos/videos → arrange (order, cover, alt text) → details screen (caption-style: title and story on top, then rows for type, skills, tags, materials and steps, difficulty and time) → **Post** (button renamed from "Share", PO 2026-10-29). Drafts save automatically and are listed under "Drafts" on the own profile |
 | CRT-02 | Post type: any of the six types (First attempt, Tutorial, Work in progress, Journal, Finished, Tip). A Tutorial needs ≥ 2 steps and an estimated time to publish |
 | CRT-03 | Media: 1–10 images/videos, mixed, MEDIA-01/03 limits; at least one to publish; reorder; first item is the cover. Alt text required on every image to publish, with a short prompt ("Describe the photo for people who can't see it") |
 | CRT-04 | Details: title (1–120), description (≤ 2,000), difficulty and estimated time optional |

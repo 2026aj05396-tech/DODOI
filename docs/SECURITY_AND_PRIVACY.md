@@ -138,8 +138,8 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Search | 60 / min / user |
 | Media signing | 30 / hour / user |
 | Publish post (P2) | 20 / day / user |
-| Comment (P2) | 30 / hour / user |
-| Follow, like (P2) | 200 / hour / user each |
+| Comment (P2, built P2-04) | 30 / hour / user (`comment-create`) |
+| Follow, like (P2) | 200 / hour / user each (like built P2-05 as `like`: likes and unlikes together) |
 | Block (P2) | 50 / day / user |
 
 Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed window), behind the limiter interface; expired rows purged daily. Implemented in `src/server/lib/rate-limit.ts` (P1-08): atomic `INSERT … ON CONFLICT` increment, and bucket keys are `<rule>:<sha256(subject)>` so emails and IPs are never stored in plain text. Custom-interest text rules and blocklist: PRODUCT_REQUIREMENTS §5.2 (OD-13). Additional limit: reports 10 / day / user.

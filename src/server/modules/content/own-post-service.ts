@@ -217,7 +217,7 @@ async function assertOwnPublishable(postId: string, ownWorkConfirmed: boolean, t
     ownWorkConfirmed,
   });
   if (Object.keys(problems).length > 0) {
-    throw new ValidationError("This post isn't ready to share yet.", {
+    throw new ValidationError("This post isn't ready to post yet.", {
       code: "POST_NOT_PUBLISHABLE",
       fields: problems,
     });
@@ -281,7 +281,7 @@ export async function createOwnPost(
   const user = requireSignedIn(actor);
   if ((await countDrafts(user.id)) >= MAX_DRAFTS) {
     throw new UnprocessableError(
-      `You have ${MAX_DRAFTS} drafts. Share or delete some to start another.`,
+      `You have ${MAX_DRAFTS} drafts. Post or delete some to start another.`,
       { code: "DRAFT_LIMIT" },
     );
   }
@@ -363,7 +363,7 @@ export async function publishOwnPost(
   const user = requireSignedIn(actor);
   const ownership = await requireOwnPost(user, id);
   if (!user.isEmailVerified) {
-    throw new ForbiddenError("Verify your email to share posts.", { code: "EMAIL_NOT_VERIFIED" });
+    throw new ForbiddenError("Verify your email to post.", { code: "EMAIL_NOT_VERIFIED" });
   }
   const current = await findAdminPost(id);
   if (current?.status === "PUBLISHED") return loadOwnPost(id, provider);

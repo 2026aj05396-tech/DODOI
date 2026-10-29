@@ -86,10 +86,10 @@ test("E2E-19: a maker picks photos, describes them, adds details and shares a po
   await expect(page.getByText("Saved as draft")).toBeVisible();
 
   // Sharing without the own-work confirmation (CRT-08) says what is missing.
-  await nextAction(page, "Share").click();
-  await expect(page.getByText("Tick this to share your post.")).toBeVisible();
+  await nextAction(page, "Post").click();
+  await expect(page.getByText("Tick this to post it.")).toBeVisible();
   await page.getByRole("checkbox", { name: /This is my own work/ }).check();
-  await nextAction(page, "Share").click();
+  await nextAction(page, "Post").click();
 
   await expect(page.getByRole("heading", { name: "Posted!" })).toBeVisible();
   await page.getByRole("link", { name: "See your post" }).click();
@@ -100,6 +100,9 @@ test("E2E-19: a maker picks photos, describes them, adds details and shares a po
   await expect(
     page.getByRole("link", { name: "Edit post" }).filter({ visible: true }),
   ).toBeVisible();
+
+  // Your own post says it is live (PO decision 2026-10-29).
+  await expect(page.getByText("Live · showing in feeds")).toBeVisible();
 
   // The profile opens on Posts once there are any (P2-02).
   await page.goto("/profile");
@@ -150,7 +153,7 @@ test("Edit on a shared post saves changes live", async ({ page }) => {
     .click();
   await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("checkbox", { name: /This is my own work/ }).check();
-  await nextAction(page, "Share").click();
+  await nextAction(page, "Post").click();
   await page.getByRole("link", { name: "See your post" }).click();
 
   await page.getByRole("link", { name: "Edit post" }).filter({ visible: true }).first().click();
@@ -214,8 +217,8 @@ test("a tutorial needs two steps and a time, and a step can have a described pho
   await page.getByRole("button", { name: "Done" }).click();
   await page.getByRole("checkbox", { name: /This is my own work/ }).check();
 
-  // Share opens the sheet that is missing something: the steps.
-  await nextAction(page, "Share").click();
+  // Post opens the sheet that is missing something: the steps.
+  await nextAction(page, "Post").click();
   const sheet = page.getByRole("dialog", { name: "Materials and steps" });
   await expect(sheet.getByText("A tutorial needs at least two steps.")).toBeVisible();
   for (const step of ["Roll a ball of clay", "Press your thumb in and pinch"]) {
@@ -231,6 +234,6 @@ test("a tutorial needs two steps and a time, and a step can have a described pho
   await page.getByRole("dialog").getByRole("button", { name: "30 min" }).click();
   await page.getByRole("button", { name: "Done" }).click();
 
-  await nextAction(page, "Share").click();
+  await nextAction(page, "Post").click();
   await expect(page.getByRole("heading", { name: "Posted!" })).toBeVisible();
 });

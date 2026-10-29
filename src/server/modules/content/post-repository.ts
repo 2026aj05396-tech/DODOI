@@ -158,6 +158,13 @@ export async function isPublishedPost(id: string): Promise<boolean> {
   return (await db.post.count({ where: { id, ...PUBLISHED } })) > 0;
 }
 
+/** The author of a published post: `{ authorId: null }` for team posts, null when not published. */
+export async function findPublishedPostAuthor(
+  id: string,
+): Promise<{ authorId: string | null } | null> {
+  return db.post.findFirst({ where: { id, ...PUBLISHED }, select: { authorId: true } });
+}
+
 const themeSelect = {
   id: true,
   slug: true,

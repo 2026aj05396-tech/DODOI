@@ -8,7 +8,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
-  Share2,
+  Send,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -116,7 +116,7 @@ export function ProjectView({ project: initial }: { project: Project }) {
     }
   }
 
-  /** "Share" (JRN-05): a draft post from the latest entry, opened in Create on Details. */
+  /** "Post" (JRN-05; design `1g` says "Share"): a draft post from the latest entry, opened in Create. */
   async function share() {
     setIsSharing(true);
     try {
@@ -173,8 +173,8 @@ export function ProjectView({ project: initial }: { project: Project }) {
         disabled={isSharing || !latest}
         title={latest ? undefined : "Add an entry first"}
       >
-        <Share2 aria-hidden className="size-4.5" />
-        Share
+        <Send aria-hidden className="size-4.5" />
+        Post
       </Button>
     </>
   ) : null;

@@ -43,6 +43,8 @@ export type PostDetail = PostCard & {
   publishedAt: string;
   /** The viewer wrote this post themselves (P2-02): it shows Edit instead of Follow. */
   isOwn: boolean;
+  /** False only when the author (or an admin) previews a draft. */
+  isPublished: boolean;
 };
 
 export type ThemeSummary = {

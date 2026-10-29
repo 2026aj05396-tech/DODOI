@@ -27,6 +27,7 @@ import {
   findPublishedThemes,
   findRelatedCandidates,
   findThemePostIds,
+  findPublishedPostAuthor,
   isPublishedPost,
   searchPublishedPostIds,
   updatePostSearchVector,
@@ -139,6 +140,7 @@ export async function getPostDetail(
     publishedAt: (row.publishedAt ?? row.createdAt).toISOString(),
     // The maker's own post (not an invited creator's seeded one): Edit instead of Follow (F-17).
     isOwn: actor !== null && row.authorId === actor.id && !row.attribution,
+    isPublished: row.status === "PUBLISHED",
   };
 }
 
@@ -308,6 +310,13 @@ export async function getBeginnerProjectCounts(
 
 export async function isPostPublished(id: string): Promise<boolean> {
   return isPublishedPost(id);
+}
+
+/** Who wrote a published post, for comment permissions; null when the post is not published. */
+export async function getPublishedPostAuthor(
+  id: string,
+): Promise<{ authorId: string | null } | null> {
+  return findPublishedPostAuthor(id);
 }
 
 // --- For search and Explore (P1-23) ------------------------------------------------------------

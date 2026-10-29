@@ -164,6 +164,8 @@ model User {
   reportsFiled    Report[]       @relation("ReportReporter")
   reportsResolved Report[]       @relation("ReportResolver")
   projects        Project[]
+  comments        Comment[]
+  likes           PostLike[]
 
   @@map("user")
 }
@@ -341,6 +343,8 @@ model Post {
   feedback        FeedFeedback[]
   progress        PostProgress[]
   tags            PostTag[]
+  comments        Comment[]
+  likes           PostLike[]
   project         Project?         @relation("ProjectPosts", fields: [projectId], references: [id], onDelete: SetNull)
   /// Projects started from this tutorial ("Start as my project", JRN-03).
   startedProjects Project[]        @relation("ProjectSource")
@@ -766,4 +770,49 @@ model ProjectEntryMedia {
   @@unique([entryId, position])
   @@index([mediaId])
   @@map("project_entry_media")
+}
+
+// ---------------------------------------------------------------------------
+// Comments (P2-04, OD-25)
+// ---------------------------------------------------------------------------
+
+/// A comment on a published post, with one level of replies (CMT-01).
+model Comment {
+  id        String    @id @default(cuid())
+  postId    String    @map("post_id")
+  /// Null once the author's account is deleted; the row stays as "Comment deleted" for its replies.
+  authorId  String?   @map("author_id")
+  /// Set on replies; a reply's parent always has parentId null (service-enforced, OD-25).
+  parentId  String?   @map("parent_id")
+  body      String    @db.VarChar(1000)
+  editedAt  DateTime? @map("edited_at")
+  /// Soft delete, only for a comment that has replies (CMT-02); the body is cleared. Otherwise the row is deleted.
+  deletedAt DateTime? @map("deleted_at")
+  /// Hidden after a report (MOD-04).
+  hiddenAt  DateTime? @map("hidden_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author  User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("Replies")
+
+  @@index([postId, parentId, createdAt])
+  @@index([parentId, createdAt])
+  @@index([authorId])
+  @@map("comment")
+}
+
+/// One like per user per post (LIKE-01). Only the post's author ever sees the count (LIKE-02).
+model PostLike {
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
+  @@index([userId])
+  @@map("post_like")
 }

@@ -1,10 +1,9 @@
 "use client";
 
-import { Share2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, type CSSProperties } from "react";
 
-import { sharePost } from "@/components/posts/share-button";
+import { ShareButton } from "@/components/posts/share-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
@@ -68,13 +67,10 @@ export function Celebration({ postId, title }: { postId: string; title: string }
           Posted!
         </h2>
         <p className="text-body text-foreground-secondary">
-          “{title}” is on dodoi now. Share it with a friend who&apos;d love it?
+          “{title}” is in the feed now. Send the link to a friend who&apos;d love it?
         </p>
         <div className="flex w-full flex-col gap-2.5">
-          <Button size="lg" variant="outline" onClick={() => sharePost(title, `/p/${postId}`)}>
-            <Share2 aria-hidden className="size-5" />
-            Share it
-          </Button>
+          <ShareButton title={title} path={`/p/${postId}`} variant="wide" />
           <Button asChild size="lg">
             <Link href={`/p/${postId}`}>See your post</Link>
           </Button>

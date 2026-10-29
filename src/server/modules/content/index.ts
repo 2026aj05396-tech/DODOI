@@ -22,6 +22,7 @@ export {
   getFeedCandidates,
   getPostCards,
   getPostDetail,
+  getPublishedPostAuthor,
   getRelatedPosts,
   getTheme,
   isPostPublished,

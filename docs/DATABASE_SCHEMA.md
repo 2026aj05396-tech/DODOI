@@ -581,7 +581,7 @@ model Comment {
   parentId  String?                              // set on replies; a reply's parent has parentId null (service-enforced, OD-25)
   body      String    @db.VarChar(1000)
   editedAt  DateTime?
-  deletedAt DateTime?                            // soft delete only when it has replies (CMT-02); otherwise hard delete
+  deletedAt DateTime?                            // soft delete only when it has replies (CMT-02); body is cleared and authorId set to null; otherwise hard delete
   hiddenAt  DateTime?                            // MOD-04
   createdAt DateTime  @default(now())
   post    Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -589,10 +589,11 @@ model Comment {
   parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies Comment[] @relation("Replies")
   @@index([postId, parentId, createdAt])
+  @@index([parentId, createdAt])               // replies under a comment (added when built, P2-04)
   @@index([authorId])
 }
 
-model PostLike {
+model PostLike {                                  // built P2-05; table post_like, snake_case columns like the rest
   postId    String
   userId    String
   createdAt DateTime @default(now())

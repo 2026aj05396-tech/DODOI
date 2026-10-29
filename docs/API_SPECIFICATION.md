@@ -433,11 +433,13 @@ Share (JRN-05): the client creates the draft with `POST /api/me/posts` and `proj
 | `PATCH /api/comments/{id}` | Owner | `{ body }` → sets `editedAt` |
 | `DELETE /api/comments/{id}` | Owner, or the post's author | Soft or hard delete (CMT-02/03) → `204` |
 
+Built P2-04 (2026-10-29): all five routes need a signed-in user; reading and writing apply to **published posts only** (others → `404`). A `Comment` is `{ id, postId, parentId, body (null when deleted), isDeleted, author ({ username, displayName, avatarUrl } or null), createdAt, editedAt, isOwn, canDelete, replyCount, replies }`; lists are `{ items, nextCursor }`, 20 per page, oldest first. `GET …/replies` without a cursor starts from the first reply. Errors: `403 EMAIL_NOT_VERIFIED` (POST), `404` for a post that is not published, a comment that is not the caller's to edit or delete, or a `parentId` on another post; `422` replying to a deleted comment; `429` at 30 an hour. Deleting a reply also removes its parent when the parent is "Comment deleted" and this was its last reply. The public count is shown on the post page (comments and replies still shown), not an API field.
+
 **Likes, follows, blocks (P2-05, P2-06, P2-08)** — idempotent PUT/DELETE, `204`.
 
 | Method & path | Who | Purpose |
 |---|---|---|
-| `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author |
+| `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author. **Built P2-05:** `204`; unlike needs only a signed-in user; `404` for a post that is not published; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour. `isLiked` and `likeCount` reach the post page from the server (not an API field); cards have no `isLiked` yet |
 | `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404` |
 | `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `isFollowing` and, for the owner, counts |
 | `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02) |
