@@ -461,3 +461,24 @@ Built P2-07 (2026-10-29): an item is `{ id, type, actors: [{ username, displayNa
 **Safety (P2-08)** — `POST /api/reports` accepts `targetType: "POST" | "COMMENT"` and `reason: "NOT_MY_WORK"`. `/api/admin/reports*` opens to `Moderator` (other `/api/admin/*` stays Admin); `HIDE_TARGET` sets `hiddenAt` on posts and comments. `PATCH /api/admin/users/{id}/role` `{ role: "USER" | "MODERATOR" }` — Admin, audited.
 
 **Feed (P2-06)** — `GET /api/feed?filter=following` (FLW-04); `/api/feed/filters` lists "Following" once the user follows someone.
+
+### 9.2 Phase 4 endpoints (CONFIRMED — P4-00 approved 2026-10-29)
+
+All need a signed-in, verified user unless noted; all answer `503 AI_UNAVAILABLE` when `AI_ENABLED` is off, the global cap is reached, the provider fails, or the tier rule is not met (free tier outside local). No provider detail is ever in a response.
+
+| Method & path | Purpose |
+|---|---|
+| `POST /api/ai/messages` (**built P4-01**) | `{ conversationId?, text (1–1,000), context?: { type: "POST" \| "SKILL", id }, imageMediaId? }` → `201 { conversation, userMessage, assistantMessage }`. Without `conversationId` a new conversation starts (the context is fixed for its life). `403 AI_CONSENT_REQUIRED` (photo without `AI_IMAGES`), `404` (context not visible to the user, or someone else's conversation or photo), `422 AI_BLOCKED` (provider safety filter; the message is stored with status BLOCKED), `429 AI_QUOTA` (with the reset time) or `429` (per-minute), `503 AI_UNAVAILABLE` |
+| `POST /api/ai/plan` | `{ text (1–1,000), skillId? }` → `200 { title, craft, materials: string[], steps: string[] }` (validated; one retry on invalid output). Counts as a message for the quota |
+| `GET /api/ai/conversations?cursor=` (**built P4-01**) | The user's conversations, newest activity first: `{ items: [{ id, title, contextType, context: { id, title } \| null, updatedAt }], nextCursor }` |
+| `GET /api/ai/conversations/{id}` (**built P4-01**) | Messages oldest first: `{ id, context, messages: [{ id, role, content, imageUrl, status, feedback: { helpful } \| null, createdAt }] }`; others' → `404` |
+| `DELETE /api/ai/conversations/{id}` / `DELETE /api/ai/conversations` (**built P4-01**) | Delete one / all, with their photos → `204` |
+| `PUT /api/ai/messages/{id}/feedback` (**built P4-01**) | `{ helpful, comment? (≤300) }` → `204`; assistant messages in your conversations only |
+| `GET /api/me/consents` / `PUT /api/me/consents` (**built P4-01**) | `{ AI_IMAGES: boolean, AI_PROFILE_CONTEXT: boolean }` → grant or withdraw (records policy version and time) |
+| `GET /api/admin/ai/usage?from=&to=` | Admin: `{ totals: { requests, inputTokens, outputTokens, costMicros, errors, blocked }, byDay: […] }` — no content |
+| `PUT /api/admin/ai/switch` | Admin: `{ enabled }` kill switch stored in the database, in addition to the `AI_ENABLED` env flag |
+
+Not built yet: `POST /api/ai/plan` (P4-03) and the admin endpoints (P4-05). Built details (P4-01): the quota errors are `429 AI_QUOTA` with `Retry-After` and `fields.resetAt` (ISO time); a blocked request answers `422 AI_BLOCKED` and stores the question as BLOCKED; context can only be a post the user can see (published, not hidden, not by someone blocked) or an active skill; the answer is capped at 8,000 characters.
+
+Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only).
+

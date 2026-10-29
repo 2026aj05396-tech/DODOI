@@ -85,6 +85,8 @@ describe("daily jobs", () => {
       "purge-auth-tokens": 2,
       "purge-feed-sessions": 1,
       "purge-notifications": 1,
+      "purge-ai-conversations": 0,
+      "purge-ai-usage": 0,
       "purge-rate-limit-buckets": 1,
       "delete-orphaned-media": 1,
     });

@@ -332,7 +332,7 @@ Limits on the motion: `prefers-reduced-motion` turns every animation into a plai
 |---|---|
 |---|---|
 |---|---|
-| AI companion (`1f`, docked in `2c`) | P4 |
+| AI companion (`1f`, docked in `2c`) | P4 — **spec approved 2026-10-29 (PRODUCT_REQUIREMENTS §6.2, USER_FLOWS F-23…F-26)** |
 | Creative journal (`1g`) | P2 |
 | Community · help requests (`1h`) | P3 |
 | Right-rail help/session cards (`2b`) | P3 |
@@ -383,3 +383,21 @@ Each item is OPEN until the product owner decides. Resolved items move into the 
 | DC-26 | ~~Username~~ | **Resolved:** auto-generated at sign-up, editable later, first-profile-visit prompt |
 | DC-28 | ~~Skip on step 1~~ | **Resolved:** removed on step 1; kept on steps 2–3. *Design file to be updated to match* |
 | DC-27 | ~~Creator row on seeded posts~~ | **Resolved:** invited creators = real accounts with creator row (Follow = coming soon in P1, live from P2-06); stock/CC posts = no creator row, "via dodoi editors" line + attribution block. *Design file to be updated to match* |
+
+### 8.2 AI companion (P4-00, approved 2026-10-29)
+
+Built from designs `1f` (mobile chat, image troubleshooting) and `2c` (docked companion on the post page); tablet and the Companion list/settings screens are built from the system; everything on `--palette-ai-surface` (`#F8F3FB` with lavender dots) per §2.
+
+| Element | Spec |
+|---|---|
+| Entry points | "Ask dodoi" pill / sidebar card go live (leaving coming-soon, DC-21); "Ask about this" on posts; "What is this and how do I start?" on skill pages |
+| Chat screen | Header "dodoi companion" with Back; context line "Looking at: {title}" (a chip with the post thumbnail); user bubbles on the right, assistant on the left with a small **AI** label; the answer ends with a muted uncertainty line when the model gave one; row of actions: Helpful / Not helpful, Report. Field "Ask about a technique…" with a photo button and send |
+| Photo | Thumbnail in the user bubble; consent sheet before the first photo (sheet on phones, centred from 768px) |
+| Plan card | Title, craft chip, materials checklist (read-only), numbered steps, **Start as my project** |
+| Docked panel | From 1280px on post and skill pages: right column, "Talking about: {title}"; the sidebar becomes the 76px icon rail (DC-12) |
+| States | Typing indicator; empty ("Ask me about a craft, a technique or what to try next"); quota, off, blocked and error messages (F-23 step 5); offline: the field is disabled with "You're offline" |
+| Not built | "Show me a diagram" (in `1f`, not in scope); "Ask the crochet community" is a coming-soon button until P3-03 |
+| Accessibility | Chat log is an `aria-live="polite"` region; the field keeps focus after sending; all controls 44px; reduced motion removes the typing animation |
+
+**Settings → AI and privacy:** two switch rows (photos; interests and levels), conversations list with Delete, Delete all with confirmation; styled like the other Settings screens (§8 Settings rows).
+

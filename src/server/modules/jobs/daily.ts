@@ -3,6 +3,7 @@ import "server-only";
 import { mediaProvider as defaultProvider, type MediaProvider } from "@/server/integrations/media";
 import { logger } from "@/server/lib/logger";
 import { purgeExpiredRateLimitBuckets } from "@/server/lib/rate-limit";
+import { purgeExpiredConversations, purgeOldUsage } from "@/server/modules/ai";
 import { deleteOrphanedMedia } from "@/server/modules/content";
 import { purgeExpiredFeedSessions } from "@/server/modules/feed";
 import { purgeOldNotifications } from "@/server/modules/notifications";
@@ -24,6 +25,12 @@ const DAILY_JOBS: { name: string; run: (context: JobContext) => Promise<number> 
   { name: "delete-accounts", run: ({ now, provider }) => deleteAccountsDue({ now, provider }) },
   { name: "purge-auth-tokens", run: ({ now }) => purgeSpentAuthTokens(now) },
   { name: "purge-feed-sessions", run: ({ now }) => purgeExpiredFeedSessions(now) },
+  // AI companion (AI_INTEGRATION §10): chats after 30 days with their photos, usage after 12 months.
+  {
+    name: "purge-ai-conversations",
+    run: ({ now, provider }) => purgeExpiredConversations({ now, mediaProvider: provider }),
+  },
+  { name: "purge-ai-usage", run: ({ now }) => purgeOldUsage(now) },
   // NTF-05: notifications are kept 90 days.
   { name: "purge-notifications", run: ({ now }) => purgeOldNotifications(now) },
   {

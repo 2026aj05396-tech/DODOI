@@ -98,6 +98,7 @@ Phase 1 (required before MVP exit):
 | E2E-23 | Follows (P2-06, F-20): Follow on a post's creator row → Following, `PUT` answers 204 → profile shows Following and no follower count → feed Following chip shows their post → own Following list → unfollow; signed-out visitors are sent to sign-in (`follows.spec.ts`; counts and lists for the owner are in `follows.test.ts`) |
 | E2E-24 | Notifications (P2-07, F-21): seeded comment, three likes and a follower → the bell shows a dot → the list shows "Asha commented on …", "… and 2 others liked …", "… followed you" → reloading shows none unread → a comment item opens the post at the comment; Likes switched off in settings stays off after a reload; signed-out visitors are sent to sign-in (`notifications.spec.ts`; who is notified is covered in `notifications.test.ts`) |
 | E2E-25 | Safety (P2-08, F-22): Block on a maker's profile → back to the previous page → their profile and post show the not-found page → Settings → Blocked accounts → Unblock → the post is back; a reporter sends "Not my work" on a post from its ⋯ menu → a moderator sees only Reports, hides that post's card → the reporter gets not-found and `/admin/posts` is not found for the moderator (`safety.spec.ts`; blocking across modules, hiding, roles and the audit trail are in `safety.test.ts`) |
+| — | AI companion server (P4-01): `gemini.test.ts` (request shape, filters on, key in a header, blocked vs failed, no prompt in errors), `env.test.ts` (free tier only in local), `ai.test.ts` with `FakeAIProvider` (usage without text, consent gates, own-photo only, post/skill context authorization incl. hidden/draft/blocked, profile context only with consent and never private collections, prompt delimiters, quotas and global cap, blocked and failed requests, ownership, deletion with photos, 30-day / 12-month retention, account deletion). The eval suite (`tests/ai-evals/`) is P4-06 |
 | E2E-16 | Coming-soon items (Community, bell, Ask dodoi…; Create is live from P2-02) are announced as disabled and trigger no network calls to unbuilt endpoints |
 
 Later phases add the master doc scenarios: create/edit post, comment, join community, send message, help request, schedule session, AI guidance, report/block.
@@ -114,7 +115,7 @@ Every Phase 1 scenario above has a test whose title starts with its ID (`grep -r
 
 ## 7. AI Evaluation (Phase 4)
 
-Defined now so it is not forgotten; implemented in P4.
+Defined now so it is not forgotten; implemented in P4. **P4-00 additions (2026-10-29):** all unit and integration tests use a `FakeAIProvider` (no network, no key); the eval suite (`tests/ai-evals/`) runs against the real provider **locally on the free tier with synthetic prompts only**, never in CI and never with real user data; photo cases use a small set of licensed or self-made test images; checks also cover consent gating (no photo or profile context without consent), quota and global-cap enforcement, the 30-day retention job, deletion with photos, that logs and `AIUsage` never hold text, and that `AI_TIER=free` is refused outside `APP_ENV=local`.
 
 | Category | Method |
 |---|---|

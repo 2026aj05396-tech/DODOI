@@ -1,0 +1,17 @@
+// Public API of the ai module (CODE_QUALITY §3.2): the AI companion (P4).
+export {
+  AI_DAILY_LIMIT,
+  AI_MINUTE_LIMIT,
+  AI_PHOTO_LIMIT,
+  CONSENT_POLICY_VERSION,
+  deleteAllConversations,
+  deleteConversation,
+  getConsents,
+  getConversation,
+  listConversations,
+  purgeExpiredConversations,
+  purgeOldUsage,
+  sendMessage,
+  setConsents,
+  submitFeedback,
+} from "./service";

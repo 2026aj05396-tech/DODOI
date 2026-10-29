@@ -533,7 +533,7 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 |---|---|
 | P2 | Specified in §9.1 (CONFIRMED, P2-00) |
 | P3 | Community, Membership, CommunityPost, Conversation, ConversationParticipant, Message, HelpRequest, HelpResponse, Session (rename to `CreativeSession` to avoid clashing with Auth.js `Session`) |
-| P4 | AIConversation, AIMessage, AIUsage (retention policy required) |
+| P4 | Specified in §9.2 (CONFIRMED, P4-00) |
 
 ### 9.1 Phase 2 models (CONFIRMED — P2-00 approved 2026-10-28)
 
@@ -708,3 +708,75 @@ model NotificationPreference {                    // built P2-07; table notifica
 - Search: `Post.searchVector` adds tag names at weight C, with skill names.
 - Lifecycle additions to §7: notifications deleted after 90 days (daily job); deleting a post cascades comments, likes, tags and saves; account deletion removes likes, follows, blocks, notifications, projects and their media; the deletion job first turns the user's comments that have replies into "Comment deleted" (as CMT-02, so other people's replies stay) and deletes the rest.
 
+### 9.2 Phase 4 models (CONFIRMED — P4-00 approved 2026-10-29)
+
+Requirements: PRODUCT_REQUIREMENTS §6.2; rules: AI_INTEGRATION §10. Snake_case table and column names like the rest.
+
+```prisma
+enum AIContextType     { NONE POST SKILL }
+enum AIMessageRole     { USER ASSISTANT }
+enum AIMessageStatus   { OK BLOCKED ERROR }               // BLOCKED: provider safety filter; ERROR: provider failure
+enum AIUsageStatus     { OK BLOCKED ERROR QUOTA }
+enum ConsentType       { AI_IMAGES AI_PROFILE_CONTEXT }
+
+model AIConversation {
+  id          String        @id @default(cuid())
+  userId      String                                       // Cascade: account deletion removes it
+  contextType AIContextType @default(NONE)
+  contextId   String?                                      // post or skill id; no FK (the post may go)
+  title       String?       @db.VarChar(80)                // start of the first question
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt                     // last message: the 30-day clock
+  messages    AIMessage[]
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+model AIMessage {
+  id             String          @id @default(cuid())
+  conversationId String                                    // Cascade
+  role           AIMessageRole
+  content        String          @db.VarChar(8000)
+  imageMediaId   String?                                   // MediaAsset purpose `ai`; deleted with the conversation
+  promptVersion  String?                                   // assistant messages
+  status         AIMessageStatus @default(OK)
+  createdAt      DateTime        @default(now())
+  feedback       AIFeedback?
+  @@index([conversationId, createdAt])
+}
+
+model AIUsage {                                            // no message text, ever
+  id           String        @id @default(cuid())
+  userId       String?                                     // SetNull on account deletion
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costMicros   Int           @default(0)                   // millionths of a US dollar, from AI_*_PRICE_PER_M
+  latencyMs    Int
+  status       AIUsageStatus
+  hasImage     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  @@index([createdAt])
+  @@index([userId, createdAt])
+}
+
+model AIFeedback {
+  messageId String   @id                                   // one per assistant message; Cascade
+  userId    String                                         // Cascade
+  helpful   Boolean
+  comment   String?  @db.VarChar(300)
+  createdAt DateTime @default(now())
+}
+
+model Consent {
+  userId        String                                     // Cascade
+  type          ConsentType
+  policyVersion String                                     // e.g. "ai-2026-1"
+  grantedAt     DateTime
+  revokedAt     DateTime?                                  // withdrawing stops use at once
+  @@id([userId, type])
+}
+```
+
+**Built (P4-01, migration `ai_companion`, 2026-10-29):** all five models as above, with `AIMessage.imageMediaId` → `MediaAsset` (SetNull; the orphan cleanups treat a photo referenced by a message as used), `AIUsage.userId` SetNull, the rest Cascade, an extra index on `AIConversation.updatedAt` for the retention job. Table names `ai_conversation`, `ai_message`, `ai_usage`, `ai_feedback`, `consent`.
+
+**Rules:** `AI_IMAGES` is needed before a message with a photo, `AI_PROFILE_CONTEXT` before interests and levels go into a prompt; a revoked or missing consent is the same as none. Quotas are counted from `AIUsage` and the rate-limit buckets (`ai-message`, `ai-message-minute`). The daily jobs delete conversations whose `updatedAt` is over 30 days old (with their photos) and `AIUsage` rows over 12 months old. `Media` gains purpose `ai` (images only, folder `ai/`, uploader-owned, counted as used while a message references it, removed by the orphan cleanup otherwise).

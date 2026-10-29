@@ -46,7 +46,7 @@ A **modular monolith** in a single Next.js (App Router, TypeScript) application 
 | Local infra | Docker Compose (PostgreSQL) | CONFIRMED |
 | Hosting | Test: Vercel Hobby + Neon (DEPLOYMENT.md) | Test DECIDED 2026-10-27; production OPEN (OD-01) |
 | Messaging transport (P3) | Polling | CONFIRMED |
-| AI provider (P4) | — | OPEN (OD-02) |
+| AI provider (P4) | Google Gemini API, server-side key, behind `AIProvider` (`src/server/integrations/ai/`); the SDK (or plain REST) is added in P4-01 only; free tier for development only, paid tier before any real user (AI_INTEGRATION §9) | CONFIRMED provider (OD-02, 2026-10-29); version and package chosen in P4-01 |
 
 ## 3. Supporting Libraries (APPROVED before P0-02)
 
@@ -126,7 +126,8 @@ src/
 │   │   │   (`notBlockedWith`, used by every module that shows others' content); reports/ gains
 │   │   │   posts, comments and the MODERATOR role (built P2-08) — no separate moderation/ module;
 │   │   │   blocks/ (built P2-08: block / unblock / list, over the block-table reads in users)
-│   │   └── (P3+) communities/ messaging/ help/ sessions/ ai/
+│   │   ├── (P4) ai/ (conversations, messages, consents, usage, planning; talks to the provider only through server/integrations/ai; reads content for the post or skill in view, users for interests, journal to start a project from a plan)
+│   │   └── (P3+) communities/ messaging/ help/ sessions/
 │   ├── integrations/
 │   │   ├── email/   (resend and smtp implementations)
 │   │   ├── media/   (cloudinary implementation)

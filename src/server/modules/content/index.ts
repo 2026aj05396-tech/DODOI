@@ -6,6 +6,7 @@ export {
   getMedia,
   getMediaMap,
   getOwnedMediaIds,
+  getOwnImageForAI,
   MEDIA_SIGN_RATE_LIMIT,
   mediaFolder,
   ORPHAN_MEDIA_AGE_MS,

@@ -50,6 +50,7 @@ Each environment has its own accounts and keys; nothing is shared with local or 
 | `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM` | Test Gmail address, its App Password, `dodoi <that address>` |
 | `RESEND_API_KEY` | Optional while SMTP is set; needed once a domain is verified |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Test Cloudinary |
+| `AI_ENABLED`, `AI_PROVIDER`, `AI_MODEL`, `AI_TIER`, `GEMINI_API_KEY`, `AI_DAILY_REQUEST_CAP`, `AI_INPUT_PRICE_PER_M`, `AI_OUTPUT_PRICE_PER_M` | **AI companion (Phase 4), all optional while `AI_ENABLED` is off (the default).** To turn it on: a Gemini API key and a model that supports images (`AI_MODEL`). **The test site must use `AI_TIER=paid`** (Google AI Studio project with billing enabled, so submitted content is not used for training): the app refuses `AI_TIER=free` outside local development because Google may use and review content sent through the free quota. Free tier is for local development with synthetic prompts only. Use a Gemini 3.x model (the default local one is `gemini-3.5-flash-lite`). A reply can take 20 s or more, so the host's function time limit must allow about 60 s for `/api/ai/messages` (the route sets `maxDuration = 60`); check this against the hosting plan. Record the free-tier limits shown in AI Studio here when the key exists. Cost: per token on the paid tier, capped by `AI_DAILY_REQUEST_CAP` (default 500 a day) |
 | `CRON_SECRET` | New random value, 32+ characters: `openssl rand -base64 32` |
 | `SEED_ADMIN_EMAIL` | Your email |
 | `SUPPORT_EMAIL` | Optional |

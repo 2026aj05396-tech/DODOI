@@ -257,17 +257,18 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 ## 6. Phase 4 — AI Creative Companion (Milestone M11)
 
-**Before starting:** resolve AI_INTEGRATION §9 (provider **OD-02**, moderation, retention, quotas, streaming).
+**Before starting:** AI_INTEGRATION §9 decided by the PO on 2026-10-29 (OD-02 Google Gemini, free tier for development only; photos in the first release with provider safety filters + consent + reports; 30-day retention; no private collections). The quota numbers, one-response-at-a-time (no streaming), reportable AI answers and plan → journal project were approved with the spec.
 
 | ID | Task |
 |---|---|
-| P4-00 | AI spec finalisation + provider adapter |
-| P4-01 | Companion chat endpoint with consent, quotas, moderation, usage logging |
+| P4-00 | AI spec finalisation (AI_INTEGRATION §9–13, PRODUCT_REQUIREMENTS §6.2 AIC-01…12, DATABASE_SCHEMA §9.2, API_SPECIFICATION §9.2, USER_FLOWS F-23…F-26, UI_UX §8.2, SECURITY, TESTING §7) — **☑ APPROVED by the PO 2026-10-29**; the provider adapter is built in P4-01 |
+| P4-01 | `AIProvider` interface + Gemini adapter + `FakeAIProvider`; migration (§9.2); companion chat endpoint with consent, quotas, safety filters, usage logging; env vars and the tier guard; `purpose: ai` media. **◐ Built 2026-10-29:** migration `ai_companion` (`ai_conversation`, `ai_message`, `ai_usage`, `ai_feedback`, `consent`); `src/server/integrations/ai/` (`AIProvider`, Gemini over plain REST with the key in a header and safety filters at block-medium-and-above, no SDK installed); `ai` module (send message with consent, own-photo and context authorization before anything enters a prompt, quotas 10/min · 30/day · 5 photos/day with `AI_QUOTA` and the reset time, global daily cap, provider failure → `AI_UNAVAILABLE`, blocked → `AI_BLOCKED`, usage rows without text, conversation list / read / delete one / delete all with photos, feedback, consents, 30-day and 12-month purge jobs `purge-ai-conversations` / `purge-ai-usage`); routes `POST /api/ai/messages`, `/api/ai/conversations[/{id}]`, `PUT /api/ai/messages/{id}/feedback`, `GET`/`PUT /api/me/consents`; env rules (`AI_TIER=free` refused outside local); media purpose `ai`. Tests: `gemini.test.ts` (5, mocked HTTP), `env.test.ts` (+4), `ai.test.ts` (18, fake provider). **Verified against the real API on 2026-10-29** (local, free tier, synthetic prompts; AI_INTEGRATION §14): answers, photo, injection and refusal cases pass on `gemini-3.5-flash-lite`; the adapter sends `thinkingLevel: minimal` (hidden thinking otherwise cut replies off) and retries once on 500/503; the route allows 60 s; free-tier latency is 3–30 s. **Left:** project plan endpoint (P4-03), admin usage and kill switch (P4-05), UI (P4-02/P4-04/P4-07) |
 | P4-02 | "Ask about this" docked companion (`2c`, sidebar → icon rail) and mobile companion (`1f`) |
 | P4-03 | Project planning: materials checklist and steps generation |
-| P4-04 | Image-aware troubleshooting (if model and cost allow) |
+| P4-04 | Photo troubleshooting (in the first release, PO 2026-10-29): photo in the chat, consent sheet, shrunk before sending |
 | P4-05 | Admin usage dashboard, global spend cap and kill switch |
 | P4-06 | AI evaluation suite (TESTING_STRATEGY §7) |
+| P4-07 | Settings → AI and privacy: consents, conversation list and deletion, 30-day and 12-month retention jobs, report an AI answer |
 
 **Exit:** safe, useful AI assistance within cost limits.
 

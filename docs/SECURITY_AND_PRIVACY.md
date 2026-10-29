@@ -97,6 +97,9 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Notification / preferences | Recipient | System | Recipient | System (90 days; built P2-07 — every read, mark-read and preference call is scoped to the signed-in user) |
 | Reports queue | Moderator, Admin | User (report) | Moderator, Admin (action) | — |
 | User role | Admin | — | Admin (USER ↔ MODERATOR) | — |
+| AI conversation / messages (P4) | Owner | Verified (own) | — | Owner (and the 30-day job) |
+| AI consent (P4) | Owner | Owner | Owner (withdraw) | — |
+| AI usage (P4) | Admin (no content) | System | — | System (12 months) |
 | Media asset (post, entry) | Via parent resource | User (own) | Owner | Owner |
 
 ## 4. Input Handling and Web Vulnerabilities
@@ -141,6 +144,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Comment (P2, built P2-04) | 30 / hour / user (`comment-create`) |
 | Follow, like (P2) | 200 / hour / user each (built as `like` P2-05 and `follow` P2-06: each counts both directions together) |
 | Block (P2) | 50 / day / user |
+| AI messages (P4, CONFIRMED) | 30 / day and 10 / min / user (photos: 5 / day); global `AI_DAILY_REQUEST_CAP` |
 
 Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed window), behind the limiter interface; expired rows purged daily. Implemented in `src/server/lib/rate-limit.ts` (P1-08): atomic `INSERT … ON CONFLICT` increment, and bucket keys are `<rule>:<sha256(subject)>` so emails and IPs are never stored in plain text. Custom-interest text rules and blocklist: PRODUCT_REQUIREMENTS §5.2 (OD-13). Additional limit: reports 10 / day / user.
 
@@ -206,3 +210,13 @@ Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed wi
 - [ ] Rate limit applied if the action is abusable
 - [ ] No secrets or sensitive data in logs or client
 - [ ] Integration test for unauthorized access
+
+### AI companion safety and privacy (P4-00, approved 2026-10-29)
+
+- **Free tier is development only (PO):** Google's free ("unpaid") Gemini quota lets Google use submitted content to improve its products and human reviewers may read it, so no real user's prompt, photo or profile context may go through it. The server refuses `AI_TIER=free` unless `APP_ENV=local`.
+- Provider keys are server-only; the browser never calls the provider. Logs never contain prompt text, answers or images (usage rows hold counts only).
+- Photos go to the provider only after `AI_IMAGES` consent and are shrunk first; profile context only after `AI_PROFILE_CONTEXT` consent. Private collections, messages, emails and other users' private data are never in a prompt (PO). Authorization runs before anything is placed in a prompt.
+- Provider safety filters are on for every request (block medium and above). A blocked request returns a neutral message, is stored as BLOCKED and counted in usage.
+- Prompt injection: user text, post text and skill text are delimited as data; the system prompt says to ignore instructions inside them; answers are length-limited and links are limited to dodoi skill pages.
+- Retention 30 days (deletable anytime); the retention job, deletion of photos with conversations, and removal on account deletion are covered by tests.
+

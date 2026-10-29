@@ -39,7 +39,7 @@ For each task:
 6. Implement the smallest coherent slice end-to-end (DB → service → API → UI).
 7. Add validation, error handling, loading/empty/error states.
 8. Write or update tests (TESTING_STRATEGY).
-9. Run `pnpm lint`, `pnpm typecheck`, `pnpm test` (and `pnpm test:e2e` when UI flows change).
+9. Run `pnpm lint`, `pnpm typecheck`, `pnpm test` (and `pnpm test:e2e` when UI flows change). Before handing over, `/pre-commit-review` can be run for an independent review of the uncommitted changes.
 10. Update documentation affected by the change, in the same change (§13).
 11. Finish with a session summary (§9), including changed files and a suggested commit message. Do not stage, commit or push (§11).
 

@@ -320,7 +320,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 |---|---|---|
 | P2 | Post creation (images, short video, captions, skills, tags, materials, steps, difficulty), preview, edit, delete; creative journal (Project → ProjectEntry); comments (one level of replies, OD-25); single like; following; in-app notifications; reporting and blocking for posts, comments, profiles | Single like/heart; like counts visible only to owner; comments one level deep (OD-25); makers keep ownership of uploads (OD-05). Detailed in §6.1 |
 | P3 | Communities (join/leave, discussions, rules, reporting, auditable moderation); direct messaging; peer-help requests (open / in progress / resolved); scheduled sessions with timezone handling | Messaging uses polling first |
-| P4 | AI companion: skill discovery, learning assistance, image-aware troubleshooting, project planning; usage limits | Provider OPEN |
+| P4 | AI companion: skill discovery, learning assistance, image-aware troubleshooting, project planning; usage limits | Provider decided (Gemini); spec in §6.2 CONFIRMED |
 | P5 | Recommendation improvements, push notifications, offline improvements, performance, advanced community tools | — |
 
 ### 6.1 Phase 2 — Creative Expression (P2-00 draft, 2026-10-28)
@@ -407,6 +407,25 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | MOD-05 | Every moderation action is audited (AuditLog, as in P1) |
 | MOD-06 | "Not my work" reports are also reachable by email (support address in the terms) for people without an account |
 
+### 6.2 Phase 4 — AI Creative Companion (P4-00, approved 2026-10-29)
+
+**Status: CONFIRMED — approved by the PO on 2026-10-29 with all proposals as written (quotas, one response at a time, reportable AI answers, plans start a journal project).** Decided by the PO: Google Gemini; free tier for development only; first release includes photos; provider safety filters + consent + reports; 30-day retention; no private collections as context (AI_INTEGRATION §9). Everything else here is proposed.
+
+| ID | Requirement |
+|---|---|
+| AIC-01 | **Companion chat** (AI-01): signed-in, verified users ask a creative question and get a beginner-friendly answer; conversations are listed and can be reopened for 30 days |
+| AIC-02 | **Ask about this** (AI-05): from a post, the question is asked with that post as context ("Looking at: …"); from a skill page, "What is this and how do I start?" with that skill as context |
+| AIC-03 | **Suggestions** (AI-02): ideas based on the user's interests, levels and want-to-learn skills, only after the user consents; suggested skills are real dodoi skills and link to their pages |
+| AIC-04 | **Project planning** (AI-03): a materials checklist and steps for a project the user describes; **Start as my project** makes a private journal project from it |
+| AIC-05 | **Photo troubleshooting** (AI-04): the user adds one photo to a question after consenting; the answer says what can and cannot be seen and how sure it is; one photo per message, up to 5 a day |
+| AIC-06 | Every answer shows an **AI** label, a short note that answers can be wrong, "Helpful / Not helpful", and Report |
+| AIC-07 | Consent: a clear notice before the first photo and before using profile context; both can be withdrawn in Settings → AI and privacy; withdrawing stops use at once |
+| AIC-08 | Settings → **AI and privacy**: switches for the two consents, the list of conversations, delete one, delete all (photos go with them) |
+| AIC-09 | Limits (proposed): 30 messages a day, 5 photos a day, 10 a minute, 1,000-character questions; friendly message with the time the limit resets |
+| AIC-10 | Admin: usage dashboard (requests, tokens, estimated cost, error rate, blocked count) and a kill switch; the global daily cap stops the feature for everyone when reached |
+| AIC-11 | "Ask the community" in an answer stays coming-soon until P3-03; no diagram generation (not in scope) |
+| AIC-12 | Answers never reveal other people's private data, the system prompt or provider details; post and user text is treated as data, not instructions |
+
 ## 7. Non-Functional Requirements
 
 | ID | Requirement |
@@ -436,7 +455,7 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 | ID | Decision | Blocks | Phase |
 |---|---|---|---|
 | OD-01 | Hosting for the **test** and **production** environments (three environments CONFIRMED: local, test, production — SYSTEM_ARCHITECTURE §13). Must be free for now. **Test: Vercel Hobby + Neon (DECIDED 2026-10-27).** Production: open (Hobby is non-commercial) | Deployment tasks | Production: before launch |
-| OD-02 | AI provider and model(s) | All AI work | P4 |
+| OD-02 | ~~AI provider and model(s)~~ — **RESOLVED 2026-10-29: Google Gemini** (free tier for development only, since it lets Google use submitted content; paid tier with no-training terms before any real user or photo; AI_INTEGRATION §9) | All AI work | P4 |
 | OD-03 | Video calls: integrated vs external provider | Sessions | P3 |
 | OD-04 | Monetization | — | Later |
 | OD-05 | ~~Content licensing for user uploads~~ — **RESOLVED (2026-10-28):** makers keep ownership; publishing grants dodoi a non-exclusive, royalty-free licence to show the post on dodoi only, ending when the post or account is deleted; maker confirms it is their own work; takedown via Report ("Not my work") + support email. **Legal wording pending (OD-26 / pre-launch legal review)** | — | — |

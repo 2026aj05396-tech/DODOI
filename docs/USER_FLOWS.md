@@ -212,6 +212,29 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 3. `[Settings] → Blocked accounts` → Unblock (follows and notifications that were removed do not come back). Profile: a Block button beside Report; post: ⋯ → Block @name; comment: ⋯ → Block @name.
 4. Moderator: `/admin/reports` (moderators see only Reports; admins assign the role through the API for now) → Hide post / comment / profile / skill, Dismiss, Show again; the author sees "Hidden after a report" on their hidden post or comment (a hidden post is listed with their drafts so they can delete it).
 
+### F-23 Ask the companion (AIC-01…03, AIC-06, approved 2026-10-29)
+
+1. Entry points: **Ask dodoi** (pill on phones and tablet, sidebar card on desktop) → `/companion`; **Ask about this** on a post (phones: sticky bar; tablet/desktop: beside the actions) → new chat "Looking at: {post title}"; skill page → **What is this and how do I start?** → new chat about that skill. Signed-out visitors go to sign-in; unverified users are asked to verify.
+2. Chat: field "Ask about a technique…", reply with an **AI** label, "Answers can be wrong", **Helpful / Not helpful**, Report. Skill names the assistant mentions are links. While waiting: a typing indicator. Past chats: list at `/companion` (30 days), reopen, delete.
+3. Desktop (≥ 1280): on a post or skill page the companion docks on the right ("Talking about: {title}") and the sidebar becomes the icon rail (`2c`); elsewhere `/companion` is a two-pane page (list | chat). Phones: list → full-screen chat (`1f`).
+4. Suggestions ("what should I try next?"): the first time, a notice asks to use interests and levels; Allow / Not now. Answers name real dodoi skills.
+5. Limits: at 30 messages a day the field says "You've used today's questions. They reset at {time}."; per-minute limit shows "Slow down a little". AI off or over the global cap: "The companion is resting. Try again later." Blocked by safety filters: "I can't help with that one."
+
+### F-24 Photo troubleshooting (AIC-05, AIC-07, approved 2026-10-29)
+
+1. In the chat field → **Add a photo** (one photo; JPEG, PNG or WebP up to 10 MB) → first time only: consent notice ("Your photo is sent to our AI provider to answer this question. It is kept with this chat for 30 days, and you can delete it any time.") → Allow / Cancel.
+2. The photo uploads at once; the message is sent with it; the answer says what can and cannot be seen and how sure it is, and suggests a better photo if needed (design `1f`).
+3. Withdraw: Settings → AI and privacy → switch off "Use my photos in the companion" (stops at once; existing chats stay until deleted).
+
+### F-25 Plan a project (AIC-04, approved 2026-10-29)
+
+1. In the chat, **Plan a project** (or the same words typed) → short form: what you want to make (and craft, optional) → plan card: title, craft, materials checklist, steps.
+2. **Start as my project** → private journal project with the materials as a checklist → project page (F-18). The plan stays in the chat.
+
+### F-26 AI and privacy settings (AIC-07, AIC-08, approved 2026-10-29)
+
+Settings → **AI and privacy**: two switches (photos; interests and levels), "Your conversations" list with Delete, **Delete all conversations** (confirmation; photos go too), and a note on retention (30 days).
+
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 
 | Phase | Flow |

@@ -178,6 +178,11 @@ model User {
   blocking                Block[]                  @relation("Blocking")
   blockedBy               Block[]                  @relation("BlockedBy")
 
+  aiConversations AIConversation[]
+  aiUsage         AIUsage[]
+  aiFeedback      AIFeedback[]
+  consents        Consent[]
+
   @@map("user")
 }
 
@@ -434,6 +439,7 @@ model MediaAsset {
   skillCovers   Skill[]             @relation("SkillCover")
   themeCovers   Theme[]             @relation("ThemeCover")
   entryMedia    ProjectEntryMedia[]
+  aiMessages    AIMessage[]
 
   @@index([ownerId])
   @@map("media_asset")
@@ -908,4 +914,130 @@ model Block {
   @@id([blockerId, blockedId])
   @@index([blockedId])
   @@map("block")
+}
+
+// ---------------------------------------------------------------------------
+// AI companion (P4-01; AI_INTEGRATION §10, DATABASE_SCHEMA §9.2)
+// ---------------------------------------------------------------------------
+
+enum AIContextType {
+  NONE
+  POST
+  SKILL
+}
+
+enum AIMessageRole {
+  USER
+  ASSISTANT
+}
+
+enum AIMessageStatus {
+  OK
+  /// Stopped by the provider's safety filters.
+  BLOCKED
+  ERROR
+}
+
+enum AIUsageStatus {
+  OK
+  BLOCKED
+  ERROR
+  QUOTA
+}
+
+enum ConsentType {
+  AI_IMAGES
+  AI_PROFILE_CONTEXT
+}
+
+/// A chat with the companion. Kept 30 days after its last message, or until the user deletes it.
+model AIConversation {
+  id          String        @id @default(cuid())
+  userId      String        @map("user_id")
+  contextType AIContextType @default(NONE) @map("context_type")
+  /// The post or skill asked about; no foreign key, because the post may go.
+  contextId   String?       @map("context_id")
+  /// The start of the first question.
+  title       String?       @db.VarChar(80)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  /// Last message: the 30-day retention clock.
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AIMessage[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([updatedAt])
+  @@map("ai_conversation")
+}
+
+model AIMessage {
+  id             String          @id @default(cuid())
+  conversationId String          @map("conversation_id")
+  role           AIMessageRole
+  content        String          @db.VarChar(8000)
+  /// A photo the user added (purpose `ai`); it is deleted with the conversation.
+  imageMediaId   String?         @map("image_media_id")
+  /// Assistant messages: which prompt wrote it.
+  promptVersion  String?         @map("prompt_version")
+  status         AIMessageStatus @default(OK)
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  image        MediaAsset?    @relation(fields: [imageMediaId], references: [id], onDelete: SetNull)
+  feedback     AIFeedback?
+
+  @@index([conversationId, createdAt])
+  @@index([imageMediaId])
+  @@map("ai_message")
+}
+
+/// Counts and cost of each request. Never holds text.
+model AIUsage {
+  id           String        @id @default(cuid())
+  userId       String?       @map("user_id")
+  model        String
+  inputTokens  Int           @map("input_tokens")
+  outputTokens Int           @map("output_tokens")
+  /// Millionths of a US dollar, from AI_INPUT_PRICE_PER_M and AI_OUTPUT_PRICE_PER_M.
+  costMicros   Int           @default(0) @map("cost_micros")
+  latencyMs    Int           @map("latency_ms")
+  status       AIUsageStatus
+  hasImage     Boolean       @default(false) @map("has_image")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("ai_usage")
+}
+
+model AIFeedback {
+  messageId String   @id @map("message_id")
+  userId    String   @map("user_id")
+  helpful   Boolean
+  comment   String?  @db.VarChar(300)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message AIMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ai_feedback")
+}
+
+/// What the user agreed to for the companion; withdrawing sets `revokedAt` and stops use at once.
+model Consent {
+  userId        String      @map("user_id")
+  type          ConsentType
+  /// E.g. "ai-2026-1".
+  policyVersion String      @map("policy_version")
+  grantedAt     DateTime    @map("granted_at")
+  revokedAt     DateTime?   @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type])
+  @@map("consent")
 }

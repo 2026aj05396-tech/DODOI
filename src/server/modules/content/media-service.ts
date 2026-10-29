@@ -28,6 +28,7 @@ import {
   deleteMediaRow,
   findMediaById,
   findMediaByIds,
+  findOwnImage,
   findMediaWithOwner,
   findOrphanedMedia,
   insertMedia,
@@ -64,6 +65,7 @@ const FOLDER_BY_PURPOSE: Record<MediaPurpose, string> = {
   cover: "covers",
   avatar: "avatars",
   entry: "entries",
+  ai: "ai",
 };
 
 /** Everything dodoi stores lives under `dodoi/<APP_ENV>/`, so environments never mix. */
@@ -269,6 +271,31 @@ export async function getMediaMap(
 export async function getOwnedMediaIds(ownerId: string, ids: string[]): Promise<Set<string>> {
   const rows = await findMediaByIds([...new Set(ids)], ownerId);
   return new Set(rows.map((row) => row.id));
+}
+
+const MIME_BY_FORMAT: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heif",
+};
+
+/**
+ * A photo the user uploaded, scaled down for the AI provider (P4-01), or null when it is not an
+ * image of theirs. Only the delivery URL and MIME type leave this module.
+ */
+export async function getOwnImageForAI(
+  ownerId: string,
+  mediaId: string,
+  { width, provider = defaultProvider }: ProviderOption & { width: number },
+): Promise<{ url: string; mimeType: string } | null> {
+  const row = await findOwnImage(mediaId, ownerId);
+  if (!row) return null;
+  const mimeType = MIME_BY_FORMAT[row.format.toLowerCase()];
+  if (!mimeType) return null;
+  return { url: provider.deliveryUrl(row.publicId, "image", { width }), mimeType };
 }
 
 /** Delivery URL for a stored avatar (profiles and creator rows), scaled for its small slot. */
