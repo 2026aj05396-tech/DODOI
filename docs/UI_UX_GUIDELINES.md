@@ -223,7 +223,7 @@ Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-
 | **SearchField** | 1b, 1d, 2b | Pill, sand-input (mobile) / paper + line border (web), search icon, muted placeholder |
 | **MaterialsList** | 1e, 2c | Bordered list; each row is a full-width toggle button (min 46px) with checkbox (checked = coral square + check + pop; unchecked = `#7A6E78` border). Header "Materials · {n} of {total} · saved to your account". **Checks persist per user and sync across devices** (DC-07) |
 | **StepList** | 1e, 2c | Each step has a tappable numbered circle that toggles **done** (filled + check, pop animation; tap again to undo). Next unfinished step = ink-filled circle; others outlined. A **"Next step"** button scrolls to the next unfinished step. Header "Step {completed} of {total} · progress saved". Persisted per user (DC-07, DC-24) |
-| **CreatorRow** | 1e, 2c | Avatar, name, "helps with …", Follow (coming soon in P1). Shown only when the post has a dodoi author (invited creator). For stock/Creative Commons posts it is replaced by a muted line **"via dodoi editors"** (DC-27) |
+| **CreatorRow** | 1e, 2c | Avatar, name, "helps with …", Follow / Following (live from P2-06: brick text action, `aria-pressed`, hidden for your own post and private profiles; signed-out visitors go to sign-in). Shown only when the post has a dodoi author (invited creator). For stock/Creative Commons posts it is replaced by a muted line **"via dodoi editors"** (DC-27) |
 | **AttributionBlock** | 1e | Below the steps on every seeded post: sand-input box, overline "SOURCE", "Adapted from \"{title}\" by {author} on {site link}", "License: {license} · Added by dodoi editors" (DC-10) |
 | **ComingSoonCard** | 3b, 1d, 2b | Dashed `ink-faint` border, radius card, muted title + one-line description, butter "Coming soon" pill, `aria-disabled`, not tappable (DC-19) |
 | **FieldError / ErrorBanner** | 3b | Input with 1.5px danger border; message below in danger with round "!" icon; banner = danger-surface box with ink text (DC-15) |
@@ -231,7 +231,7 @@ Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-
 | **PostMetaHeader** | 1e, 2c | Chips row (skill, level, time), title, creator row (avatar, name · "helps with …", Follow) |
 | **StickyActionBar** | 1e, 1g | Paper bar with top border; outline + primary buttons |
 | **CollectionTile** | 1i | 120px mosaic cover (2fr/1fr grid of 3 images), name, "18 saved · Private"; "+ New collection" dashed tile. **Built (P1-25):** `components/collections/collection-tile.tsx`; empty slots show craft patterns; the API returns `previewMedia` (3 newest covers) |
-| **ProfileHeader** | 1i | 72px avatar, display name, `@username · N following`, bio |
+| **ProfileHeader** | 1i | 72px avatar, display name, `@username`, bio. **P2-06 (PO review at 390/834/1280):** others' public profiles get an outline Follow / Following button beside Report; the owner sees "{n} followers  {n} following" under the username, each opening its list (`/profile/followers`, `/profile/following`: avatar, name, @username; Following has a Following button to unfollow; empty states "No followers yet" / "You're not following anyone yet") |
 | **SkillGroups** | 1i | Overline groups with chips: Interests (with level) · Can help with · Want to learn |
 | **Tabs** | 1h, 1i | Text tabs, active = brick bold + 2px brick underline |
 | **OnboardingProgress** | 1b | 3 segments 28×4px (active coral, rest line). "Skip" link only on steps 2 and 3 (DC-28) |
@@ -382,4 +382,4 @@ Each item is OPEN until the product owner decides. Resolved items move into the 
 | DC-25 | ~~Creative Commons~~ | **Resolved:** allowed source, CC BY and CC BY-SA only |
 | DC-26 | ~~Username~~ | **Resolved:** auto-generated at sign-up, editable later, first-profile-visit prompt |
 | DC-28 | ~~Skip on step 1~~ | **Resolved:** removed on step 1; kept on steps 2–3. *Design file to be updated to match* |
-| DC-27 | ~~Creator row on seeded posts~~ | **Resolved:** invited creators = real accounts with creator row (Follow = coming soon); stock/CC posts = no creator row, "via dodoi editors" line + attribution block. *Design file to be updated to match* |
+| DC-27 | ~~Creator row on seeded posts~~ | **Resolved:** invited creators = real accounts with creator row (Follow = coming soon in P1, live from P2-06); stock/CC posts = no creator row, "via dodoi editors" line + attribution block. *Design file to be updated to match* |

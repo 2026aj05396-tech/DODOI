@@ -122,7 +122,7 @@ src/
 │   │   ├── collections/                # saves, collections
 │   │   ├── admin/                      # audit log, admin ops
 │   │   ├── (P2) content/ gains user posts + tags; journal/ (projects, entries — built P2-03; uses content for media and posts, skills, users);
-│   │   │   comments/ (built P2-04; uses content for the post's author, users for writers' profiles); likes/ (built P2-05; uses content for the post's author); social/ (follows); notifications/; users/ gains blocks
+│   │   │   comments/ (built P2-04; uses content for the post's author, users for writers' profiles); likes/ (built P2-05; uses content for the post's author); follows/ (built P2-06; uses users for profiles; read by feed and library); notifications/; users/ gains blocks
 │   │   │   (`notBlockedWith`, used by every module that shows others' content); reports/ gains
 │   │   │   posts, comments and the MODERATOR role — no separate moderation/ module
 │   │   └── (P3+) communities/ messaging/ help/ sessions/ ai/
@@ -168,7 +168,7 @@ Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the P
 
 **Candidate pool:** published posts, excluding: posts the user hid ("not interested"), posts already served in this feed session, (P2: blocked users' posts).
 
-**Score** = `interestMatch` + `levelFit` + `freshness` + `saveAffinity` − `negativeFeedbackPenalty`, then **diversity re-ranking**.
+**Score** = `interestMatch` + `levelFit` + `freshness` + `saveAffinity` + `followBoost` − `negativeFeedbackPenalty`, then **diversity re-ranking**.
 
 | Signal | Rule (CONFIRMED) |
 |---|---|
@@ -177,6 +177,7 @@ Rules-based, computed per request in `server/modules/feed`. **CONFIRMED by the P
 | freshness | decays with post age (e.g. +2 if < 7 days, +1 if < 30 days) |
 | saveAffinity | +1 per post skill that appears in user's saves from the last 30 days (0 until saving exists, P1-24) |
 | negativeFeedbackPenalty | −2 per post skill of posts the user marked "not interested" in the last 30 days (those posts are hidden for good) |
+| followBoost | +4 per post by a maker the user follows (P2-06, FLW-04; PROPOSED size, PO to confirm; `FEED_CONFIG.followBoost`). The **Following** filter shows only followed makers' posts, with no discovery quota |
 | Discovery quota | ≥ 20% of each For you page drawn from posts with no skill among the user's interests (when such posts exist), replacing the lowest-ranked interest posts |
 | Diversity | no more than 2 consecutive items with the same primary skill |
 

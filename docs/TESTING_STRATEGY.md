@@ -95,6 +95,7 @@ Phase 1 (required before MVP exit):
 | E2E-20 | Creative journal (P2-03, F-18): new project → two entries (one with a photo) newest first → show on profile → mark finished → profile Projects tab → Share opens Create pre-filled; also: Start as my project copies a tutorial's materials and a tick survives a reload (`journal.spec.ts`) |
 | E2E-21 | Comments (P2-04, F-19): comment → reply starting with @username → edit shows "edited" → delete the comment that has a reply leaves "Comment deleted" and the reply, still there after a reload; signed-out visitors see the count and a Sign in link (`comments.spec.ts`) |
 | E2E-22 | Likes (P2-05, F-20): heart on a post → filled, `PUT` answers 204, still filled after a reload, unlike; signed-out visitors are sent to sign-in; a non-author sees no count (`likes.spec.ts`; the author's count is covered in `likes.test.ts`) |
+| E2E-23 | Follows (P2-06, F-20): Follow on a post's creator row → Following, `PUT` answers 204 → profile shows Following and no follower count → feed Following chip shows their post → own Following list → unfollow; signed-out visitors are sent to sign-in (`follows.spec.ts`; counts and lists for the owner are in `follows.test.ts`) |
 | E2E-16 | Coming-soon items (Community, bell, Ask dodoi…; Create is live from P2-02) are announced as disabled and trigger no network calls to unbuilt endpoints |
 
 Later phases add the master doc scenarios: create/edit post, comment, join community, send message, help request, schedule session, AI guidance, report/block.

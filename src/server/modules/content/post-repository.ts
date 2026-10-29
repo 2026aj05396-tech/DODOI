@@ -111,6 +111,8 @@ export async function findRelatedCandidates(postId: string, skillIds: string[], 
 export async function findFeedCandidates(options: {
   excludeIds: string[];
   excludeAuthorId?: string;
+  /** Only posts by these authors (the "Following" filter, FLW-04). */
+  authorIds?: string[];
   skillId?: string;
   take: number;
 }) {
@@ -122,6 +124,7 @@ export async function findFeedCandidates(options: {
       ...(options.excludeAuthorId
         ? { OR: [{ authorId: null }, { authorId: { not: options.excludeAuthorId } }] }
         : {}),
+      ...(options.authorIds ? { authorId: { in: options.authorIds } } : {}),
       ...(options.skillId ? { skills: { some: { skillId: options.skillId } } } : {}),
       // Cards need a cover (P1-15); posts without media never reach a page.
       media: { some: {} },
@@ -130,6 +133,7 @@ export async function findFeedCandidates(options: {
     take: options.take,
     select: {
       id: true,
+      authorId: true,
       publishedAt: true,
       difficulty: true,
       skills: { select: { skillId: true, isPrimary: true } },

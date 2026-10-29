@@ -256,6 +256,8 @@ export async function refreshPostSearchIndex(postId: string): Promise<void> {
 
 export type FeedCandidate = {
   id: string;
+  /** Null for team, stock and Creative Commons posts. */
+  authorId: string | null;
   publishedAt: Date;
   difficulty: ExperienceLevel | null;
   skillIds: string[];
@@ -266,12 +268,14 @@ export type FeedCandidate = {
 export async function getFeedCandidates(options: {
   excludeIds: string[];
   excludeAuthorId?: string;
+  authorIds?: string[];
   skillId?: string;
   take: number;
 }): Promise<FeedCandidate[]> {
   const rows = await findFeedCandidates(options);
   return rows.map((row) => ({
     id: row.id,
+    authorId: row.authorId,
     publishedAt: row.publishedAt ?? new Date(0),
     difficulty: row.difficulty,
     skillIds: row.skills.map((skill) => skill.skillId),

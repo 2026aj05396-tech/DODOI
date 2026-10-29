@@ -7,6 +7,7 @@ import { SkillChipLink } from "@/components/skills/skill-chip-link";
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/chip";
+import type { FollowState } from "@/lib/types/follows";
 import type { PostLikeState } from "@/lib/types/likes";
 import type {
   PostCard as PostCardData,
@@ -54,6 +55,7 @@ export function PostDetail({
   commentCount,
   isEmailVerified,
   like,
+  follow,
 }: {
   post: PostDetailData;
   related: PostCardData[];
@@ -65,6 +67,8 @@ export function PostDetail({
   isEmailVerified: boolean;
   /** The viewer's like; null for signed-out visitors. */
   like: PostLikeState | null;
+  /** Follow button state for the creator; null for signed-out visitors. */
+  follow: FollowState | null;
 }) {
   const path = `/p/${post.id}`;
   const skills = [...post.skills].sort(
@@ -116,7 +120,7 @@ export function PostDetail({
             <h1 className="text-title text-balance text-foreground md:text-title-web">
               {post.title}
             </h1>
-            <CreatorRow creator={post.creator} isOwn={post.isOwn} />
+            <CreatorRow creator={post.creator} isOwn={post.isOwn} follow={follow} returnTo={path} />
             {post.isOwn ? (
               // Your own post says whether others can see it (PO decision 2026-10-29).
               <p className="inline-flex items-center gap-2 text-meta text-foreground-secondary">

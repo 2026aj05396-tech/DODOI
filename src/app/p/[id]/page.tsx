@@ -9,6 +9,7 @@ import { NotFoundError } from "@/server/lib/errors";
 import { orNotFound } from "@/server/lib/not-found";
 import { getCommentCount } from "@/server/modules/comments";
 import { getPostDetail, getPostProgress, getRelatedPosts } from "@/server/modules/content";
+import { getFollowState } from "@/server/modules/follows";
 import { getPostLikeState } from "@/server/modules/likes";
 
 type Params = PageProps<"/p/[id]">["params"];
@@ -60,6 +61,7 @@ async function PostContent({ params }: { params: Params }) {
     getCommentCount(id),
     actor ? orNotFound(getPostLikeState(actor, id)) : null,
   ]);
+  const follow = actor && post.creator ? await getFollowState(actor, post.creator.username) : null;
   return (
     <PostDetail
       post={post}
@@ -68,6 +70,7 @@ async function PostContent({ params }: { params: Params }) {
       commentCount={commentCount}
       isEmailVerified={actor?.isEmailVerified ?? false}
       like={like}
+      follow={follow}
     />
   );
 }

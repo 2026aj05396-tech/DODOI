@@ -197,8 +197,8 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 ### F-20 Like and follow (LIKE-01…03, FLW-01…04)
 
 1. Heart on post detail (built P2-05; the card menu has no heart yet) → filled at once (optimistic); the author sees "{n} likes" on their own post only. Signed-out visitors go to sign-in and return; unverified users get "Verify your email to like posts."
-2. Follow on a profile, creator row or post → "Following"; unfollow from the same button. Private profiles show no Follow button.
-3. Feed → "Following" chip (once you follow someone) shows only their posts. Own profile → "Followers · Following" (owner only) → lists.
+2. Follow on a profile or the creator row on a post → "Following" at once; unfollow from the same button. Private profiles and your own show no Follow button; signed-out visitors go to sign-in; unverified users get "Verify your email to follow people."
+3. Feed → "Following" chip (once you follow someone) shows only their posts. Own profile → "{n} followers · {n} following" (owner only) → lists at `/profile/followers` and `/profile/following`; unfollow from the Following list.
 
 ### F-21 Notifications (NTF-01…05)
 

@@ -47,6 +47,12 @@ function emptyMessage(filter: string, chips: FeedFilterChip[]) {
       description: "Check back soon: new projects are added every week.",
     };
   }
+  if (filter === "following") {
+    return {
+      title: "No new posts from people you follow",
+      description: "When they share something new, it will show up here.",
+    };
+  }
   if (filter.startsWith("skill:")) {
     const label = chips.find((chip) => chip.key === filter)?.label ?? "this skill";
     return {

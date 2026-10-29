@@ -200,14 +200,14 @@ Own full profile: `{ username, displayName, bio, avatar: Media|null, visibility,
 
 ### GET /api/profiles/{username} — User*
 Public profile: `{ username, displayName, bio, avatarUrl, skills: { interests[], canHelp[], wantsToLearn[] } (with levels), publicCollections: CollectionSummary[] }`.
-Full view also has `isPrivate: false`, `isOwner` and `visibility`; skills are active skills only; `publicCollections` are most recently changed first. Private profile (OD-10) → `{ username, displayName, avatarUrl, isPrivate: true }` only (the owner always gets the full view). Unknown, deactivated or hidden-after-report profiles → `404` (owners still see their own). **Never** includes email, DOB, role, internal IDs beyond what is needed.
+Full view also has `isPrivate: false`, `isOwner`, `visibility`, `follow` and (owner only) `followCounts`; skills are active skills only; `publicCollections` are most recently changed first. Private profile (OD-10) → `{ username, displayName, avatarUrl, isPrivate: true }` only (the owner always gets the full view). Unknown, deactivated or hidden-after-report profiles → `404` (owners still see their own). **Never** includes email, DOB, role, internal IDs beyond what is needed.
 
 ---
 
 ## 5. Feed, Posts, Themes, Search
 
 ### GET /api/feed — User
-Query: `filter` (`for-you` default · `skill:<slug>` (must be one of the actor's interests) · `new-to-you`), `cursor`, `limit`. A call without cursor creates a feed session bound to that filter; changing filter = new session.
+Query: `filter` (`for-you` default · `following` (P2-06) · `skill:<slug>` (must be one of the actor's interests) · `new-to-you`), `cursor`, `limit`. A call without cursor creates a feed session bound to that filter; changing filter = new session.
 Response: `{ items: FeedItem[], nextCursor }`. Cursor encodes feed session; no post repeats within a session (FEED-09).
 
 ```ts
@@ -440,8 +440,8 @@ Built P2-04 (2026-10-29): all five routes need a signed-in user; reading and wri
 | Method & path | Who | Purpose |
 |---|---|---|
 | `PUT` / `DELETE /api/posts/{postId}/like` | Verified | Like / unlike. Post detail and cards gain `isLiked`; `likeCount` only when the actor is the author. **Built P2-05:** `204`; unlike needs only a signed-in user; `404` for a post that is not published; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour. `isLiked` and `likeCount` reach the post page from the server (not an API field); cards have no `isLiked` yet |
-| `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404` |
-| `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `isFollowing` and, for the owner, counts |
+| `PUT` / `DELETE /api/follows/{username}` | Verified | Follow / unfollow; private, own or blocked profile → `404`. **Built P2-06:** `204`, idempotent; unfollow needs only a signed-in user and works even if the profile went private since; `403 EMAIL_NOT_VERIFIED`; `429` at 200 an hour (follows and unfollows together) |
+| `GET /api/me/followers?cursor=` / `GET /api/me/following?cursor=` | User | Owner-only lists (FLW-03); profile view gains `follow: { canFollow, isFollowing }` and, for the owner only, `followCounts: { followers, following }` (built P2-06). Lists are `{ items: [{ username, displayName, avatarUrl }], nextCursor }`, newest first, 20 per page; profiles that are hidden or deactivated are left out |
 | `PUT` / `DELETE /api/blocks/{username}` | User | Block / unblock (MOD-02) |
 | `GET /api/me/blocks?cursor=` | User | Block list |
 

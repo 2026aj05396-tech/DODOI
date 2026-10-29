@@ -59,16 +59,23 @@ export function resetRateLimits(): void {
 }
 
 /** A published (or draft) Creative Commons tutorial with every section, plus one related post. */
-export function createPost(options: { status?: "PUBLISHED" | "DRAFT" } = {}): {
+export function createPost(options: { status?: "PUBLISHED" | "DRAFT"; creator?: boolean } = {}): {
   id: string;
   relatedId: string;
+  creatorUsername?: string;
+  creatorName?: string;
 } {
   const output = execFileSync(
     "pnpm",
     ["exec", "tsx", join(__dirname, "create-post.ts"), JSON.stringify(options)],
     { encoding: "utf8" },
   );
-  return JSON.parse(output) as { id: string; relatedId: string };
+  return JSON.parse(output) as {
+    id: string;
+    relatedId: string;
+    creatorUsername?: string;
+    creatorName?: string;
+  };
 }
 
 /** A new skill (unique name, with a pitch) and `count` published posts on it, for feed tests. */

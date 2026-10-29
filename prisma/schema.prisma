@@ -166,6 +166,8 @@ model User {
   projects        Project[]
   comments        Comment[]
   likes           PostLike[]
+  following       Follow[]       @relation("Following")
+  followers       Follow[]       @relation("Followers")
 
   @@map("user")
 }
@@ -815,4 +817,19 @@ model PostLike {
   @@id([postId, userId])
   @@index([userId])
   @@map("post_like")
+}
+
+/// A follow (FLW-01): `followerId` follows `followeeId`. Only public profiles can be followed.
+model Follow {
+  followerId String   @map("follower_id")
+  followeeId String   @map("followee_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  follower User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followee User @relation("Followers", fields: [followeeId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followeeId])
+  @@index([followeeId, createdAt(sort: Desc)])
+  @@index([followerId, createdAt(sort: Desc)])
+  @@map("follow")
 }

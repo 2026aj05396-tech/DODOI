@@ -91,7 +91,7 @@ export const config = {
     "/projects/:path*",
     "/u/:path*",
     "/onboarding/:path*",
-    "/profile",
+    "/profile/:path*",
     "/settings/:path*",
     "/admin/:path*",
     "/account-deletion",

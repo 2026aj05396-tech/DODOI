@@ -19,6 +19,7 @@ const daysAgo = (days: number) => new Date(NOW.getTime() - days * 24 * 60 * 60 *
 function post(id: string, overrides: Partial<RankCandidate> = {}): RankCandidate {
   return {
     id,
+    authorId: null,
     publishedAt: daysAgo(60),
     difficulty: null,
     skillIds: ["crochet"],
@@ -31,6 +32,7 @@ function context(overrides: Partial<RankingContext> = {}): RankingContext {
   return {
     interests: new Set(["crochet", "embroidery"]),
     levels: new Map(),
+    followedAuthors: new Set(),
     savedSkills: new Set(),
     notInterestedSkills: new Set(),
     now: NOW,
@@ -39,6 +41,23 @@ function context(overrides: Partial<RankingContext> = {}): RankingContext {
 }
 
 describe("feed ranking", () => {
+  it("adds 4 for a post by a maker the user follows (FLW-04)", () => {
+    const theirs = post("a", {
+      authorId: "maker",
+      skillIds: ["pottery"],
+      primarySkillId: "pottery",
+    });
+    const other = post("b", {
+      authorId: "someone",
+      skillIds: ["pottery"],
+      primarySkillId: "pottery",
+    });
+    const followed = context({ followedAuthors: new Set(["maker"]) });
+    expect(scoreCandidate(theirs, followed, "full")).toBe(4);
+    expect(scoreCandidate(other, followed, "full")).toBe(0);
+    expect(scoreCandidate(post("c"), followed, "full")).toBe(3);
+  });
+
   it("adds 3 per post skill among the user's interests", () => {
     const both = post("a", { skillIds: ["crochet", "embroidery"] });
     const none = post("b", { skillIds: ["pottery"], primarySkillId: "pottery" });

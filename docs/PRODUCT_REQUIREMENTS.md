@@ -262,7 +262,7 @@ Comments and reporting on posts are P2.
 
 **Rule:** no scraping of Pinterest, Instagram, Google Images or any source without a license permitting this use.
 
-**Invited creators (CONFIRMED, OD-18/DC-27):** get a real dodoi account; their seeded posts have `authorId` set and show the creator row (Follow = coming soon in P1). Team-original, stock and Creative Commons posts have no author account: no creator row, a "via dodoi editors" line, and the attribution block.
+**Invited creators (CONFIRMED, OD-18/DC-27):** get a real dodoi account; their seeded posts have `authorId` set and show the creator row (Follow = coming soon in P1, live from P2-06). Team-original, stock and Creative Commons posts have no author account: no creator row, a "via dodoi editors" line, and the attribution block.
 
 ### 5.8b Media Limits (MEDIA)
 
@@ -280,7 +280,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 
 | ID | Requirement |
 |---|---|
-| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Create is live from P2-02** (2026-10-29) |
+| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29) |
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |
@@ -384,7 +384,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | FLW-01 | Follow / unfollow a user with a public profile from their profile, the creator row and the post detail (replaces the coming-soon Follow buttons) |
 | FLW-02 | Private profiles cannot be followed in P2 (no follow requests); turning a profile private keeps existing followers |
 | FLW-03 | Follower and following counts are shown only to the profile owner (PP-4); the owner can open both lists |
-| FLW-04 | Feed: posts from followed makers get a ranking boost, and a "Following" filter chip shows only them |
+| FLW-04 | Feed: posts from followed makers get a ranking boost, and a "Following" filter chip shows only them. **Built P2-06:** boost +4 (PO to confirm); the chip appears after "For you" once the user follows someone; empty state "No new posts from people you follow" |
 
 #### Notifications (NTF) — P2-07
 

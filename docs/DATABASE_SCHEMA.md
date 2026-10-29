@@ -603,7 +603,7 @@ model PostLike {                                  // built P2-05; table post_lik
   @@index([userId])
 }
 
-model Follow {
+model Follow {                                    // built P2-06; table follow, snake_case columns; also indexed on (followerId, createdAt desc) for the Following list
   followerId String
   followeeId String
   createdAt  DateTime @default(now())

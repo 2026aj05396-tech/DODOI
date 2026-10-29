@@ -58,9 +58,9 @@ Never set `AUTH_GOOGLE_ISSUER` or `CLOUDINARY_API_BASE` here: they are for autom
 
 ## Checking a deploy
 
-- Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`. The first deploy with Phase 2 applies `…_user_posts_tags`, `…_creative_journal`, `…_comments` and `…_post_likes`; no new environment variables are needed.
+- Vercel → Deployments: the build log shows `prisma migrate deploy` applying (or "No pending migrations") before `next build`. The first deploy with Phase 2 applies `…_user_posts_tags`, `…_creative_journal`, `…_comments`, `…_post_likes` and `…_follows`; no new environment variables are needed.
 - `/robots.txt` says `Disallow: /`.
 - Sign up with any address, verify from the email, onboard, open the feed, save a post, sign out.
 - On a phone over HTTPS: the install banner after a save, and offline mode (visit the feed, turn on airplane mode, reopen).
-- Phase 2 (P2-02, P2-03, P2-04): Create → pick a phone photo (it uploads at once), Edit photo, describe it, add a craft, tick "my own work", Share → "Posted!"; the post shows on your profile's Posts tab. Journal → New project → add an entry with a photo → Share opens Create pre-filled. On a tutorial, "Start as my project" copies its materials. On any post, add a comment, reply to it, edit it (shows "edited"), delete it ("Comment deleted" stays while it has a reply). Tap the heart on a post, reload: it stays filled.
+- Phase 2 (P2-02, P2-03, P2-04): Create → pick a phone photo (it uploads at once), Edit photo, describe it, add a craft, tick "my own work", Share → "Posted!"; the post shows on your profile's Posts tab. Journal → New project → add an entry with a photo → Share opens Create pre-filled. On a tutorial, "Start as my project" copies its materials. On any post, add a comment, reply to it, edit it (shows "edited"), delete it ("Comment deleted" stays while it has a reply). Tap the heart on a post, reload: it stays filled. Follow a maker from their post: the feed gets a Following chip showing their posts, and your profile's "following" count opens the list.
 - Vercel → Settings → Cron Jobs lists `/api/cron/daily`; "Run" triggers it, and the function log shows each job's count.
