@@ -87,7 +87,7 @@ describe("ai companion", () => {
     });
     const messages = await db.aIMessage.findMany({ orderBy: { createdAt: "asc" } });
     expect(messages.map((m) => m.role)).toEqual(["USER", "ASSISTANT"]);
-    expect(messages[1]?.promptVersion).toBe("companion-2026-1");
+    expect(messages[1]?.promptVersion).toBe("companion-2026-2");
     const usage = await db.aIUsage.findMany();
     expect(usage).toHaveLength(1);
     expect(usage[0]).toMatchObject({

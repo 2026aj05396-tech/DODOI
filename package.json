@@ -18,6 +18,7 @@
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:ai-evals": "vitest run --config vitest.ai-evals.config.mts",
     "test:e2e": "playwright test",
     "test:e2e:browsers": "E2E_BROWSERS=all playwright test --project=webkit --project=firefox",
     "db:seed": "prisma db seed",

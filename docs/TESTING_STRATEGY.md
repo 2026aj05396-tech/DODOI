@@ -120,7 +120,7 @@ Every Phase 1 scenario above has a test whose title starts with its ID (`grep -r
 
 ## 7. AI Evaluation (Phase 4)
 
-Defined now so it is not forgotten; implemented in P4. **P4-00 additions (2026-10-29):** all unit and integration tests use a `FakeAIProvider` (no network, no key); the eval suite (`tests/ai-evals/`) runs against the real provider **locally on the free tier with synthetic prompts only**, never in CI and never with real user data; photo cases use a small set of licensed or self-made test images; checks also cover consent gating (no photo or profile context without consent), quota and global-cap enforcement, the 30-day retention job, deletion with photos, that logs and `AIUsage` never hold text, and that `AI_TIER=free` is refused when `APP_ENV=production`.
+Defined now so it is not forgotten; implemented in P4. **P4-00 additions (2026-10-29):** all unit and integration tests use a `FakeAIProvider` (no network, no key); the eval suite (`tests/ai-evals/`, built P4-06) runs against the real provider **locally on the free tier with synthetic prompts only**, never in CI and never with real user data; photo cases use a small set of licensed or self-made test images; checks also cover consent gating (no photo or profile context without consent), quota and global-cap enforcement, the 30-day retention job, deletion with photos, that logs and `AIUsage` never hold text, and that `AI_TIER=free` is refused when `APP_ENV=production`.
 
 | Category | Method |
 |---|---|
@@ -131,6 +131,8 @@ Defined now so it is not forgotten; implemented in P4. **P4-00 additions (2026-1
 | Safety | Hazardous materials/tools questions → safety notes; disallowed requests → refusal |
 | Cost limits | Quotas and global cap enforced (integration tests with fake provider) |
 | Regression | Eval set re-run on every prompt or model change; `promptVersion` tracked |
+
+**Built (P4-06, 2026-10-30):** `pnpm test:ai-evals` (`vitest.ai-evals.config.mts`, `tests/ai-evals/`) runs 27 cases against the real Gemini API, one request at a time with a 4 s pause and up to 3 tries per request. It builds the prompts with the app's own code (`buildSystemPrompt`, the plan prompt and schema) and refuses to start unless `GEMINI_API_KEY` and `AI_MODEL` are set, `AI_TIER=free` and `APP_ENV` is local; it is not part of `pnpm test` and not in CI. Everything is synthetic (made-up questions, a made-up post, and two PNGs the test draws itself: blue/white stripes and plain grey). Cases: **quality** (6, reviewer-written key-point groups; must reach 80%), **uncertainty** (3: vague question, unknowable future, unlabelled yarn), **injection** (5: print the rules, close the data section, instruction in a post description, instruction in profile text, naming the provider), **privacy** (3: another member's email, private messages, private collections), **safety** (3: resin and craft-knife notes, refusing a weapon request), **plans** (4: valid schema and size, no craft, wax safety step, injection in the request), **photos** (2: describes stripes, says a plain grey image shows no stitches). Safety, privacy, injection, plan and photo cases must pass every time. One JSON line per case goes to `test-results/ai-evals.jsonl` (git-ignored) for comparing runs. The checks are keyword and pattern based, so a failure means "read the answer in the report", not always a defect.
 
 ## 8. Performance Checks
 
