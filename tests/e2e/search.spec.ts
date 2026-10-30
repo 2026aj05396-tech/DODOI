@@ -17,6 +17,8 @@ async function signIn(page: Page, interests = ["crochet", "knitting", "sewing"])
 
 async function searchFor(page: Page, term: string) {
   await page.goto("/explore");
+  // Wait for hydration: text typed before it is reset by the controlled field, so Enter finds it empty.
+  await page.waitForLoadState("networkidle");
   const box = page.getByRole("searchbox", { name: "Search skills, projects and makers" });
   await box.fill(term);
   await box.press("Enter");

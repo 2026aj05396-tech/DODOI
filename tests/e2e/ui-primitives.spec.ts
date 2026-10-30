@@ -27,6 +27,8 @@ test.describe("UI primitives preview", () => {
 
   test("the sheet traps focus and returns it to its trigger on Escape", async ({ page }) => {
     await page.goto("/dev/ui");
+    // Wait for hydration: the preview is a large page and a click before it is ignored.
+    await page.waitForLoadState("networkidle");
     const trigger = page.getByRole("button", { name: "Open sheet" });
 
     await trigger.click();
