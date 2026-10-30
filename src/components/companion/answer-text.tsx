@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import type { CompanionSetup } from "@/lib/types/ai";
 
-type SkillLink = CompanionSetup["skills"][number];
+type SkillLink = Pick<CompanionSetup["skills"][number], "name" | "slug">;
 
 // An AI answer as plain text with a little structure (AIC-06, AI_INTEGRATION §12): paragraphs,
 // numbered and bulleted lines, **bold**, and exact dodoi skill names as links. It is built as React

@@ -4,6 +4,7 @@ export {
   AI_MINUTE_LIMIT,
   AI_PHOTO_LIMIT,
   CONSENT_POLICY_VERSION,
+  createPlan,
   deleteAllConversations,
   deleteConversation,
   getAnswersForModeration,

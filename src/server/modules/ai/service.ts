@@ -3,10 +3,12 @@ import "server-only";
 import { z } from "zod";
 
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants/pagination";
+import { aiPlanSchema } from "@/lib/schemas/ai";
 import type {
   AIFeedbackInput,
   AIListQuery,
   ConsentsInput,
+  PlanRequestInput,
   SendAIMessageInput,
 } from "@/lib/schemas/ai";
 import type {
@@ -15,6 +17,7 @@ import type {
   AIConversationDetail,
   AIConversationSummary,
   AIMessageView,
+  AIPlan,
   CompanionSetup,
   SendAIMessageResult,
 } from "@/lib/types/ai";
@@ -59,6 +62,7 @@ import {
 import { getProfileSkills } from "@/server/modules/users";
 
 import { buildSystemPrompt, PROMPT_VERSION } from "./prompts/companion";
+import { buildPlanSystemPrompt, PLAN_JSON_SCHEMA, wrapPlanRequest } from "./prompts/plan";
 import {
   countProviderRequestsSince,
   deleteConversations,
@@ -163,7 +167,7 @@ export async function getCompanionSetup(
     isAvailable: provider !== null,
     showFreeTierNotice: serverEnv.AI_TIER === "free",
     consents,
-    skills: skills.map(({ name, slug }) => ({ name, slug })),
+    skills: skills.map(({ id, name, slug }) => ({ id, name, slug })),
   };
 }
 
@@ -550,6 +554,106 @@ export async function isOwnAnswer(actor: Actor, messageId: string): Promise<bool
 /** For the moderators' reports list: the reported answers' text (and nothing around it). */
 export async function getAnswersForModeration(ids: string[]): Promise<Map<string, string>> {
   return new Map((await findAnswersByIds(ids)).map((row) => [row.id, row.content]));
+}
+
+// --- Project plans (P4-03, AIC-04) ------------------------------------------------------------------
+
+const PLAN_MAX_OUTPUT_TOKENS = 1_200;
+const PLAN_FAILED = "I couldn't put a plan together. Try again.";
+
+function parsePlan(text: string): z.output<typeof aiPlanSchema> | null {
+  try {
+    const parsed = aiPlanSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * POST /api/ai/plan: a materials checklist and steps for what the member wants to make. A request
+ * like a message (same limits, same global cap); the answer is checked against `aiPlanSchema` and
+ * asked for once more when it doesn't fit (AI_INTEGRATION §11). Nothing is stored here: the plan
+ * becomes a project only when the member starts it.
+ */
+export async function createPlan(
+  actor: Actor,
+  input: PlanRequestInput,
+  { provider = defaultProvider, now = new Date() }: Pick<Options, "provider" | "now"> = {},
+): Promise<AIPlan> {
+  const user = requireVerified(actor);
+  if (!provider) throw resting();
+  if ((await countProviderRequestsSince(startOfUtcDay(now))) >= serverEnv.AI_DAILY_REQUEST_CAP) {
+    throw resting();
+  }
+
+  const skills = await getActivePredefinedSkills();
+  let chosen: string | null = null;
+  if (input.skillId) {
+    chosen = (await getActiveSkillSummaries([input.skillId])).get(input.skillId)?.name ?? null;
+    if (!chosen) throw new NotFoundError("We couldn't find that skill.");
+  }
+
+  await enforceQuotas(user, false, provider.model, now);
+
+  const request = {
+    system: buildPlanSystemPrompt(skills.map((skill) => skill.name)),
+    messages: [
+      {
+        role: "user" as const,
+        content: [{ type: "text" as const, text: wrapPlanRequest(input.text, chosen) }],
+      },
+    ],
+    maxOutputTokens: PLAN_MAX_OUTPUT_TOKENS,
+    jsonSchema: PLAN_JSON_SCHEMA as unknown as Record<string, unknown>,
+  };
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    let result;
+    try {
+      result = await provider.generate(request);
+    } catch (error) {
+      await insertUsage({
+        userId: user.id,
+        model: provider.model,
+        inputTokens: 0,
+        outputTokens: 0,
+        costMicros: 0,
+        latencyMs: 0,
+        status: "ERROR",
+        hasImage: false,
+      });
+      logger.error("AI provider failed", {
+        status: error instanceof AIProviderError ? error.status : null,
+      });
+      throw resting();
+    }
+    await insertUsage({
+      userId: user.id,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      costMicros: costMicros(result.inputTokens, result.outputTokens),
+      latencyMs: result.latencyMs,
+      status: result.kind === "ok" ? "OK" : "BLOCKED",
+      hasImage: false,
+    });
+    if (result.kind === "blocked") {
+      throw new UnprocessableError(BLOCKED_ANSWER, { code: "AI_BLOCKED" });
+    }
+    const plan = parsePlan(result.text);
+    if (!plan) continue;
+    const match = skills.find((skill) => skill.name.toLowerCase() === plan.craft.toLowerCase());
+    const skillId = input.skillId ?? match?.id ?? null;
+    return {
+      title: plan.title,
+      craft: chosen ?? match?.name ?? plan.craft,
+      skillId,
+      materials: plan.materials,
+      steps: plan.steps,
+    };
+  }
+  throw new ServiceUnavailableError(PLAN_FAILED, { code: "AI_UNAVAILABLE" });
 }
 
 // --- Conversations ----------------------------------------------------------------------------------

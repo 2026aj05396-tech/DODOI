@@ -143,6 +143,8 @@ Free-tier/zero-budget constraint applies until changed.
 
 ## 11. Project planning (AI-03)
 
+**Built P4-03 (2026-10-30):** prompt `plan-2026-1` (`prompts/plan.ts`, request wrapped in data delimiters, dodoi skill names listed), Gemini `responseSchema`, 1,200 output tokens; checked on the real API on the free tier (valid plan in 1.5 s). The plan is not stored; the response also carries `skillId` so the project gets its craft; the steps are not stored in the project (no steps list in the journal, PO to confirm if wanted).
+
 Planning is a separate structured request, not free text: `POST /api/ai/plan` asks the model for `{ title, craft, materials[], steps[] }` (validated with Zod; invalid output is retried once, then an error). The plan shows as a card with **Start as my project**, which creates a private journal project (title, craft, materials checklist) through the journal module. The journal's create-project call gains an optional materials list for this (approved change, built in P4-03).
 
 ## 12. Suggestions and links (AI-02, AI-05)

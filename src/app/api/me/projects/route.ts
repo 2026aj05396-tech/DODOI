@@ -8,7 +8,7 @@ export const GET = withRouteHandler(
   async ({ actor, query }) => ok({ items: await listMyProjects(actor, query) }),
 );
 
-/** POST /api/me/projects — `{ title, skillId?, visibility? }` → 201. 422 PROJECT_LIMIT at 100. */
+/** POST /api/me/projects — `{ title, skillId?, visibility?, materials? }` → 201. 422 PROJECT_LIMIT at 100. */
 export const POST = withRouteHandler(
   { auth: "user", body: createProjectSchema },
   async ({ actor, body }) => created(await createProject(actor, body)),

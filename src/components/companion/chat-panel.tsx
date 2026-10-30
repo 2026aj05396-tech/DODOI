@@ -7,13 +7,15 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { useIsOnline } from "@/hooks/use-is-online";
-import { sendAIMessage, updateAIConsents } from "@/lib/api-client/ai";
+import { createAIPlan, sendAIMessage, updateAIConsents } from "@/lib/api-client/ai";
 import { ApiRequestError } from "@/lib/api-client/request";
 import { AI_TEXT_MAX_LENGTH, type AIContextInput } from "@/lib/schemas/ai";
-import type { AIContextView, AIMessageView, CompanionSetup } from "@/lib/types/ai";
+import type { AIContextView, AIMessageView, AIPlan, CompanionSetup } from "@/lib/types/ai";
 import { cn } from "@/lib/utils/cn";
 
 import { AssistantBubble, BlockedNote, UserBubble } from "./message-bubble";
+import { PlanCard } from "./plan-card";
+import { PlanSheet } from "./plan-sheet";
 import { ProfileConsentSheet } from "./profile-consent-sheet";
 import { TypingIndicator } from "./typing-indicator";
 
@@ -24,6 +26,8 @@ import { TypingIndicator } from "./typing-indicator";
 const FREE_TIER_NOTICE =
   "Test version: Google may read your questions and photos. Don't share anything personal.";
 const SUGGESTION = "What should I try next?";
+const CHIP =
+  "min-h-11 rounded-full border border-border-strong bg-background px-4 text-control text-foreground hover:bg-muted disabled:pointer-events-none disabled:opacity-60";
 const RESTING = "The companion is resting. Try again later.";
 /** A limit that resets within this many seconds is the per-minute one, not the daily one. */
 const MINUTE_LIMIT_SECONDS = 90;
@@ -83,13 +87,17 @@ export function ChatPanel({
   const [dailyLimit, setDailyLimit] = useState<string | null>(null);
   const [hasProfileConsent, setHasProfileConsent] = useState(setup.consents.AI_PROFILE_CONTEXT);
   const [isAskingConsent, setIsAskingConsent] = useState(false);
+  const [isPlanFormOpen, setIsPlanFormOpen] = useState(false);
+  const [isPlanning, setIsPlanning] = useState(false);
+  // Plans live in this view only; `after` is how many messages came before each one.
+  const [plans, setPlans] = useState<{ key: number; plan: AIPlan; after: number }[]>([]);
   const logEndRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const isPending = pendingText !== null;
+  const isPending = pendingText !== null || isPlanning;
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ block: "end" });
-  }, [messages, pendingText, notice]);
+  }, [messages, pendingText, notice, plans, isPlanning]);
 
   // The field keeps focus after sending (accessibility, UI_UX_GUIDELINES §8.2).
   useEffect(() => {
@@ -110,6 +118,45 @@ export function ChatPanel({
         ? "Ask about this…"
         : "Ask about a technique…";
 
+  /** Quota, refusal and other failures of a message or a plan (F-23 step 5). */
+  function showError(caught: unknown, onBlocked: () => void) {
+    if (!(caught instanceof ApiRequestError)) {
+      setNotice("We couldn't send that. Try again.");
+    } else if (caught.code === "AI_QUOTA") {
+      const resetAt = caught.fields.resetAt;
+      const seconds = resetAt ? (new Date(resetAt).getTime() - Date.now()) / 1000 : 0;
+      const time = formatResetTime(resetAt);
+      if (seconds > MINUTE_LIMIT_SECONDS) {
+        setDailyLimit(
+          time
+            ? `You've used today's questions. They reset at ${time}.`
+            : "You've used today's questions. They reset tomorrow.",
+        );
+      } else {
+        setNotice("Slow down a little. Try again in a minute.");
+      }
+    } else if (caught.code === "AI_BLOCKED") {
+      onBlocked();
+      setNotice("I can't help with that one.");
+    } else {
+      setNotice(caught.message);
+    }
+  }
+
+  async function makePlan(input: { text: string; skillId?: string }) {
+    setIsPlanFormOpen(false);
+    setNotice(null);
+    setIsPlanning(true);
+    try {
+      const plan = await createAIPlan(input);
+      setPlans((current) => [...current, { key: current.length, plan, after: messages.length }]);
+    } catch (caught) {
+      showError(caught, () => undefined);
+    } finally {
+      setIsPlanning(false);
+    }
+  }
+
   async function send(text: string) {
     const trimmed = text.trim();
     if (!trimmed || isPending || isFieldDisabled) return;
@@ -128,28 +175,7 @@ export function ChatPanel({
       }
     } catch (caught) {
       setDraft(trimmed);
-      if (!(caught instanceof ApiRequestError)) {
-        setNotice("We couldn't send that. Try again.");
-      } else if (caught.code === "AI_QUOTA") {
-        const resetAt = caught.fields.resetAt;
-        const seconds = resetAt ? (new Date(resetAt).getTime() - Date.now()) / 1000 : 0;
-        const time = formatResetTime(resetAt);
-        if (seconds > MINUTE_LIMIT_SECONDS) {
-          setDailyLimit(
-            time
-              ? `You've used today's questions. They reset at ${time}.`
-              : "You've used today's questions. They reset tomorrow.",
-          );
-        } else {
-          setNotice("Slow down a little. Try again in a minute.");
-        }
-      } else if (caught.code === "AI_BLOCKED") {
-        // The refused question stays in the history; the field starts fresh.
-        setDraft("");
-        setNotice("I can't help with that one.");
-      } else {
-        setNotice(caught.message);
-      }
+      showError(caught, () => setDraft(""));
     } finally {
       setPendingText(null);
     }
@@ -185,7 +211,11 @@ export function ChatPanel({
     element.style.height = `${Math.min(element.scrollHeight, 128)}px`;
   }
 
-  const isEmpty = messages.length === 0 && !isPending;
+  const plansAfter = (count: number) =>
+    plans
+      .filter((entry) => entry.after === count)
+      .map((entry) => <PlanCard key={`plan-${entry.key}`} plan={entry.plan} />);
+  const isEmpty = messages.length === 0 && plans.length === 0 && !isPending;
   const showCounter = draft.length > AI_TEXT_MAX_LENGTH * 0.8;
   const contextLink = context ? contextHref(context, setup.skills) : null;
 
@@ -262,25 +292,27 @@ export function ChatPanel({
               type="button"
               onClick={startSuggestion}
               disabled={isFieldDisabled}
-              className="min-h-11 rounded-full border border-border-strong bg-background px-4 text-control text-foreground hover:bg-muted disabled:pointer-events-none disabled:opacity-60"
+              className={CHIP}
             >
               {SUGGESTION}
             </button>
           </div>
         ) : null}
-        {messages.map((message) => {
-          if (message.role === "USER") {
-            return (
-              <div key={message.id} className="contents">
+        {plansAfter(0)}
+        {messages.map((message, index) => (
+          <div key={message.id} className="contents">
+            {message.role === "USER" ? (
+              <>
                 <UserBubble message={message} />
                 {message.status === "BLOCKED" ? <BlockedNote /> : null}
-              </div>
-            );
-          }
-          return message.status === "OK" ? (
-            <AssistantBubble key={message.id} message={message} skills={setup.skills} />
-          ) : null;
-        })}
+              </>
+            ) : message.status === "OK" ? (
+              <AssistantBubble message={message} skills={setup.skills} />
+            ) : null}
+            {plansAfter(index + 1)}
+          </div>
+        ))}
+        {isPlanning ? <TypingIndicator /> : null}
         {pendingText !== null ? (
           <>
             <p className="max-w-[85%] self-end rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-body-lg wrap-break-word whitespace-pre-line text-primary-foreground">
@@ -297,6 +329,16 @@ export function ChatPanel({
         {stateNotice ? (
           <p className="text-control-sm text-foreground-secondary">{stateNotice}</p>
         ) : null}
+        <div>
+          <button
+            type="button"
+            onClick={() => setIsPlanFormOpen(true)}
+            disabled={isFieldDisabled || isPending}
+            className={cn(CHIP, "min-h-9 px-3.5 text-control-sm")}
+          >
+            Plan a project
+          </button>
+        </div>
         <form
           method="post"
           onSubmit={(event) => {
@@ -344,6 +386,13 @@ export function ChatPanel({
         ) : null}
       </div>
 
+      {isPlanFormOpen ? (
+        <PlanSheet
+          skills={setup.skills}
+          onSubmit={(input) => void makePlan(input)}
+          onClose={() => setIsPlanFormOpen(false)}
+        />
+      ) : null}
       {isAskingConsent ? (
         <ProfileConsentSheet
           showFreeTierNotice={setup.showFreeTierNotice}

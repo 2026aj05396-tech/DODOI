@@ -233,6 +233,8 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 1. In the chat, **Plan a project** (or the same words typed) → short form: what you want to make (and craft, optional) → plan card: title, craft, materials checklist, steps.
 2. **Start as my project** → private journal project with the materials as a checklist → project page (F-18). The plan stays in the chat.
 
+**Built (P4-03, 2026-10-30):** a **Plan a project** chip above the field (in the full chat and the docked one) opens a sheet: "What would you like to make?" and an optional craft list ("Not sure yet" by default). While the plan is made, the typing indicator shows. The plan card shows title, craft chip, a read-only materials list, numbered steps, "Answers can be wrong." and **Start as my project** → toast "Project started. It's in your journal." → the project page. The steps stay in the card (a project has no steps list). A plan is shown in the chat view only: it is not saved with the conversation, so it is gone after a reload (to keep one, start it as a project). Typed words such as "plan a project" are an ordinary question, not a plan request. Plans use the same limits as messages (a plan counts as one). Failures use the F-23 messages; when the answer is unusable twice: "I couldn't put a plan together. Try again."
+
 ### F-26 AI and privacy settings (AIC-07, AIC-08, approved 2026-10-29)
 
 Settings → **AI and privacy**: two switches (photos; interests and levels), "Your conversations" list with Delete, **Delete all conversations** (confirmation; photos go too), and a note on retention (30 days).

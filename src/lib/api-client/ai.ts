@@ -1,8 +1,14 @@
-import type { AIFeedbackInput, ConsentsInput, SendAIMessageInput } from "@/lib/schemas/ai";
+import type {
+  AIFeedbackInput,
+  ConsentsInput,
+  PlanRequestInput,
+  SendAIMessageInput,
+} from "@/lib/schemas/ai";
 import type {
   AIConsents,
   AIConversationDetail,
   AIConversationSummary,
+  AIPlan,
   SendAIMessageResult,
 } from "@/lib/types/ai";
 import type { Paginated } from "@/lib/types/api";
@@ -13,6 +19,10 @@ import { postJson, requestJson } from "./request";
 
 export function sendAIMessage(input: SendAIMessageInput): Promise<SendAIMessageResult> {
   return postJson<SendAIMessageResult>("/api/ai/messages", input);
+}
+
+export function createAIPlan(input: PlanRequestInput): Promise<AIPlan> {
+  return postJson<AIPlan>("/api/ai/plan", input);
 }
 
 export function listAIConversations(

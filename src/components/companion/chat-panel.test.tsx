@@ -7,22 +7,28 @@ import type { AIMessageView, CompanionSetup, SendAIMessageResult } from "@/lib/t
 
 import { ChatPanel, type ChatPanelProps } from "./chat-panel";
 
-const { sendAIMessage, updateAIConsents } = vi.hoisted(() => ({
+const { sendAIMessage, updateAIConsents, createAIPlan, createProject, push } = vi.hoisted(() => ({
   sendAIMessage: vi.fn(),
   updateAIConsents: vi.fn(),
+  createAIPlan: vi.fn(),
+  createProject: vi.fn(),
+  push: vi.fn(),
 }));
 
 vi.mock("@/lib/api-client/ai", () => ({
   sendAIMessage,
   updateAIConsents,
+  createAIPlan,
   sendAIFeedback: vi.fn(),
 }));
+vi.mock("@/lib/api-client/journal", () => ({ createProject }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 const SETUP: CompanionSetup = {
   isAvailable: true,
   showFreeTierNotice: false,
   consents: { AI_IMAGES: false, AI_PROFILE_CONTEXT: false },
-  skills: [{ name: "Crochet", slug: "crochet" }],
+  skills: [{ id: "s1", name: "Crochet", slug: "crochet" }],
 };
 
 function message(overrides: Partial<AIMessageView>): AIMessageView {
@@ -71,6 +77,9 @@ describe("ChatPanel", () => {
     Element.prototype.scrollIntoView = vi.fn();
     sendAIMessage.mockReset();
     updateAIConsents.mockReset();
+    createAIPlan.mockReset();
+    createProject.mockReset();
+    push.mockReset();
   });
 
   it("shows the test-version notice on the free tier and nothing on a paid tier", () => {
@@ -215,5 +224,66 @@ describe("ChatPanel", () => {
 
     expect(screen.getByText("Unsafe thing")).toBeInTheDocument();
     expect(screen.getByText("I can't help with that one.")).toBeInTheDocument();
+  });
+
+  describe("project plans", () => {
+    const PLAN = {
+      title: "Granny square coaster",
+      craft: "Crochet",
+      skillId: "s1",
+      materials: ["Cotton yarn", "4 mm hook"],
+      steps: ["Make a magic ring.", "Work the first round."],
+    };
+
+    async function planOne() {
+      await userEvent.click(screen.getByRole("button", { name: "Plan a project" }));
+      const sheet = await screen.findByRole("dialog");
+      await userEvent.type(
+        within(sheet).getByLabelText("What would you like to make?"),
+        "A coaster",
+      );
+      await userEvent.selectOptions(within(sheet).getByLabelText("Craft (optional)"), "s1");
+      await userEvent.click(within(sheet).getByRole("button", { name: "Make a plan" }));
+    }
+
+    it("asks what to make, shows the plan card, and starts a private project from it", async () => {
+      createAIPlan.mockResolvedValue(PLAN);
+      createProject.mockResolvedValue({ id: "proj1" });
+      renderPanel();
+
+      await planOne();
+
+      const card = await screen.findByRole("article", { name: "Plan: Granny square coaster" });
+      expect(createAIPlan).toHaveBeenCalledWith({ text: "A coaster", skillId: "s1" });
+      expect(within(card).getByText("Crochet")).toBeInTheDocument();
+      expect(
+        within(card)
+          .getAllByRole("listitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Cotton yarn", "4 mm hook", "1Make a magic ring.", "2Work the first round."]);
+
+      await userEvent.click(within(card).getByRole("button", { name: "Start as my project" }));
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/projects/proj1"));
+      expect(createProject).toHaveBeenCalledWith({
+        title: "Granny square coaster",
+        skillId: "s1",
+        visibility: "PRIVATE",
+        materials: PLAN.materials,
+      });
+    });
+
+    it("shows a friendly message when the plan can't be made, and keeps the field usable", async () => {
+      createAIPlan.mockRejectedValue(
+        new ApiRequestError(503, "AI_UNAVAILABLE", "I couldn't put a plan together. Try again."),
+      );
+      renderPanel();
+
+      await planOne();
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "I couldn't put a plan together. Try again.",
+      );
+      expect(screen.getByLabelText("Your question")).toBeEnabled();
+    });
   });
 });

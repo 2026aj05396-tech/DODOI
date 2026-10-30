@@ -36,6 +36,15 @@ export type SendAIMessageResult = {
 
 export type AIConsents = { AI_IMAGES: boolean; AI_PROFILE_CONTEXT: boolean };
 
+/** A project plan (AIC-04): `skillId` is the dodoi skill the craft matched, when one did. */
+export type AIPlan = {
+  title: string;
+  craft: string;
+  skillId: string | null;
+  materials: string[];
+  steps: string[];
+};
+
 /** What the companion screens need when they render (AIC-06, AIC-07, F-23 step 4). */
 export type CompanionSetup = {
   /** False while the companion is off: the screens show "The companion is resting". */
@@ -44,5 +53,5 @@ export type CompanionSetup = {
   showFreeTierNotice: boolean;
   consents: AIConsents;
   /** Real dodoi skills; exact names in an answer become links to `/s/{slug}`. */
-  skills: { name: string; slug: string }[];
+  skills: { id: string; name: string; slug: string }[];
 };

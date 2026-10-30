@@ -204,7 +204,10 @@ async function assertRoomForProject(userId: string) {
 }
 
 /** POST /api/me/projects. */
-export async function createProject(actor: Actor, input: CreateProjectInput): Promise<Project> {
+export async function createProject(
+  actor: Actor,
+  input: Omit<CreateProjectInput, "materials"> & { materials?: string[] },
+): Promise<Project> {
   const user = requireSignedIn(actor);
   requireVerifiedForPublic(user, input.visibility);
   await assertRoomForProject(user.id);
@@ -218,6 +221,7 @@ export async function createProject(actor: Actor, input: CreateProjectInput): Pr
         title: input.title,
         skillId: input.skillId,
         visibility: input.visibility,
+        materials: (input.materials ?? []).map((name) => ({ name, note: null })),
       },
       tx,
     ),
