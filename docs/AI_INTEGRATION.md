@@ -10,6 +10,8 @@ Markers: **CONFIRMED** / **PROPOSED** / **OPEN**.
 
 ## 1. Role of AI in the Product
 
+**Scope (PO request 2026-10-30, defaults proposed — PO to confirm):** the companion is a creative-making companion and talks **only** about making and creating and learning those skills. **In scope:** crafts, art, drawing, painting, sewing, pottery and similar hobbies; their materials, tools, techniques and concepts (e.g. colour theory, yarn weights); project ideas and plans; fixing problems in the member's own work, including from a photo; how to learn and practise these skills. **Out of scope:** general knowledge, technology and AI, coding, science and school subjects, news, sport, health, money, law, relationships, and running or selling a craft business. An out-of-scope question gets one or two warm sentences that say the companion is best at making and creating and offer a craft or creative idea instead, with none of the off-topic content; a question that mixes both gets only the making part; "ignore your rules" or "act as a general assistant" does not change this. Enforced by the system prompt (Option A, `companion-2026-3`) and measured by the eval suite (§14b); a server-side topic check (Option B, an extra model call before the answer) is **not built** and is the next step if the evals show leaks.
+
 AI is a supporting capability inside discovery, learning and project creation — **not** a standalone chatbot without context (master doc §5.14). It must not replace human interaction (PP-5) and must point users toward community help where appropriate (once P3 ships).
 
 ## 2. Capabilities and Priority
@@ -83,7 +85,7 @@ Authorization is checked **before** any data is placed in a prompt.
 ## 5. Prompting
 
 - System prompt stored in code (`server/modules/ai/prompts/`), versioned, with a `promptVersion` recorded per response.
-- Required behaviors in system prompt:
+- Required behaviors in system prompt (the scope rule in §1 comes first):
   - Beginner-friendly, encouraging tone consistent with product voice.
   - Do not invent materials, steps or claims; say when unsure.
   - Ask a clarifying question when the request is ambiguous.
@@ -143,7 +145,7 @@ Free-tier/zero-budget constraint applies until changed.
 
 ## 11. Project planning (AI-03)
 
-**Built P4-03 (2026-10-30):** prompt `plan-2026-1` (`prompts/plan.ts`, request wrapped in data delimiters, dodoi skill names listed), Gemini `responseSchema`, 1,200 output tokens; checked on the real API on the free tier (valid plan in 1.5 s). The plan is not stored; the response also carries `skillId` so the project gets its craft; the steps are not stored in the project (no steps list in the journal, PO to confirm if wanted).
+**Built P4-03 (2026-10-30):** prompt `plan-2026-1` (now `plan-2026-2`, §14c) (`prompts/plan.ts`, request wrapped in data delimiters, dodoi skill names listed), Gemini `responseSchema`, 1,200 output tokens; checked on the real API on the free tier (valid plan in 1.5 s). The plan is not stored; the response also carries `skillId` so the project gets its craft; the steps are not stored in the project (no steps list in the journal, PO to confirm if wanted).
 
 Planning is a separate structured request, not free text: `POST /api/ai/plan` asks the model for `{ title, craft, materials[], steps[] }` (validated with Zod; invalid output is retried once, then an error). The plan shows as a card with **Start as my project**, which creates a private journal project (title, craft, materials checklist) through the journal module. The journal's create-project call gains an optional materials list for this (approved change, built in P4-03).
 
@@ -154,6 +156,12 @@ Suggestions use only a short list of **real dodoi skills** supplied in the promp
 ## 13. Environment
 
 `GEMINI_API_KEY` (server only), `AI_ENABLED` (default off), `AI_PROVIDER` (`gemini`), `AI_MODEL` (a Gemini 3.x model; `gemini-3.5-flash-lite` locally), `AI_TIER` (`free` or `paid`), `AI_DAILY_REQUEST_CAP`, `AI_INPUT_PRICE_PER_M` and `AI_OUTPUT_PRICE_PER_M` (for the cost estimate; 0 on the free tier). Added to `.env.example` and DEPLOYMENT in P4-01. No AI SDK is installed before P4-01; the Gemini adapter is the only code that may import it.
+
+## 14c. Scope restriction (2026-10-30)
+
+Before this change the companion answered anything ("what is AI", "what is data science"): the prompt only described the audience and never told the model to decline other topics, and no eval covered it. Prompt `companion-2026-3` adds a scope section (§1) and the plan prompt `plan-2026-2` plans whatever is made by hand as asked (candles, soap, resin and similar included) and turns a non-craft request into a small ordinary handmade plan. The eval suite gained 14 cases: 8 off-topic questions that must be redirected (what is AI, data science, coding, sport, stocks, company registration, "ignore your rules", off-topic while looking at a post), 4 in-scope questions that must still be answered (colour theory, yarn weight, practising drawing, a first project for a child), 1 mixed question, and 1 plan case. 
+
+**Results (`gemini-3.5-flash-lite`, free tier).** First run of the scope wording: all 13 scope cases passed (the off-topic questions were redirected, the in-scope ones answered), but 6 older cases failed, which showed the first wording was too strict: it refused resin advice, redirected a candle plan to watercolour, redirected the mixed question without answering its crochet half, and (three cases) answered refusals with the redirect, which the keyword checks did not recognise. The prompt was widened (anything made by hand is in scope, including candles, soap, resin, jewellery, woodwork, leather, paper, glass; choosing supplies and brands; "if unsure whether it is about making, answer"; a mixed question gets the full making answer plus one sentence; private-data and weapon requests are declined, not redirected) and the checks now accept the redirect as a valid refusal. The plan prompt first used a special title for non-craft requests; the model also put it on valid candle plans, so the title was dropped: a non-craft request now just becomes an ordinary small handmade plan. **Final run: 41 of 41 passed** (8 off-topic redirected, 4 in-scope answered, mixed answered for the making half, resin and wax plans keep their safety notes, "what is data science" and "predict house prices" yield no off-topic content). Limits: one final run, keyword checks, and the model's wording varies, so some off-topic phrasings may still get through; the cure is more eval cases, then Option B if needed.
 
 ## 14b. Evaluation results (P4-06, 2026-10-30)
 

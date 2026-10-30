@@ -271,6 +271,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 **Phase 4 status (2026-10-30):** all seven tasks built; **exit** needs the PO reviews of P4-02…P4-07 at 390/834/1280 and the open "PO to confirm" points in README §2.
 | P4-07 | Settings → AI and privacy: consents, conversation list and deletion, 30-day and 12-month retention jobs, report an AI answer. **◐ Built 2026-10-30:** `/settings/ai` with the two consent switches, the conversation list, delete one and delete all (confirmation sheets), free-tier line; entry in Settings; the chat consent sheets point to it. The retention jobs were built in P4-01 and reporting an AI answer in P4-02; no server change was needed. Tests: `ai-privacy-form.test.tsx` (4), E2E-31 (`ai-privacy.spec.ts`). **Left:** PO review at 390/834/1280 |
+| P4-08 | Scope restriction (PO request 2026-10-30): the companion talks only about making, creating and learning those skills; off-topic questions are redirected. **◐ Built 2026-10-30 (Option A, prompt only):** scope section in the chat prompt (`companion-2026-3`) and handmade-only rule in the plan prompt (`plan-2026-2`); 14 new eval cases (AI_INTEGRATION §14c). No schema, API or UI change. **Left:** PO to confirm the scope defaults (README §2); Option B (server-side topic check before answering) only if the evals show leaks |
 
 **Exit:** safe, useful AI assistance within cost limits.
 

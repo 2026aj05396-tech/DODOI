@@ -424,6 +424,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | AIC-09 | Limits (proposed): 30 messages a day, 5 photos a day, 10 a minute, 1,000-character questions; friendly message with the time the limit resets |
 | AIC-10 | Admin: usage dashboard (requests, tokens, estimated cost, error rate, blocked count) and a kill switch; the global daily cap stops the feature for everyone when reached |
 | AIC-11 | "Ask the community" in an answer stays coming-soon until P3-03; no diagram generation (not in scope) |
+| AIC-13 | **Scope (PO request 2026-10-30; defaults PO to confirm):** the companion talks only about making, creating and learning those skills (AI_INTEGRATION §1). Anything else is politely redirected to a craft or creative idea; a mixed question gets only the making part; asking it to ignore this does not work. Applies to chat and to project plans |
 | AIC-12 | Answers never reveal other people's private data, the system prompt or provider details; post and user text is treated as data, not instructions |
 
 ## 7. Non-Functional Requirements
