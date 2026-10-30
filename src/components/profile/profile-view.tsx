@@ -3,8 +3,10 @@ import Link from "next/link";
 
 import { LogOutDialog } from "@/components/auth/log-out-dialog";
 import { CollectionTile } from "@/components/collections/collection-tile";
+import { MessageButton } from "@/components/messages/message-button";
 import { ReportButton } from "@/components/reports/report-button";
 import { BlockButton } from "@/components/safety/block-button";
+import { ProposeSessionLink } from "@/components/sessions/propose-session-link";
 import { Button } from "@/components/ui/button";
 import type { Paginated } from "@/lib/types/api";
 import type { FollowCounts, FollowState } from "@/lib/types/follows";
@@ -72,6 +74,7 @@ function Header({
   isOwner,
   follow,
   followCounts,
+  canMessage = false,
 }: {
   profile: { displayName: string; username: string; avatarUrl: string | null };
   isOwner: boolean;
@@ -79,6 +82,8 @@ function Header({
   follow?: FollowState;
   /** Owner only (FLW-03). */
   followCounts?: FollowCounts | null;
+  /** Message button (MSG-01, MSG-02). */
+  canMessage?: boolean;
 }) {
   return (
     <header className="flex flex-col gap-4">
@@ -114,6 +119,8 @@ function Header({
               returnTo={`/u/${profile.username}`}
             />
           ) : null}
+          {canMessage ? <MessageButton username={profile.username} /> : null}
+          <ProposeSessionLink username={profile.username} />
           <ReportButton
             targetType="PROFILE"
             targetId={profile.username}
@@ -216,6 +223,7 @@ export function ProfileView({
         isOwner={profile.isOwner}
         follow={profile.follow}
         followCounts={profile.followCounts}
+        canMessage={profile.canMessage}
       />
       {profile.isOwner && profile.isHidden ? (
         <p

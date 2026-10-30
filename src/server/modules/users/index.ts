@@ -19,6 +19,7 @@ export {
   removeBlock,
 } from "./blocks";
 export { getUserRole, setUserRole } from "./roles";
+export { getMessagePolicy, getMessageSettings, updateMessageSettings } from "./message-settings";
 export { confirmAge } from "./age-check";
 export {
   getCreatorProfiles,

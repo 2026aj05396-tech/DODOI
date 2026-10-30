@@ -9,6 +9,7 @@ import type {
 import type { Paginated } from "@/lib/types/api";
 import type {
   NotificationItem,
+  NotificationPreferenceName,
   NotificationPreferences,
   NotificationTypeName,
 } from "@/lib/types/notifications";
@@ -37,7 +38,7 @@ import {
 // likes and follows call `notify` after they succeed; a notification never blocks the action that
 // caused it. Likes are grouped per post per day when the list is read.
 
-const TYPES: NotificationTypeName[] = [
+const TYPES: NotificationPreferenceName[] = [
   "COMMENT",
   "REPLY",
   "FOLLOW",
@@ -67,6 +68,8 @@ type NotifyInput = {
   commentId?: string;
   /** Help requests (P3-03): the request and its title, kept so the list needs no other module. */
   helpRequestId?: string;
+  /** Creative sessions (P3-04); the list reads the session's start time from it. */
+  sessionId?: string;
   subject?: string;
 };
 
@@ -181,6 +184,9 @@ export async function listNotifications(
           newest.helpRequestId && newest.subject
             ? { id: newest.helpRequestId, title: newest.subject }
             : null,
+        session: newest.session
+          ? { id: newest.session.id, startsAt: newest.session.startsAt.toISOString() }
+          : null,
         commentId: newest.commentId,
         isUnread: group.some((row) => row.readAt === null),
         createdAt: newest.createdAt.toISOString(),

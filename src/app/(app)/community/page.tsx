@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { CommunityHeader } from "@/components/community/community-header";
 import { CommunityTabs } from "@/components/community/community-tabs";
 import { HelpRequestsView } from "@/components/community/help-requests-view";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export default function CommunityPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-5 pt-4 pb-10 md:px-7 md:pt-8 xl:px-10">
-      <h1 className="text-greeting text-foreground md:text-greeting-web">Community</h1>
+      <CommunityHeader />
       <CommunityTabs active="help" />
       <Suspense fallback={<HelpSkeleton />}>
         <HelpContent />

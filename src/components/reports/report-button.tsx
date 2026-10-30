@@ -36,7 +36,8 @@ export type ReportTarget = {
     | "HELP_REQUEST"
     | "HELP_RESPONSE"
     | "COMMUNITY"
-    | "COMMUNITY_POST";
+    | "COMMUNITY_POST"
+    | "MESSAGE";
   /** Skill id, username for a profile, post id or comment id. */
   targetId: string;
   /** "this profile", "this skill", "this comment", "this answer" (used in the title). */

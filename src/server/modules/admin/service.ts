@@ -25,7 +25,8 @@ export type AuditEntry = {
     | "help_request"
     | "help_response"
     | "community"
-    | "community_post";
+    | "community_post"
+    | "message";
   targetId: string;
   /** Changed field names and similar; never sensitive content. */
   metadata?: Prisma.InputJsonValue;

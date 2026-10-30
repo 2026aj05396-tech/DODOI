@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { createPasswordAccount, resetRateLimits } from "./helpers/accounts";
+import { createPasswordAccount, createPost, resetRateLimits } from "./helpers/accounts";
 
 const VIEWPORTS = {
   mobile: { width: 390, height: 844 },
@@ -50,14 +50,20 @@ test.describe("app shell layout", () => {
 
     const nav = page.getByRole("navigation", { name: "Main" });
     await expect(nav).toHaveCount(1);
-    await expect(nav.getByRole("button", { name: /Messages\s*, coming soon/ })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Messages" })).toBeVisible();
     await expect(page.getByRole("complementary", { name: "Suggestions" })).toBeVisible();
     await expectNoSeriousA11yViolations(page);
   });
 });
 
-test("E2E-16: coming-soon items show a tooltip and make no network requests", async ({ page }) => {
-  // The Sessions tab on Community stays coming soon until P3-04 (it is behind sign-in).
+test("E2E-16: coming-soon items show a tooltip and make no network requests", async ({
+  page,
+  isMobile,
+}) => {
+  // Phones show no coming-soon item any more: the post page hides this button there.
+  test.skip(isMobile, "No coming-soon item is reachable on phones since P3-04.");
+  // With every Community tab live (P3-04), "Start as my project" on a post that is not a tutorial
+  // is the coming-soon item left to check (it is behind sign-in).
   resetRateLimits();
   const { email, password } = createPasswordAccount();
   await page.goto("/sign-in");
@@ -65,7 +71,8 @@ test("E2E-16: coming-soon items show a tooltip and make no network requests", as
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/feed$/);
-  await page.goto("/community");
+  const { relatedId } = createPost();
+  await page.goto(`/p/${relatedId}`);
   // The service worker registers after load and precaches the app (P1-27); let it finish first.
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
@@ -76,13 +83,16 @@ test("E2E-16: coming-soon items show a tooltip and make no network requests", as
 
   // aria-disabled controls stay tappable for real users; Playwright needs `force` to click them.
   await page
-    .getByRole("button", { name: /Sessions\s*, coming soon/ })
+    .getByRole("button", { name: /Start as my project\s*, coming soon/ })
     .filter({ visible: true })
     .click({ force: true });
 
   await expect(page.getByRole("tooltip")).toHaveText("Coming soon");
-  await expect(page).toHaveURL(/\/community$/);
-  expect(requests).toEqual([]);
+  await expect(page).toHaveURL(new RegExp(`/p/${relatedId}$`));
+  // The unread dots poll on their own schedule (bell and Messages); only the click must be silent.
+  expect(
+    requests.filter((url) => !/\/api\/(conversations|notifications\/unread)/.test(url)),
+  ).toEqual([]);
 });
 
 test("keyboard users can skip straight to the content", async ({ page }) => {

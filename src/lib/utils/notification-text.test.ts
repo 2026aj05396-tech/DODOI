@@ -18,6 +18,7 @@ function item(overrides: Partial<NotificationItem>): NotificationItem {
     actorCount: 1,
     post: { id: "p1", title: "Cherry blossom hoop" },
     helpRequest: null,
+    session: null,
     commentId: null,
     isUnread: true,
     createdAt: "2026-10-29T10:00:00.000Z",
@@ -70,5 +71,22 @@ describe("notification text", () => {
     expect(notificationHref(item({ type: "COMMENT", commentId: "c9" }))).toBe("/p/p1#comment-c9");
     expect(notificationHref(item({ type: "FOLLOW", post: null }))).toBe("/u/asha");
     expect(notificationHref(item({ type: "FOLLOW", post: null, actors: [] }))).toBeNull();
+  });
+
+  it("words session notifications with the time and links them to Sessions", () => {
+    const session = { id: "s1", startsAt: "2026-11-03T10:00:00.000Z" } as const;
+    const base = { post: null, session } as const;
+    const text = (type: NotificationItem["type"]) => notificationText(item({ ...base, type }));
+
+    expect(text("SESSION_PROPOSED")).toMatch(/^Asha proposed a session on /);
+    expect(text("SESSION_ACCEPTED")).toMatch(/^Asha accepted your session on /);
+    expect(text("SESSION_DECLINED")).toMatch(/^Asha declined your session on /);
+    expect(text("SESSION_RESCHEDULED")).toMatch(/^Asha suggested a new time for your session: /);
+    expect(text("SESSION_CANCELLED")).toMatch(/^Asha cancelled the session on /);
+    expect(text("SESSION_REMINDER")).toMatch(/^Your session with Asha starts soon, on /);
+    expect(text("SESSION_PROPOSED")).toContain("Nov");
+    expect(notificationHref(item({ ...base, type: "SESSION_PROPOSED" }))).toBe(
+      "/community/sessions",
+    );
   });
 });

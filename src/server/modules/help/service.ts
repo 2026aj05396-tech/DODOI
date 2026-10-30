@@ -443,3 +443,9 @@ export async function setHelpRequestHidden(id: string, hidden: boolean): Promise
 export async function setHelpResponseHidden(id: string, hidden: boolean): Promise<void> {
   await updateResponseHidden(id, hidden);
 }
+
+/** Who asked a request, for sessions proposed from a reply (SES-01); null when it is gone or hidden. */
+export async function getHelpRequestAuthorId(id: string): Promise<string | null> {
+  const row = await findRequest(id);
+  return row && !row.hiddenAt ? row.authorId : null;
+}

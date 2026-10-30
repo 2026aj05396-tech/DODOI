@@ -5,12 +5,15 @@ import { useState } from "react";
 import { showToast } from "@/components/ui/toast";
 import { saveNotificationPreferences } from "@/lib/api-client/notifications";
 import { ApiRequestError } from "@/lib/api-client/request";
-import type { NotificationPreferences, NotificationTypeName } from "@/lib/types/notifications";
+import type {
+  NotificationPreferenceName,
+  NotificationPreferences,
+} from "@/lib/types/notifications";
 
 // Notification settings (P2-07, NTF-04): one switch per type, all on by default, saved as soon as
 // one changes.
 
-const OPTIONS: { type: NotificationTypeName; label: string; description: string }[] = [
+const OPTIONS: { type: NotificationPreferenceName; label: string; description: string }[] = [
   { type: "COMMENT", label: "Comments", description: "Someone comments on your post" },
   { type: "REPLY", label: "Replies", description: "Someone replies to your comment" },
   { type: "FOLLOW", label: "New followers", description: "Someone follows you" },
@@ -35,7 +38,7 @@ const OPTIONS: { type: NotificationTypeName; label: string; description: string 
 export function NotificationPreferencesForm({ initial }: { initial: NotificationPreferences }) {
   const [preferences, setPreferences] = useState(initial);
 
-  async function change(type: NotificationTypeName, enabled: boolean) {
+  async function change(type: NotificationPreferenceName, enabled: boolean) {
     setPreferences((current) => ({ ...current, [type]: enabled }));
     try {
       await saveNotificationPreferences({ [type]: enabled });

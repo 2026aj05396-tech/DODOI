@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
+import { UnreadDot } from "@/components/messages/unread-dot";
 import { Wordmark } from "@/components/ui/wordmark";
 import { cn } from "@/lib/utils/cn";
 
@@ -11,6 +13,7 @@ import {
   CREATE,
   EXPLORE,
   HOME,
+  MESSAGES,
   SAVED,
   isActivePath,
   profileNavItem,
@@ -19,7 +22,15 @@ import {
 
 const ITEM_CLASSES = "relative flex size-12 items-center justify-center rounded-md";
 
-function RailLink({ item, pathname }: { item: NavItem; pathname: string }) {
+function RailLink({
+  item,
+  pathname,
+  badge,
+}: {
+  item: NavItem;
+  pathname: string;
+  badge?: ReactNode;
+}) {
   const Icon = item.icon;
   const isActive = isActivePath(pathname, item.href);
   return (
@@ -33,6 +44,7 @@ function RailLink({ item, pathname }: { item: NavItem; pathname: string }) {
       )}
     >
       <Icon aria-hidden className="size-5" strokeWidth={isActive ? 2 : 1.7} />
+      {badge}
     </Link>
   );
 }
@@ -72,6 +84,11 @@ export function IconRailView({
       <RailLink item={HOME} pathname={pathname} />
       <RailLink item={EXPLORE} pathname={pathname} />
       <RailLink item={COMMUNITY} pathname={pathname} />
+      <RailLink
+        item={MESSAGES}
+        pathname={pathname}
+        badge={<UnreadDot className="absolute top-2.5 right-2.5" />}
+      />
       <RailLink item={SAVED} pathname={pathname} />
       <RailLink item={profileNavItem(username)} pathname={pathname} />
       <Link

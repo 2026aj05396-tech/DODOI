@@ -31,14 +31,20 @@ export const EXPLORE: NavItem = {
 export const SAVED: NavItem = { key: "saved", label: "Saved", icon: Bookmark, href: "/saved" };
 /** Live from P2-02: opens the Create post flow (F-17). */
 export const CREATE: NavItem = { key: "create", label: "Create", icon: Plus, href: "/create" };
-/** Live from P3-03: help requests (F-27); circles and sessions follow in P3-01 and P3-04. */
+/** Live from P3-03 (help requests, F-27) and P3-01 (circles, F-28); sessions follow in P3-04. */
 export const COMMUNITY: NavItem = {
   key: "community",
   label: "Community",
   icon: Users,
   href: "/community",
 };
-export const MESSAGES: NavItem = { key: "messages", label: "Messages", icon: MessageSquare };
+/** Live from P3-02: direct messages (F-29). */
+export const MESSAGES: NavItem = {
+  key: "messages",
+  label: "Messages",
+  icon: MessageSquare,
+  href: "/messages",
+};
 /** Live from P2-03: the creative journal (F-18). */
 export const JOURNAL: NavItem = {
   key: "journal",

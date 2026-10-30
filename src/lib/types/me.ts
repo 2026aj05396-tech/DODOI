@@ -73,4 +73,6 @@ export type ProfileView =
       follow: FollowState;
       /** Followers and following, for the profile's owner alone (FLW-03). */
       followCounts: FollowCounts | null;
+      /** The Message button: shown when their setting and blocks allow a conversation (MSG-02). */
+      canMessage: boolean;
     };

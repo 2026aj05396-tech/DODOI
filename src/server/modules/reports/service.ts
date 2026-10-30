@@ -48,6 +48,7 @@ import {
   setHelpRequestHidden,
   setHelpResponseHidden,
 } from "@/server/modules/help";
+import { getMessagesForModeration, getReportableMessage } from "@/server/modules/messages";
 import { getSkillsForModeration, setSkillHidden } from "@/server/modules/skills";
 import {
   getProfilesForModeration,
@@ -163,6 +164,15 @@ async function resolveTarget(user: AuthenticatedActor, input: CreateReportInput)
     }
     return { targetType: input.targetType, targetId: target.id };
   }
+  if (input.targetType === "MESSAGE") {
+    // Only a message the other person wrote in a conversation the reporter takes part in.
+    const target = await getReportableMessage(user, input.targetId);
+    if (!target) throw notFound();
+    if (target.authorId === user.id) {
+      throw new UnprocessableError("You can't report your own message.", { code: "SELF_REPORT" });
+    }
+    return { targetType: "MESSAGE", targetId: target.id };
+  }
   if (input.targetType === "AI_MESSAGE") {
     // Only an answer in the reporter's own chat (AIC-06); anything else looks like it isn't there.
     if (!(await isOwnAnswer(user, input.targetId))) throw notFound();
@@ -198,7 +208,7 @@ export async function listReportGroups(
   actor: Actor,
   query: AdminReportsQuery,
 ): Promise<Paginated<ReportGroup>> {
-  requireModerator(actor);
+  const moderator = requireModerator(actor);
   const offset = query.cursor ? decodeCursor(query.cursor, cursorSchema).offset : 0;
   const statuses =
     query.status === "OPEN" ? (["OPEN"] as const) : (["ACTIONED", "DISMISSED"] as const);
@@ -222,6 +232,7 @@ export async function listReportGroups(
     helpResponses,
     communities,
     communityPosts,
+    messages,
   ] = await Promise.all([
     findReportsForTargets(targets, [...statuses]),
     getSkillsForModeration(idsOf("SKILL")),
@@ -233,7 +244,19 @@ export async function listReportGroups(
     getHelpResponsesForModeration(idsOf("HELP_RESPONSE")),
     getCommunitiesForModeration(idsOf("COMMUNITY")),
     getCommunityPostsForModeration(idsOf("COMMUNITY_POST")),
+    getMessagesForModeration(idsOf("MESSAGE")),
   ]);
+  // A moderator reading someone's messages is itself recorded (SECURITY §8).
+  await Promise.all(
+    [...messages.keys()].map((messageId) =>
+      recordAudit({
+        actorId: moderator.id,
+        action: "message.view",
+        targetType: "message",
+        targetId: messageId,
+      }),
+    ),
+  );
 
   const items = page.map((group): ReportGroup => {
     const mine = reports.filter(
@@ -318,15 +341,24 @@ export async function listReportGroups(
                           detail: "Help response",
                           isHidden,
                         }
-                      : group.targetType === "AI_MESSAGE"
+                      : group.targetType === "MESSAGE"
                         ? {
-                            // Only the reported answer; its chat is gone after 30 days or when deleted.
-                            label: answer?.slice(0, 400) ?? null,
+                            // Only the reported message and up to 5 before it, never the rest.
+                            label: messages.get(group.targetId)?.label ?? null,
                             href: null,
-                            detail: "AI answer",
+                            detail: "Message",
                             isHidden: false,
+                            thread: messages.get(group.targetId)?.thread,
                           }
-                        : { label: null, href: null, detail: null, isHidden: false },
+                        : group.targetType === "AI_MESSAGE"
+                          ? {
+                              // Only the reported answer; its chat is gone after 30 days or when deleted.
+                              label: answer?.slice(0, 400) ?? null,
+                              href: null,
+                              detail: "AI answer",
+                              isHidden: false,
+                            }
+                          : { label: null, href: null, detail: null, isHidden: false },
       reportCount: group._count._all,
       reasons,
       notes: mine.flatMap((report) =>
@@ -368,6 +400,10 @@ async function setHidden(target: Target, hidden: boolean): Promise<void> {
       return setCommunityHidden(target.targetId, hidden);
     case "COMMUNITY_POST":
       return setCommunityPostHidden(target.targetId, hidden);
+    case "MESSAGE":
+      throw new UnprocessableError("A message can't be hidden. Dismiss its reports instead.", {
+        code: "NOT_HIDEABLE",
+      });
     case "AI_MESSAGE":
       throw new UnprocessableError("An AI answer can't be hidden. Dismiss its reports instead.", {
         code: "NOT_HIDEABLE",
@@ -385,6 +421,7 @@ const AUDIT_TARGET = {
   HELP_RESPONSE: "help_response",
   COMMUNITY: "community",
   COMMUNITY_POST: "community_post",
+  MESSAGE: "message",
 } as const;
 
 /**

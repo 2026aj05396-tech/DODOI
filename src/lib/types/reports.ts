@@ -14,7 +14,8 @@ export type ReportGroup = {
     | "HELP_REQUEST"
     | "HELP_RESPONSE"
     | "COMMUNITY"
-    | "COMMUNITY_POST";
+    | "COMMUNITY_POST"
+    | "MESSAGE";
   target: {
     /** Skill name, display name, post title, the start of a comment or of an AI answer; null when it no longer exists. */
     label: string | null;
@@ -22,6 +23,8 @@ export type ReportGroup = {
     href: string | null;
     detail: string | null;
     isHidden: boolean;
+    /** A reported message with up to 5 before it, oldest first; nobody is named (RPT-05). */
+    thread?: { text: string; isReported: boolean; fromSender: boolean }[];
   };
   reportCount: number;
   reasons: Partial<Record<ReportReason, number>>;

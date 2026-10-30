@@ -1,4 +1,14 @@
-import { Ban, Bell, ChevronRight, Lock, ShieldCheck, Sparkles, User, UserCog } from "lucide-react";
+import {
+  Ban,
+  Bell,
+  ChevronRight,
+  Lock,
+  MessageSquare,
+  ShieldCheck,
+  Sparkles,
+  User,
+  UserCog,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -38,6 +48,12 @@ const SECTIONS = [
     icon: Bell,
     title: "Notifications",
     description: "Comments, replies, followers, likes",
+  },
+  {
+    href: "/settings/messages",
+    icon: MessageSquare,
+    title: "Messages",
+    description: "Who can message you",
   },
   {
     href: "/settings/blocked",

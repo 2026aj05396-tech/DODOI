@@ -87,6 +87,8 @@ describe("daily jobs", () => {
       "purge-notifications": 1,
       "purge-ai-conversations": 0,
       "purge-ai-usage": 0,
+      // Sessions are covered in sessions.test.ts; there are none here.
+      "settle-sessions": 0,
       "purge-rate-limit-buckets": 1,
       "delete-orphaned-media": 1,
     });

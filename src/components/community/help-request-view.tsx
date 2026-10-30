@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 import { ConfirmDeleteDialog } from "@/components/companion/confirm-delete-dialog";
+import { MessageButton } from "@/components/messages/message-button";
 import { Avatar } from "@/components/profile/avatar";
+import { ProposeSessionLink } from "@/components/sessions/propose-session-link";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Label, Textarea } from "@/components/ui/input";
@@ -264,16 +266,26 @@ export function HelpRequestView({
                 {response.body}
               </p>
               {request.isOwn && !response.isOwn ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-pressed={response.isHelpful}
-                  className="self-start"
-                  onClick={() => void toggleHelpful(response.id, !response.isHelpful)}
-                >
-                  <ThumbsUp aria-hidden className="size-4" />
-                  {response.isHelpful ? "Marked helpful" : "This helped"}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-pressed={response.isHelpful}
+                    onClick={() => void toggleHelpful(response.id, !response.isHelpful)}
+                  >
+                    <ThumbsUp aria-hidden className="size-4" />
+                    {response.isHelpful ? "Marked helpful" : "This helped"}
+                  </Button>
+                  {response.author ? (
+                    <>
+                      <MessageButton username={response.author.username} />
+                      <ProposeSessionLink
+                        username={response.author.username}
+                        helpRequestId={request.id}
+                      />
+                    </>
+                  ) : null}
+                </div>
               ) : null}
             </li>
           ))}

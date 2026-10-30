@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { CirclesView } from "@/components/community/circles-view";
+import { CommunityHeader } from "@/components/community/community-header";
 import { CommunityTabs } from "@/components/community/community-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export default function CirclesPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-5 pt-4 pb-10 md:px-7 md:pt-8 xl:px-10">
-      <h1 className="text-greeting text-foreground md:text-greeting-web">Community</h1>
+      <CommunityHeader />
       <CommunityTabs active="circles" />
       <Suspense fallback={<CirclesSkeleton />}>
         <CirclesContent />

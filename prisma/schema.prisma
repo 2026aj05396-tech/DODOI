@@ -109,6 +109,8 @@ enum ReportTargetType {
   /// A community or one of its discussion posts or replies (P3-01).
   COMMUNITY
   COMMUNITY_POST
+  /// A direct message, reported by the other participant (P3-02).
+  MESSAGE
 }
 
 enum ReportReason {
@@ -189,6 +191,13 @@ model User {
   communityMemberships    CommunityMember[]
   communityPosts          CommunityPost[]
   communityLogEntries     CommunityModerationLog[]
+  /// Who may start or continue a conversation with this member (MSG-02).
+  messagePolicy           MessagePolicy            @default(EVERYONE) @map("message_policy")
+  conversationsAsA        Conversation[]           @relation("ConversationUserA")
+  conversationsAsB        Conversation[]           @relation("ConversationUserB")
+  messagesSent            Message[]
+  sessionsProposed        CreativeSession[]        @relation("SessionProposer")
+  sessionsInvited         CreativeSession[]        @relation("SessionInvitee")
   blocking                Block[]                  @relation("Blocking")
   blockedBy               Block[]                  @relation("BlockedBy")
 
@@ -884,6 +893,13 @@ enum NotificationType {
   HELP_RESPONSE
   HELP_HELPFUL
   HELP_RESOLVED
+  /// Creative sessions (P3-04): a proposal, its answer, a new time, a cancellation, a reminder.
+  SESSION_PROPOSED
+  SESSION_ACCEPTED
+  SESSION_DECLINED
+  SESSION_RESCHEDULED
+  SESSION_CANCELLED
+  SESSION_REMINDER
 }
 
 /// One in-app notification for `recipientId` (NTF-01). Likes stay one row each and are grouped
@@ -901,14 +917,17 @@ model Notification {
   /// nothing from the help module; both go with the request.
   helpRequestId String?          @map("help_request_id")
   subject       String?          @db.VarChar(100)
+  /// The creative session (P3-04) a SESSION_* notification is about; goes with the session.
+  sessionId     String?          @map("session_id")
   readAt        DateTime?        @map("read_at")
   createdAt     DateTime         @default(now()) @map("created_at")
 
-  recipient   User         @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
-  actor       User?        @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
-  post        Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  comment     Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  helpRequest HelpRequest? @relation(fields: [helpRequestId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User?            @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
+  post        Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment     Comment?         @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  helpRequest HelpRequest?     @relation(fields: [helpRequestId], references: [id], onDelete: Cascade)
+  session     CreativeSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt(sort: Desc)])
   @@index([recipientId, readAt])
@@ -1110,6 +1129,7 @@ model HelpRequest {
   photos        HelpRequestMedia[]
   responses     HelpResponse[]
   notifications Notification[]
+  sessions      CreativeSession[]
 
   @@index([status, skillId, updatedAt(sort: Desc)])
   @@index([authorId, createdAt(sort: Desc)])
@@ -1254,4 +1274,95 @@ model CommunityModerationLog {
 
   @@index([communityId, createdAt(sort: Desc)])
   @@map("community_moderation_log")
+}
+
+enum MessagePolicy {
+  EVERYONE
+  FOLLOWING
+  NOBODY
+}
+
+/// A one-to-one conversation (MSG-01). One row per pair: `userAId` is the smaller user id.
+model Conversation {
+  id            String    @id @default(cuid())
+  userAId       String    @map("user_a_id")
+  userBId       String    @map("user_b_id")
+  lastMessageAt DateTime  @default(now()) @map("last_message_at")
+  /// A member can hide a conversation for themselves; a new message shows it again (MSG-04).
+  hiddenForA    Boolean   @default(false) @map("hidden_for_a")
+  hiddenForB    Boolean   @default(false) @map("hidden_for_b")
+  /// When each side last opened it: the unread dot. Never shown to the other side (no receipts).
+  lastReadAtA   DateTime? @map("last_read_at_a")
+  lastReadAtB   DateTime? @map("last_read_at_b")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  userA    User      @relation("ConversationUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB    User      @relation("ConversationUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, lastMessageAt(sort: Desc)])
+  @@index([userBId, lastMessageAt(sort: Desc)])
+  @@map("conversation")
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String    @map("conversation_id")
+  senderId       String    @map("sender_id")
+  /// Text only, at most 1,000 characters; erased (empty) when the sender deletes it.
+  body           String    @db.VarChar(1000)
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("message")
+}
+
+enum SessionState {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+/// A scheduled call between two members on an external meeting link (SES-01); named so it does not
+/// clash with Auth.js `Session`. Times are UTC. `Completed` is also worked out when a session is read.
+model CreativeSession {
+  id            String       @id @default(cuid())
+  proposerId    String       @map("proposer_id")
+  inviteeId     String       @map("invitee_id")
+  helpRequestId String?      @map("help_request_id")
+  startsAt      DateTime     @map("starts_at")
+  /// `startsAt` plus the length; kept so lists and the daily job can ask "has it ended?" directly.
+  endsAt        DateTime     @map("ends_at")
+  durationMin   Int          @map("duration_min") @db.SmallInt
+  note          String?      @db.VarChar(300)
+  /// https only; erased (null) 24 hours after the session ends (SES-05).
+  meetingUrl    String?      @map("meeting_url") @db.VarChar(500)
+  state         SessionState @default(PROPOSED)
+  /// The session this one is a new time for (RESCHEDULED).
+  replacesId    String?      @map("replaces_id")
+  /// When the one-hour reminder was made, so each session gets it once.
+  remindedAt    DateTime?    @map("reminded_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  proposer      User              @relation("SessionProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  invitee       User              @relation("SessionInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  helpRequest   HelpRequest?      @relation(fields: [helpRequestId], references: [id], onDelete: SetNull)
+  replaces      CreativeSession?  @relation("SessionReplaces", fields: [replacesId], references: [id], onDelete: SetNull)
+  replacedBy    CreativeSession[] @relation("SessionReplaces")
+  notifications Notification[]
+
+  @@index([inviteeId, state, startsAt])
+  @@index([proposerId, state, startsAt])
+  @@index([state, endsAt])
+  @@map("creative_session")
 }

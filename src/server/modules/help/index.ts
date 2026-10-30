@@ -5,6 +5,7 @@ export {
   deleteHelpRequest,
   getHelpBanner,
   getHelpRequest,
+  getHelpRequestAuthorId,
   getHelpRequestsForModeration,
   getHelpResponsesForModeration,
   getMatchingHelpRequests,

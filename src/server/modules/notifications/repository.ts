@@ -14,6 +14,7 @@ export type NotificationRow = {
   commentId: string | null;
   helpRequestId: string | null;
   subject: string | null;
+  session: { id: string; startsAt: Date } | null;
   readAt: Date | null;
   createdAt: Date;
 };
@@ -25,6 +26,7 @@ export async function insertNotification(data: {
   postId?: string;
   commentId?: string;
   helpRequestId?: string;
+  sessionId?: string;
   subject?: string;
 }): Promise<void> {
   await db.notification.create({ data });
@@ -67,6 +69,7 @@ export async function findNotifications(
       commentId: true,
       helpRequestId: true,
       subject: true,
+      session: { select: { id: true, startsAt: true } },
       readAt: true,
       createdAt: true,
     },

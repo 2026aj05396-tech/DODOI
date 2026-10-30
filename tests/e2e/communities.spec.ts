@@ -161,7 +161,8 @@ test("E2E-34: the owner appoints a moderator, hands the community over and leave
 
   // The owner cannot leave without handing over; handing over makes them a moderator.
   await manage.getByRole("button", { name: /Hand the community to/ }).click();
-  await expect(manage.getByText(/@.* · Owner/)).toHaveCount(1);
+  // The hand-over is done once the owner no longer has a Hand over button to press.
+  await expect(manage.getByRole("button", { name: /Hand the community to/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page.reload();
   await page.waitForLoadState("networkidle");
