@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { cn } from "@/lib/utils/cn";
 
-import { ComingSoonTrigger } from "./coming-soon-trigger";
 import {
   COMMUNITY,
   CREATE,
@@ -32,21 +30,6 @@ function TabLink({ item, pathname }: { item: NavItem; pathname: string }) {
       <Icon aria-hidden className="size-6" strokeWidth={isActive ? 2 : 1.7} />
       {item.label}
     </Link>
-  );
-}
-
-function ComingSoonTab({ item }: { item: NavItem }) {
-  const Icon = item.icon;
-  return (
-    <ComingSoonTrigger
-      label={item.label}
-      hasVisibleLabel
-      className="relative flex flex-col items-center gap-0.5 rounded-md py-1 text-tab text-muted-foreground"
-    >
-      <Icon aria-hidden className="size-6" strokeWidth={1.7} />
-      {item.label}
-      <ComingSoonBadge size="sm" decorative className="absolute -top-1 right-1" />
-    </ComingSoonTrigger>
   );
 }
 
@@ -86,7 +69,7 @@ export function BottomTabBarView({
             <CreateIcon aria-hidden className="size-6" strokeWidth={2.2} />
           </Link>
         </div>
-        <ComingSoonTab item={COMMUNITY} />
+        <TabLink item={COMMUNITY} pathname={pathname} />
         <TabLink item={profileNavItem(username)} pathname={pathname} />
       </div>
     </nav>

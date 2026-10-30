@@ -103,6 +103,14 @@ enum ReportTargetType {
   COMMENT
   /// An AI companion answer, reported by the member it was written for (P4-02).
   AI_MESSAGE
+  /// A help request or one of its responses (P3-03).
+  HELP_REQUEST
+  HELP_RESPONSE
+  /// A community or one of its discussion posts or replies (P3-01).
+  COMMUNITY
+  COMMUNITY_POST
+  /// A direct message, reported by the other participant (P3-02).
+  MESSAGE
 }
 
 enum ReportReason {
@@ -177,6 +185,19 @@ model User {
   notificationsReceived   Notification[]           @relation("NotificationsReceived")
   notificationsCaused     Notification[]           @relation("NotificationsCaused")
   notificationPreferences NotificationPreference[]
+  helpRequests            HelpRequest[]
+  helpResponses           HelpResponse[]
+  communitiesCreated      Community[]
+  communityMemberships    CommunityMember[]
+  communityPosts          CommunityPost[]
+  communityLogEntries     CommunityModerationLog[]
+  /// Who may start or continue a conversation with this member (MSG-02).
+  messagePolicy           MessagePolicy            @default(EVERYONE) @map("message_policy")
+  conversationsAsA        Conversation[]           @relation("ConversationUserA")
+  conversationsAsB        Conversation[]           @relation("ConversationUserB")
+  messagesSent            Message[]
+  sessionsProposed        CreativeSession[]        @relation("SessionProposer")
+  sessionsInvited         CreativeSession[]        @relation("SessionInvitee")
   blocking                Block[]                  @relation("Blocking")
   blockedBy               Block[]                  @relation("BlockedBy")
 
@@ -276,13 +297,15 @@ model Skill {
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
-  createdBy   User?           @relation("SkillCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  coverMedia  MediaAsset?     @relation("SkillCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
-  userSkills  UserSkill[]
-  postSkills  PostSkill[]
-  projects    Project[]
-  relatedFrom SkillRelation[] @relation("SkillRelationFrom")
-  relatedTo   SkillRelation[] @relation("SkillRelationTo")
+  createdBy    User?           @relation("SkillCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  coverMedia   MediaAsset?     @relation("SkillCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  userSkills   UserSkill[]
+  postSkills   PostSkill[]
+  projects     Project[]
+  helpRequests HelpRequest[]
+  communities  Community[]
+  relatedFrom  SkillRelation[] @relation("SkillRelationFrom")
+  relatedTo    SkillRelation[] @relation("SkillRelationTo")
 
   @@index([origin, status])
   @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "skill_name_trgm_idx")
@@ -434,14 +457,16 @@ model MediaAsset {
   altText     String?   @map("alt_text") @db.VarChar(300)
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  owner         User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  postMedia     PostMedia[]
-  stepMedia     PostStep[]
-  profileAvatar Profile?            @relation("ProfileAvatar")
-  skillCovers   Skill[]             @relation("SkillCover")
-  themeCovers   Theme[]             @relation("ThemeCover")
-  entryMedia    ProjectEntryMedia[]
-  aiMessages    AIMessage[]
+  owner          User?                @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  postMedia      PostMedia[]
+  stepMedia      PostStep[]
+  profileAvatar  Profile?             @relation("ProfileAvatar")
+  skillCovers    Skill[]              @relation("SkillCover")
+  themeCovers    Theme[]              @relation("ThemeCover")
+  entryMedia     ProjectEntryMedia[]
+  aiMessages     AIMessage[]
+  helpMedia      HelpRequestMedia[]
+  communityMedia CommunityPostMedia[]
 
   @@index([ownerId])
   @@map("media_asset")
@@ -864,26 +889,45 @@ enum NotificationType {
   REPLY
   FOLLOW
   LIKE
+  /// Help requests (P3-03): a response to yours, your response marked helpful, a request resolved.
+  HELP_RESPONSE
+  HELP_HELPFUL
+  HELP_RESOLVED
+  /// Creative sessions (P3-04): a proposal, its answer, a new time, a cancellation, a reminder.
+  SESSION_PROPOSED
+  SESSION_ACCEPTED
+  SESSION_DECLINED
+  SESSION_RESCHEDULED
+  SESSION_CANCELLED
+  SESSION_REMINDER
 }
 
 /// One in-app notification for `recipientId` (NTF-01). Likes stay one row each and are grouped
 /// per post per day when read. Kept 90 days (NTF-05).
 model Notification {
-  id          String           @id @default(cuid())
-  recipientId String           @map("recipient_id")
-  type        NotificationType
+  id            String           @id @default(cuid())
+  recipientId   String           @map("recipient_id")
+  type          NotificationType
   /// Who commented, replied, followed or liked; null once their account is deleted.
-  actorId     String?          @map("actor_id")
+  actorId       String?          @map("actor_id")
   /// The post, and for COMMENT / REPLY the comment; both go with the post or comment.
-  postId      String?          @map("post_id")
-  commentId   String?          @map("comment_id")
-  readAt      DateTime?        @map("read_at")
-  createdAt   DateTime         @default(now()) @map("created_at")
+  postId        String?          @map("post_id")
+  commentId     String?          @map("comment_id")
+  /// The help request (P3-03) and its title when the notification was made, so the list needs
+  /// nothing from the help module; both go with the request.
+  helpRequestId String?          @map("help_request_id")
+  subject       String?          @db.VarChar(100)
+  /// The creative session (P3-04) a SESSION_* notification is about; goes with the session.
+  sessionId     String?          @map("session_id")
+  readAt        DateTime?        @map("read_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
 
-  recipient User     @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
-  actor     User?    @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User?            @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
+  post        Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment     Comment?         @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  helpRequest HelpRequest?     @relation(fields: [helpRequestId], references: [id], onDelete: Cascade)
+  session     CreativeSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt(sort: Desc)])
   @@index([recipientId, readAt])
@@ -1054,4 +1098,271 @@ model AppSetting {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("app_setting")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Help requests (P3-03, PRODUCT_REQUIREMENTS HLP-01…06)
+// ---------------------------------------------------------------------------------------------
+
+enum HelpStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+/// A member's question to other makers: one skill, up to 3 photos, answered by responses (HLP-01).
+model HelpRequest {
+  id         String     @id @default(cuid())
+  authorId   String     @map("author_id")
+  skillId    String     @map("skill_id")
+  title      String     @db.VarChar(100)
+  body       String     @db.VarChar(1000)
+  status     HelpStatus @default(OPEN)
+  /// Hidden after a report (like `Post.hiddenAt`): out of lists, 404 for everyone but moderators.
+  hiddenAt   DateTime?  @map("hidden_at")
+  resolvedAt DateTime?  @map("resolved_at")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  skill         Skill              @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  photos        HelpRequestMedia[]
+  responses     HelpResponse[]
+  notifications Notification[]
+  sessions      CreativeSession[]
+
+  @@index([status, skillId, updatedAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@index([skillId])
+  @@map("help_request")
+}
+
+model HelpRequestMedia {
+  requestId String @map("request_id")
+  mediaId   String @map("media_id")
+  position  Int
+
+  request HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  media   MediaAsset  @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([requestId, position])
+  @@unique([requestId, mediaId])
+  @@index([mediaId])
+  @@map("help_request_media")
+}
+
+/// One answer to a request. `isHelpful` is set by the asker only; it is a thank-you, never a score.
+model HelpResponse {
+  id        String    @id @default(cuid())
+  requestId String    @map("request_id")
+  authorId  String    @map("author_id")
+  body      String    @db.VarChar(1000)
+  isHelpful Boolean   @default(false) @map("is_helpful")
+  hiddenAt  DateTime? @map("hidden_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  request HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author  User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@index([authorId])
+  @@map("help_response")
+}
+
+enum CommunityRole {
+  OWNER
+  MODERATOR
+  MEMBER
+}
+
+/// A public community around one skill (COM-01). Names are unique case-insensitively.
+model Community {
+  id             String    @id @default(cuid())
+  name           String    @db.VarChar(40)
+  /// Lower-cased name without extra spaces: the uniqueness key (COM-02).
+  normalizedName String    @unique @map("normalized_name") @db.VarChar(160)
+  slug           String    @unique @db.VarChar(60)
+  skillId        String    @map("skill_id")
+  description    String    @db.VarChar(300)
+  /// Up to 5 rules of up to 150 characters, checked in the service.
+  rules          String[]
+  /// Null once the creator's account is deleted and the community was handed over (COM-08).
+  createdById    String?   @map("created_by_id")
+  /// Hidden after a report (COM-06): not found for anyone.
+  hiddenAt       DateTime? @map("hidden_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  createdBy User?                    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  skill     Skill                    @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  members   CommunityMember[]
+  posts     CommunityPost[]
+  log       CommunityModerationLog[]
+
+  @@index([skillId, createdAt(sort: Desc)])
+  @@index([createdById])
+  @@map("community")
+}
+
+model CommunityMember {
+  communityId String        @map("community_id")
+  userId      String        @map("user_id")
+  role        CommunityRole @default(MEMBER)
+  /// Set when a moderator removed the member: they cannot rejoin until the owner allows it.
+  removedAt   DateTime?     @map("removed_at")
+  joinedAt    DateTime      @default(now()) @map("joined_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([communityId, userId])
+  @@index([userId])
+  @@map("community_member")
+}
+
+/// A discussion post, or a reply when `parentId` is set (one level only, COM-05).
+model CommunityPost {
+  id          String    @id @default(cuid())
+  communityId String    @map("community_id")
+  authorId    String?   @map("author_id")
+  parentId    String?   @map("parent_id")
+  body        String    @db.VarChar(2000)
+  hiddenAt    DateTime? @map("hidden_at")
+  editedAt    DateTime? @map("edited_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  /// The newest reply or the post itself, so the list shows newest activity first.
+  activityAt  DateTime  @default(now()) @map("activity_at")
+
+  community Community            @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author    User?                @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  parent    CommunityPost?       @relation("CommunityReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   CommunityPost[]      @relation("CommunityReplies")
+  photos    CommunityPostMedia[]
+
+  @@index([communityId, activityAt(sort: Desc)])
+  @@index([parentId])
+  @@index([authorId])
+  @@map("community_post")
+}
+
+model CommunityPostMedia {
+  postId   String @map("post_id")
+  mediaId  String @map("media_id")
+  position Int
+
+  post  CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset    @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([postId, position])
+  @@unique([postId, mediaId])
+  @@index([mediaId])
+  @@map("community_post_media")
+}
+
+/// Who did what in a community (COM-06). Never holds content.
+model CommunityModerationLog {
+  id          String   @id @default(cuid())
+  communityId String   @map("community_id")
+  actorId     String?  @map("actor_id")
+  /// post.hide, post.restore, post.delete, member.remove, member.allow, role.change
+  action      String   @db.VarChar(40)
+  targetType  String   @map("target_type") @db.VarChar(20)
+  targetId    String   @map("target_id") @db.VarChar(40)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([communityId, createdAt(sort: Desc)])
+  @@map("community_moderation_log")
+}
+
+enum MessagePolicy {
+  EVERYONE
+  FOLLOWING
+  NOBODY
+}
+
+/// A one-to-one conversation (MSG-01). One row per pair: `userAId` is the smaller user id.
+model Conversation {
+  id            String    @id @default(cuid())
+  userAId       String    @map("user_a_id")
+  userBId       String    @map("user_b_id")
+  lastMessageAt DateTime  @default(now()) @map("last_message_at")
+  /// A member can hide a conversation for themselves; a new message shows it again (MSG-04).
+  hiddenForA    Boolean   @default(false) @map("hidden_for_a")
+  hiddenForB    Boolean   @default(false) @map("hidden_for_b")
+  /// When each side last opened it: the unread dot. Never shown to the other side (no receipts).
+  lastReadAtA   DateTime? @map("last_read_at_a")
+  lastReadAtB   DateTime? @map("last_read_at_b")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  userA    User      @relation("ConversationUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB    User      @relation("ConversationUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, lastMessageAt(sort: Desc)])
+  @@index([userBId, lastMessageAt(sort: Desc)])
+  @@map("conversation")
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  conversationId String    @map("conversation_id")
+  senderId       String    @map("sender_id")
+  /// Text only, at most 1,000 characters; erased (empty) when the sender deletes it.
+  body           String    @db.VarChar(1000)
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("message")
+}
+
+enum SessionState {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+/// A scheduled call between two members on an external meeting link (SES-01); named so it does not
+/// clash with Auth.js `Session`. Times are UTC. `Completed` is also worked out when a session is read.
+model CreativeSession {
+  id            String       @id @default(cuid())
+  proposerId    String       @map("proposer_id")
+  inviteeId     String       @map("invitee_id")
+  helpRequestId String?      @map("help_request_id")
+  startsAt      DateTime     @map("starts_at")
+  /// `startsAt` plus the length; kept so lists and the daily job can ask "has it ended?" directly.
+  endsAt        DateTime     @map("ends_at")
+  durationMin   Int          @map("duration_min") @db.SmallInt
+  note          String?      @db.VarChar(300)
+  /// https only; erased (null) 24 hours after the session ends (SES-05).
+  meetingUrl    String?      @map("meeting_url") @db.VarChar(500)
+  state         SessionState @default(PROPOSED)
+  /// The session this one is a new time for (RESCHEDULED).
+  replacesId    String?      @map("replaces_id")
+  /// When the one-hour reminder was made, so each session gets it once.
+  remindedAt    DateTime?    @map("reminded_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  proposer      User              @relation("SessionProposer", fields: [proposerId], references: [id], onDelete: Cascade)
+  invitee       User              @relation("SessionInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  helpRequest   HelpRequest?      @relation(fields: [helpRequestId], references: [id], onDelete: SetNull)
+  replaces      CreativeSession?  @relation("SessionReplaces", fields: [replacesId], references: [id], onDelete: SetNull)
+  replacedBy    CreativeSession[] @relation("SessionReplaces")
+  notifications Notification[]
+
+  @@index([inviteeId, state, startsAt])
+  @@index([proposerId, state, startsAt])
+  @@index([state, endsAt])
+  @@map("creative_session")
 }

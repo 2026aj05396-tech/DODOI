@@ -27,6 +27,8 @@ export function createPasswordAccount(
     moderator?: boolean;
     /** Skill slugs added as interests. */
     interests?: string[];
+    /** Skill slugs added as "can help with" (HLP-03). */
+    canHelp?: string[];
   } = {},
 ): { email: string; password: string } {
   const email = uniqueEmail();
@@ -41,6 +43,7 @@ export function createPasswordAccount(
     ...(options.admin ? ["--admin"] : []),
     ...(options.moderator ? ["--moderator"] : []),
     ...(options.interests ? [`--interests=${options.interests.join(",")}`] : []),
+    ...(options.canHelp ? [`--can-help=${options.canHelp.join(",")}`] : []),
   ]);
   return { email, password: PASSWORD };
 }

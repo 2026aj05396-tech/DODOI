@@ -1,11 +1,16 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiRequestError } from "@/lib/api-client/request";
 import type { AIMessageView, CompanionSetup, SendAIMessageResult } from "@/lib/types/ai";
 
 import { ChatPanel, type ChatPanelProps } from "./chat-panel";
+import {
+  FakeSpeechRecognition,
+  installFakeSpeech,
+  removeFakeSpeech,
+} from "../../../tests/helpers/fake-speech";
 
 const { sendAIMessage, updateAIConsents, createAIPlan, createProject, push, uploadMedia } =
   vi.hoisted(() => ({
@@ -117,6 +122,19 @@ describe("ChatPanel", () => {
     expect(screen.getByRole("button", { name: "Report" })).toBeInTheDocument();
     expect(onConversationStart).toHaveBeenCalledWith("c1");
     await waitFor(() => expect(field).toHaveFocus());
+  });
+
+  it("offers to take the question to the community from an answer", async () => {
+    sendAIMessage.mockResolvedValue(result("Start with a magic ring."));
+    renderPanel();
+
+    await userEvent.type(screen.getByLabelText("Your question"), "How do I start?{Enter}");
+    await screen.findByText("Start with a magic ring.");
+
+    expect(screen.getByRole("link", { name: "Ask the community" })).toHaveAttribute(
+      "href",
+      "/community/help/new?q=How%20do%20I%20start%3F",
+    );
   });
 
   it("starts a chat about a post with that context, and continues it with the conversation id", async () => {
@@ -376,6 +394,42 @@ describe("ChatPanel", () => {
       expect(await screen.findByRole("alert")).toHaveTextContent("You've used today's photos.");
       expect(screen.getByLabelText("Your question")).toBeEnabled();
       expect(screen.getByRole("button", { name: "Remove the photo" })).toBeInTheDocument();
+    });
+  });
+  describe("voice typing (P2-10)", () => {
+    beforeEach(() => {
+      window.localStorage.setItem("dodoi:voice-typing-note", "1");
+      installFakeSpeech();
+    });
+    afterEach(() => removeFakeSpeech());
+
+    it("types what is said into the question field and sends nothing by itself", async () => {
+      renderPanel();
+      await userEvent.click(screen.getByRole("button", { name: "Start voice typing" }));
+      act(() => FakeSpeechRecognition.last.hearFinal("how do I fix a dropped stitch"));
+
+      expect(screen.getByLabelText("Your question")).toHaveValue("how do I fix a dropped stitch");
+      expect(sendAIMessage).not.toHaveBeenCalled();
+    });
+
+    it("sends the dictated text as an ordinary message and stops listening", async () => {
+      sendAIMessage.mockResolvedValue(result("Pick it up with a hook."));
+      renderPanel();
+      await userEvent.click(screen.getByRole("button", { name: "Start voice typing" }));
+      act(() => FakeSpeechRecognition.last.hearFinal("fix a dropped stitch"));
+      await userEvent.click(screen.getByRole("button", { name: "Send" }));
+
+      await screen.findByText("Pick it up with a hook.");
+      expect(sendAIMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ text: "fix a dropped stitch" }),
+      );
+      expect(FakeSpeechRecognition.last.isRunning).toBe(false);
+    });
+
+    it("is not offered when the browser cannot do it", () => {
+      removeFakeSpeech();
+      renderPanel();
+      expect(screen.queryByRole("button", { name: /voice typing/i })).not.toBeInTheDocument();
     });
   });
 });

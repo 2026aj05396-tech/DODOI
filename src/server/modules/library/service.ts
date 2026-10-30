@@ -32,6 +32,7 @@ import {
   isPostPublished,
 } from "@/server/modules/content";
 import { getFollowState, getOwnFollowCounts } from "@/server/modules/follows";
+import { canMessage } from "@/server/modules/messages";
 import {
   getOwnProfile,
   getProfileForView,
@@ -184,13 +185,14 @@ export async function getProfile(
       avatarUrl: avatar,
     };
   }
-  const [skills, collections, follow, followCounts] = await Promise.all([
+  const [skills, collections, follow, followCounts, messageable] = await Promise.all([
     getProfileSkills(profile.userId),
     listPublicCollections(profile.userId),
     profile.isOwner
       ? { canFollow: false, isFollowing: false }
       : getFollowState(actor, profile.username),
     profile.isOwner ? getOwnFollowCounts(actor) : null,
+    profile.isOwner ? false : canMessage(actor, profile.userId),
   ]);
   return {
     isPrivate: false,
@@ -205,5 +207,6 @@ export async function getProfile(
     publicCollections: await toSummaries(actor, collections, provider),
     follow,
     followCounts,
+    canMessage: messageable,
   };
 }

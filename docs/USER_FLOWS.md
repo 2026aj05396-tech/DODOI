@@ -220,6 +220,7 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 4. Suggestions ("what should I try next?"): the first time, a notice asks to use interests and levels; Allow / Not now. Answers name real dodoi skills.
 **Built (P4-02, 2026-10-30):** `/companion` (list), `/companion/new` (optionally `?post={id}` or `?skill={id}`) and `/companion/{id}`. The skill page's "What is this and how do I start?" opens a new chat with that question already in the field (the member presses send; nothing is sent for them). "Ask about this" on a post: phones in the sticky bar (not on tutorials and own posts, which have Start as my project / Edit there), tablet beside the actions; from 1280px the docked panel replaces the button. The docked chat is remembered per page for the browser tab only. **What should I try next?** is a button in the empty chat; the interests notice appears the first time. Unverified members see the field disabled with "Verify your email to ask dodoi."; AI off shows the "resting" line.
 5. Limits: at 30 messages a day the field says "You've used today's questions. They reset at {time}."; per-minute limit shows "Slow down a little". AI off or over the global cap: "The companion is resting. Try again later." Blocked by safety filters: "I can't help with that one."
+6. Scope (2026-10-30): the companion answers only about making, creating and learning those skills. Asked something else ("what is data science?"), it replies in a sentence or two that it is best at making and creating and suggests a craft idea; asked something that mixes both, it answers only the making part. It counts as a normal message for the limits. A plan request that isn't about a handmade project becomes a small, ordinary beginner handmade plan instead (e.g. "predict house prices" gives a paper house model); candles, soap, resin and similar projects are planned as asked.
 
 ### F-24 Photo troubleshooting (AIC-05, AIC-07, approved 2026-10-29)
 
@@ -244,12 +245,61 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 
 Settings → **AI and privacy**: two switches (photos; interests and levels), "Your conversations" list with Delete, **Delete all conversations** (confirmation; photos go too), and a note on retention (30 days).
 
+### F-27 Help requests (HLP-01…06, PROPOSED 2026-10-30; first Phase 3 task)
+
+1. **Ask:** Community → *Help requests* → **Ask for help** (or **Ask the community** in the AI chat, which pre-fills the question) → title, details, skill, up to 3 photos → Post. Unverified members are asked to verify first.
+2. **Answer:** a maker whose "can help with" skills match sees the request in the right rail "Help other makers" card and as a feed card → request page → **Offer help** → response (text) → the asker is notified (bell).
+3. **Resolve:** the asker opens the request → marks a response **Helpful** → **Mark as resolved** (or **Reopen**). The request shows Open / In progress / Resolved chips as in `1h`. From a response the asker can **Message** the helper (F-29) or **Propose a session** (F-30).
+4. **Safety:** ⋯ menu on requests and responses → Report / Block (as in F-22). Blocked members vanish for each other.
+
+**Built (P3-03, 2026-10-30):** `/community` shows the tabs (Your circles and Sessions stay coming soon), a lavender banner "You can help with: … · {n} open requests match your skills" (or a link to choose skills), the chips Open · In progress · Resolved · My requests, and the list (2 columns from 768px, newest first, "Show more"). **Ask for help** → `/community/help/new` (title, craft, details with a 1,000-character counter, up to 3 photos, **Post request**; unverified members can write but not post) → the request page. On the request page the asker sees **Mark as in progress / Mark as resolved / Reopen / Delete request** (with a confirmation) and **This helped** on each reply; helpers see **Offer help**; a resolved request says "This request is resolved."; a hidden one shows "Hidden after a report." to its asker. ⋯ menus offer Report and Block. **Ask the community** under an AI answer opens the form with the member's question filled in. Per-reply **Message** and **Propose a session** arrive with F-29 and F-30.
+
+### F-28 Communities (COM-01…08, PROPOSED 2026-10-30)
+
+1. **Discover:** Community → *Your circles* → "Find communities" (matching your interests first, search by name) → community page (rules, discussions).
+2. **Join / leave:** **Join** on the community page; **Leave** in its ⋯ menu. Joined communities are listed under *Your circles*.
+3. **Create:** *Your circles* → **Start a community** → name, skill, description, rules → created; you are its Owner. Name checks and limits as COM-01/02.
+4. **Discuss:** members post text with up to 4 photos; one level of replies; edit for 15 minutes; delete any time.
+5. **Moderate:** Owner and moderators hide or restore posts and replies and remove members from the ⋯ menu; the owner appoints moderators in *Manage*. A short audit list shows who did what. Members report posts, replies and the community itself.
+
+**Built (P3-01, 2026-10-30):** *Your circles* is `/community/circles`: the member's communities, then **Find communities** (search by name; interests first, then newest) and **Start a community** (`/community/circles/new`: name, craft, description, up to 5 rules; the creator is the Owner). A community page (`/community/circles/{slug}`) shows the craft, description, rules, **Join** (or the role chip) and a ⋯ menu: **Manage** (owner, moderators), **Leave community**, **Report community**, **Delete community** (owner, after a confirmation). Joined members **Start a discussion** (text, up to 4 photos), **Reply** (text), edit their own post for 15 minutes and delete it any time; owner and moderators **Hide / Restore / Delete** posts and replies. **Manage** lists the members (owner: **Make moderator**, **Hand over**, **Remove role**, **Remove**; moderators: **Remove** on members), removed members (owner: **Let back in**) and recent activity. A removed member sees "You were removed from this community" and no Join. Anyone signed in can read; unverified members are asked to verify before joining or posting.
+
+### F-29 Direct messages (MSG-01…05, PROPOSED 2026-10-30)
+
+1. **Start:** profile → **Message** (hidden when their setting is "No one", or "People I follow" and they don't follow you; also hidden when either side blocked the other).
+2. **Chat:** Messages (sidebar; phones: from Community) → conversation list → conversation (text only; updates about every 10 s while open; unread dot about every minute). Rate-limit messages: "You're sending messages fast. Try again in a few minutes."
+3. **Manage:** delete your own message ("Message deleted"), hide a conversation for yourself, **Report** a message or the person, **Block** (ends the conversation for both).
+4. **Setting:** Settings → *Messages*: Who can message me (Everyone · People I follow · No one).
+
+**Built (P3-02, 2026-10-30):** **Message** appears on a public profile (and next to **This helped** on each reply to your help request) unless their setting or a block says no; it opens `/messages/{id}`, creating the conversation the first time. `/messages` lists conversations (name, last line, how long ago, a dot when unread); from 1280px the list and the open conversation sit side by side, below that the conversation takes the whole screen with a Back arrow. Bubbles: yours on the right in coral, theirs on the left, with the time; the field sends on Enter (Shift+Enter for a new line) and updates every 10 seconds while the tab is visible. The ⋯ menu offers **Hide conversation**, **Report @person** and **Block @person**; the ⋯ beside a message offers **Delete message** (yours; it then reads "Message deleted") or **Report message** (theirs). Messages are never marked "seen". The dot on **Messages** (sidebar, tablet rail and a link on the Community screens for phones) checks every 60 seconds. Errors: "This person isn't taking messages right now.", "Wait for them to reply before you send more.", "You're sending messages fast. Try again in a few minutes." Blocking someone ends the conversation for both of you.
+
+### F-30 Creative sessions (SES-01…05, PROPOSED 2026-10-30)
+
+1. **Propose:** from a help request response, a conversation or a profile → **Propose a session** → date and time (shown in your time zone, with IST beside it when you are elsewhere), length, note, **meeting link** (https) → Send.
+2. **Respond:** the other person is notified → **Accept**, **Decline** or **Suggest another time** (that becomes a new proposal). Either side can **Cancel** later.
+3. **Join:** once accepted both see the link, with "Opens another site. Only join if you're comfortable"; a reminder arrives an hour before. After the end time the session shows as Completed and the link is removed 24 hours later.
+4. Sessions are listed under Community → *Sessions* (upcoming, then past).
+
+**Built (P3-04, 2026-10-30):** **Propose a session** is on a public profile, in a conversation's ⋯ menu, and next to **Message** on each reply to your help request (which links the session to the request). The form (`/community/sessions/new`) takes a date, a time (read in your time zone, with the IST equivalent shown underneath when you are elsewhere), a length of 15, 30, 45 or 60 minutes, your own **meeting link** (https only; "dodoi doesn't host or record the call. Only they see it, and only once they accept") and an optional note; a time less than an hour ahead is refused. The other person is notified and finds the proposal under Sessions with **Accept**, **Decline** and **Suggest another time** (a new proposal goes back to you; the old card reads "New time suggested"). Once accepted, both see **Join the call** with "Opens another site. Only join if you're comfortable." Either side can **Cancel session** (after a confirmation) until it ends; the link is removed. An hour before it starts, both get a reminder in the bell, created when either opens the app, sessions or notifications. After the end time the card shows Completed, and the link disappears 24 hours later. A proposal nobody answered before it started shows as Cancelled. A block cancels sessions still open between the two. Sessions shows Upcoming (soonest first) and Past (newest first). Notification wording: "{name} proposed a session on …", "accepted your session on …", "declined …", "suggested a new time for your session: …", "cancelled the session on …", "Your session with {name} starts soon, on …".
+
+### F-31 Voice typing (VOI-01…09, approved and built 2026-10-30, P2-10)
+
+**Entry:** the mic button inside a text box (AI chat, Plan a project, message, create-post description or step, journal entry, comment, help request).
+1. The button shows only if the browser supports speech recognition. Without support (Firefox) there is no button and nothing else changes.
+2. First tap on a device: a short note "Your browser turns your speech into text. In Chrome and Edge the audio goes to Google's speech service. dodoi never stores it." with **Continue** / **Cancel**. Continue is remembered on this device.
+3. The browser asks for microphone permission (first time only). Allowed → listening starts: the button becomes a stop button with a static ring, and "Listening…" is announced. Blocked → "Microphone is blocked. Allow it in your browser's site settings, or type instead." The box stays usable.
+4. Speaking fills the box at the cursor: words still being recognised show beside "Listening…", and are typed once final. The person can edit, delete or type at any time.
+5. Stop: tap the button again, send/share, leave the box or the page. Nothing is sent or saved by stopping; the person still presses Send / Share / Save as usual.
+6. Errors: no speech heard → "We didn't hear anything. Tap the mic and try again."; offline → button disabled, tooltip "Voice typing needs a connection"; service unavailable → "Voice typing isn't working right now. You can type instead."
+7. Starting voice typing in another box stops the first one.
+**Edge cases:** a draft autosaves as it does for typing; text over the box limit is cut off with the normal counter message; dictation inside the AI chat counts as one normal message when sent (quotas unchanged).
+
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 
 | Phase | Flow |
 |---|---|
-| P3 | Discover/join community → read rules → post discussion |
-| P3 | Start conversation → send messages (polling) → block/report |
-| P3 | Create help request → receive responses → mark resolved |
+| P3 | Discover/join community → read rules → post discussion — **drafted as F-28** |
+| P3 | Start conversation → send messages (polling) → block/report — **drafted as F-29** |
+| P3 | Create help request → receive responses → mark resolved — **drafted as F-27**; sessions **F-30** |
 | P3 | Propose session → accept/decline/reschedule/cancel with timezone display |
 | P4 | Open AI companion from persistent entry point → ask with optional image (consent) → receive guidance → feedback (helpful / not helpful) |

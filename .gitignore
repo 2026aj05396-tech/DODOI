@@ -16,7 +16,7 @@ next-env.d.ts
 !.env.example
 
 # Testing
-coverage/
+/coverage/
 test-results/
 playwright-report/
 blob-report/

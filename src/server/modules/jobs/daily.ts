@@ -7,6 +7,7 @@ import { purgeExpiredConversations, purgeOldUsage } from "@/server/modules/ai";
 import { deleteOrphanedMedia } from "@/server/modules/content";
 import { purgeExpiredFeedSessions } from "@/server/modules/feed";
 import { purgeOldNotifications } from "@/server/modules/notifications";
+import { runSessionMaintenance } from "@/server/modules/sessions";
 import { purgeSpentAuthTokens } from "@/server/modules/users";
 
 import { deleteAccountsDue } from "./account-cleanup";
@@ -33,6 +34,14 @@ const DAILY_JOBS: { name: string; run: (context: JobContext) => Promise<number> 
   { name: "purge-ai-usage", run: ({ now }) => purgeOldUsage(now) },
   // NTF-05: notifications are kept 90 days.
   { name: "purge-notifications", run: ({ now }) => purgeOldNotifications(now) },
+  // SES-02, SES-05: ended sessions are Completed and meeting links go 24 hours after the end.
+  {
+    name: "settle-sessions",
+    run: async ({ now }) => {
+      const done = await runSessionMaintenance(now);
+      return done.completed + done.lapsed + done.linksErased;
+    },
+  },
   {
     name: "purge-rate-limit-buckets",
     run: ({ now }) => purgeExpiredRateLimitBuckets(LONGEST_RATE_LIMIT_WINDOW_SECONDS, { now }),

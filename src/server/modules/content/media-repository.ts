@@ -89,6 +89,10 @@ export async function findOrphanedMedia(cutoff: Date) {
       entryMedia: { none: {} },
       // Photos sent to the companion (P4-01) stay until their conversation goes.
       aiMessages: { none: {} },
+      // Photos on help requests (P3-03) go with their request.
+      helpMedia: { none: {} },
+      // Photos in community discussions (P3-01) go with their post.
+      communityMedia: { none: {} },
     },
     select: { id: true, type: true, publicId: true },
   });

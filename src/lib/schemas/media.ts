@@ -6,9 +6,17 @@ import { z } from "zod";
  * What an upload is for. Decides the Cloudinary folder and the limits:
  * post = post images and videos, cover = skill/theme covers, avatar = profile photos (P1-12),
  * entry = journal progress-entry photos (P2-01, used from P2-03), ai = a photo sent to the
- * companion (P4-01, images only, removed with its conversation).
+ * companion (P4-01, images only, removed with its conversation), help = a photo on a help request (P3-03, images only, removed with the request), community = a photo in a community discussion (P3-01, images only, removed with the post).
  */
-export const mediaPurposeSchema = z.enum(["post", "cover", "avatar", "entry", "ai"]);
+export const mediaPurposeSchema = z.enum([
+  "post",
+  "cover",
+  "avatar",
+  "entry",
+  "ai",
+  "help",
+  "community",
+]);
 export type MediaPurpose = z.output<typeof mediaPurposeSchema>;
 
 export const mediaTypeSchema = z.enum(["IMAGE", "VIDEO"]);

@@ -13,11 +13,22 @@ export type ReportReason = z.output<typeof reportReasonSchema>;
 
 /**
  * POST /api/reports. `targetId` is the skill id for a SKILL, the post id for a POST, the comment
- * id for a COMMENT, the message id for an AI_MESSAGE (an answer in the reporter's own chat) and the **username** for a PROFILE (public profiles never show internal ids,
+ * id for a COMMENT, the request or response id for HELP_REQUEST / HELP_RESPONSE, the community id for a COMMUNITY the post or reply id for a COMMUNITY_POST, the message id for a MESSAGE (in a conversation the reporter takes part in), the message id for an AI_MESSAGE (an answer in the reporter's own chat) and the **username** for a PROFILE (public profiles never show internal ids,
  * PRF-08).
  */
 export const createReportSchema = z.object({
-  targetType: z.enum(["SKILL", "PROFILE", "POST", "COMMENT", "AI_MESSAGE"]),
+  targetType: z.enum([
+    "SKILL",
+    "PROFILE",
+    "POST",
+    "COMMENT",
+    "AI_MESSAGE",
+    "HELP_REQUEST",
+    "HELP_RESPONSE",
+    "COMMUNITY",
+    "COMMUNITY_POST",
+    "MESSAGE",
+  ]),
   targetId: z.string().trim().min(1).max(40),
   reason: reportReasonSchema,
   /** Optional; an empty note is the same as none. */

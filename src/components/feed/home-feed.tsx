@@ -4,6 +4,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-q
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { HelpFeedCard } from "@/components/community/help-feed-card";
 import { Masonry, cardHeight } from "@/components/posts/masonry";
 import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
 import { PostCard } from "@/components/posts/post-card";
@@ -31,7 +32,9 @@ import { SkillSuggestionCard } from "./skill-suggestion-card";
 const UNDO_MS = 6000;
 
 function itemKey(item: FeedItem): string {
-  return item.kind === "post" ? item.post.id : `suggestion-${item.skill.id}`;
+  if (item.kind === "post") return item.post.id;
+  if (item.kind === "help_request") return `help-${item.request.id}`;
+  return `suggestion-${item.skill.id}`;
 }
 
 /** Relative height of an item, for picking the shortest column. */
@@ -207,12 +210,15 @@ export function HomeFeed({
         <h2 className="sr-only">Posts</h2>
         <Masonry
           items={items}
-          // From 1280px the suggestion sits in the right rail instead (`2b`).
-          include={(item, columns) => !(item.kind === "skill_suggestion" && columns === 3)}
+          // From 1280px both cards sit in the right rail instead (`2b`).
+          include={(item, columns) =>
+            !((item.kind === "skill_suggestion" || item.kind === "help_request") && columns === 3)
+          }
           getKey={itemKey}
           getHeight={itemHeight}
           renderItem={(item, { isAboveFold }) => {
             if (item.kind === "skill_suggestion") return <SkillSuggestionCard suggestion={item} />;
+            if (item.kind === "help_request") return <HelpFeedCard request={item.request} />;
             const { post } = item;
             if (hidden.has(post.id)) {
               return <HiddenCard onUndo={() => undoHide(post.id)} />;

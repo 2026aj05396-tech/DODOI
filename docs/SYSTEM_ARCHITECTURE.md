@@ -247,7 +247,11 @@ Required on: register, sign-in, password reset request, resend verification, med
 
 ## 12b. Scheduled Jobs
 
-Daily maintenance, `pnpm jobs:daily` (built in P1-33, `src/server/modules/jobs`): delete accounts past the 14-day grace period and unverified accounts older than 30 days; purge spent auth tokens, feed sessions 7 days after expiry, rate-limit buckets older than the longest window; delete orphaned media. Every job is idempotent and runs even if an earlier one failed; the command exits 1 if any failed. Trigger on hosted environments (P1-35): Vercel Cron calls `GET /api/cron/daily` once a day with `Authorization: Bearer <CRON_SECRET>` (`vercel.json`); without the secret the route answers 404. `CRON_SECRET` is required outside local.
+Daily maintenance, `pnpm jobs:daily` (built in P1-33, `src/server/modules/jobs`): delete accounts past the 14-day grace period and unverified accounts older than 30 days; purge spent auth tokens, feed sessions 7 days after expiry, rate-limit buckets older than the longest window; delete orphaned media; save Completed and lapsed creative sessions and erase meeting links 24 hours after they end (P3-04, `settle-sessions`). Session reminders are not a job: they are created when a member reads their sessions or notifications (no hourly cron on Hobby). Every job is idempotent and runs even if an earlier one failed; the command exits 1 if any failed. Trigger on hosted environments (P1-35): Vercel Cron calls `GET /api/cron/daily` once a day with `Authorization: Bearer <CRON_SECRET>` (`vercel.json`); without the secret the route answers 404. `CRON_SECRET` is required outside local.
+
+## 12c. Voice typing (P2-10, approved and built 2026-10-30)
+
+A client-only capability: `useVoiceInput` (`src/hooks/`) wraps the browser's `SpeechRecognition` / `webkitSpeechRecognition`, and `VoiceInputButton` (`components/ui/`) is placed in text boxes by the features that own them (companion, messages, create, journal, comments, community). No server module, route, table, env variable or dependency is added; no audio leaves the browser towards dodoi. The service worker needs no change (nothing to cache). The only platform change is `Permissions-Policy: microphone=(self)` (SECURITY §11). The feature module imports the shared component; modules do not import each other's internals (§4).
 
 ## 13. Environments
 

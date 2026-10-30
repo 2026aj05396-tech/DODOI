@@ -9,6 +9,7 @@ import { PrismaClient } from "@/generated/prisma/client";
 // client is ESM-only). Usage:
 //   tsx create-account.ts account <email> <password> [--unverified] [--age-unconfirmed]
 //       [--no-password] [--onboarding-incomplete] [--admin] [--moderator] [--interests=slug,slug]
+//       [--can-help=slug,slug]
 //       (onboarding finished by default; --interests adds those skills as interests)
 //   tsx create-account.ts verification-token <email>   (prints a fresh raw token)
 //   tsx create-account.ts reset-token <email>          (prints a fresh raw token)
@@ -40,6 +41,11 @@ async function main(): Promise<void> {
       const interests = interestSlugs
         ? await db.skill.findMany({ where: { slug: { in: interestSlugs.split(",") } } })
         : [];
+      const canHelpSlugs =
+        flags.find((flag) => flag.startsWith("--can-help="))?.slice("--can-help=".length) ?? "";
+      const canHelp = canHelpSlugs
+        ? await db.skill.findMany({ where: { slug: { in: canHelpSlugs.split(",") } } })
+        : [];
       await db.user.create({
         data: {
           email,
@@ -51,7 +57,17 @@ async function main(): Promise<void> {
             },
           },
           skills: {
-            create: interests.map((skill) => ({ skillId: skill.id, isInterest: true })),
+            create: [
+              ...interests.map((skill) => ({
+                skillId: skill.id,
+                isInterest: true,
+                canHelp: canHelp.some((helper) => helper.id === skill.id),
+              })),
+              // Skills they can help with (HLP-03); a skill may be both an interest and one.
+              ...canHelp
+                .filter((skill) => !interests.some((interest) => interest.id === skill.id))
+                .map((skill) => ({ skillId: skill.id, canHelp: true })),
+            ],
           },
           emailVerified: flags.includes("--unverified") ? null : new Date(),
           ageConfirmedAt: flags.includes("--age-unconfirmed") ? null : new Date(),

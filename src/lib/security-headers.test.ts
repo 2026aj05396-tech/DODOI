@@ -21,6 +21,15 @@ describe("getSecurityHeaders", () => {
     }
   });
 
+  it("lets only dodoi's own pages use the microphone (voice typing)", () => {
+    const policy = asRecord("production")["Permissions-Policy"] ?? "";
+    expect(policy).toContain("microphone=(self)");
+    expect(policy).not.toContain("microphone=()");
+    for (const other of ["geolocation=()", "payment=()", "usb=()", "display-capture=()"]) {
+      expect(policy).toContain(other);
+    }
+  });
+
   it("enables HSTS only in production", () => {
     expect(asRecord("production")["Strict-Transport-Security"]).toContain("max-age=63072000");
     expect(asRecord("test")["Strict-Transport-Security"]).toBeUndefined();

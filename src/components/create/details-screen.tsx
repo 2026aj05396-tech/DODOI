@@ -1,11 +1,13 @@
 "use client";
 
 import { ChevronRight, Clock, Hash, ListChecks, Shapes, Star } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef } from "react";
 
 import { PostCard } from "@/components/posts/post-card";
 import { FieldError } from "@/components/ui/field-error";
 import { Label, Textarea } from "@/components/ui/input";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import type { Media } from "@/lib/types/media";
 import type { CreatorSummary, PostCard as PostCardData } from "@/lib/types/posts";
 import type { SkillSummary } from "@/lib/types/skills";
@@ -148,6 +150,13 @@ export function DetailsScreen({
   /** Own-work confirmation, Share / Save and Delete. */
   footer: ReactNode;
 }) {
+  const storyRef = useRef<HTMLTextAreaElement>(null);
+  const voice = useVoiceTyping({
+    inputRef: storyRef,
+    value: fields.description ?? "",
+    maxLength: 2_000,
+    onValueChange: (description) => onChange({ description }),
+  });
   // From the post id, so the server and the browser render the same prompt.
   const seed = [...(postId ?? "")].reduce((sum, char) => sum + char.charCodeAt(0), 0);
   const prompt = TITLE_PROMPTS[seed % TITLE_PROMPTS.length] ?? "";
@@ -224,12 +233,19 @@ export function DetailsScreen({
           <Label htmlFor="post-story">The story</Label>
           <Textarea
             id="post-story"
+            ref={storyRef}
             rows={4}
             maxLength={2_000}
             placeholder="What did you make? What went well, what would you change?"
             value={fields.description ?? ""}
             onChange={(event) => onChange({ description: event.target.value })}
           />
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <VoiceInputStatus voice={voice} />
+            </div>
+            <VoiceInputButton voice={voice} />
+          </div>
         </div>
 
         <ul className="flex flex-col divide-y divide-border-faint border-y border-border-faint">

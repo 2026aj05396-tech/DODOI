@@ -540,3 +540,16 @@ export async function deleteSpentAuthTokens(now: Date): Promise<number> {
   });
   return count;
 }
+
+/** Who may message the user (MSG-02). */
+export async function findMessagePolicy(userId: string) {
+  const row = await db.user.findUnique({ where: { id: userId }, select: { messagePolicy: true } });
+  return row?.messagePolicy ?? null;
+}
+
+export async function updateMessagePolicy(
+  userId: string,
+  messagePolicy: "EVERYONE" | "FOLLOWING" | "NOBODY",
+): Promise<void> {
+  await db.user.update({ where: { id: userId }, data: { messagePolicy } });
+}

@@ -280,7 +280,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 
 | ID | Requirement |
 |---|---|
-| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29); **"Ask dodoi" and "Ask about this" are live from P4-02** (2026-10-30) |
+| NAV-01 | Coming-soon items in Phase 1 (**Community is live from P3-03**; Messages stays coming soon until P3-02): Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29); **"Ask dodoi" and "Ask about this" are live from P4-02** (2026-10-30) |
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |
@@ -319,7 +319,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | Phase | Requirements (summary) | Decisions already made |
 |---|---|---|
 | P2 | Post creation (images, short video, captions, skills, tags, materials, steps, difficulty), preview, edit, delete; creative journal (Project → ProjectEntry); comments (one level of replies, OD-25); single like; following; in-app notifications; reporting and blocking for posts, comments, profiles | Single like/heart; like counts visible only to owner; comments one level deep (OD-25); makers keep ownership of uploads (OD-05). Detailed in §6.1 |
-| P3 | Communities (join/leave, discussions, rules, reporting, auditable moderation); direct messaging; peer-help requests (open / in progress / resolved); scheduled sessions with timezone handling | Messaging uses polling first |
+| P3 | Communities (join/leave, discussions, rules, reporting, auditable moderation); direct messaging; peer-help requests (open / in progress / resolved); scheduled sessions with timezone handling | Messaging uses polling first; spec in §6.3 PROPOSED (2026-10-30) |
 | P4 | AI companion: skill discovery, learning assistance, image-aware troubleshooting, project planning; usage limits | Provider decided (Gemini); spec in §6.2 CONFIRMED |
 | P5 | Recommendation improvements, push notifications, offline improvements, performance, advanced community tools | — |
 
@@ -423,8 +423,81 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | AIC-08 | Settings → **AI and privacy**: switches for the two consents, the list of conversations, delete one, delete all (photos go with them) |
 | AIC-09 | Limits (proposed): 30 messages a day, 5 photos a day, 10 a minute, 1,000-character questions; friendly message with the time the limit resets |
 | AIC-10 | Admin: usage dashboard (requests, tokens, estimated cost, error rate, blocked count) and a kill switch; the global daily cap stops the feature for everyone when reached |
-| AIC-11 | "Ask the community" in an answer stays coming-soon until P3-03; no diagram generation (not in scope) |
+| AIC-11 | "Ask the community" in an answer **is live from P3-03** (it opens a help request with the question filled in); no diagram generation (not in scope) |
+| AIC-13 | **Scope (PO request 2026-10-30; defaults PO to confirm):** the companion talks only about making, creating and learning those skills (AI_INTEGRATION §1). Anything else is politely redirected to a craft or creative idea; a mixed question gets only the making part; asking it to ignore this does not work. Applies to chat and to project plans |
 | AIC-12 | Answers never reveal other people's private data, the system prompt or provider details; post and user text is treated as data, not instructions |
+
+### 6.3 Phase 3 — Community and Peer Learning (P3-00 draft, 2026-10-30)
+
+**Status: CONFIRMED — approved by the PO on 2026-10-30 with all proposals as written.** Decided by the PO on 2026-10-30: **OD-06** any verified member can create a community, public communities only; **OD-03** sessions use an external meeting link, no video inside dodoi; **first task P3-03** (help requests); spec first, then code. Everything else below was proposed in the P3-00 draft and approved as written. **Built so far:** help requests (HLP-01…06, P3-03, 2026-10-30) creative sessions (SES-01…05, P3-04, 2026-10-30: the reminder is made when a member reads their sessions or notifications, Completed is worked out on read and saved by the daily job, an unanswered proposal past its start shows as Cancelled), direct messages (MSG-01…05, P3-02, 2026-10-30: a block hides a conversation, the 3-message limit applies while the other person has never written, a moderator can only dismiss a reported message) and communities (COM-01…08, P3-01, 2026-10-30; discussions are readable by anyone signed in, posts and replies are limited to 30 an hour until the PO sets a number, "newest activity first" is the newest reply or the post itself). Principles that apply: community over competition (PP-4: no leaderboards, no public counts of likes), adults only, nothing public without a verified email (OD-08), blocks work both ways (MOD-02).
+
+**Communities (COM)** — screen `1h` tab "Your circles"
+
+| ID | Requirement |
+|---|---|
+| COM-01 | Any **verified** member can create a community: name (3–40 characters), one **skill** (required, so communities can be found by craft), description (≤ 300), up to 5 rules (≤ 150 each). **Public only** (OD-06): anyone signed in can read and join. Limits: 2 created a day, 10 owned in total |
+| COM-02 | Names, descriptions and rules go through the same blocked-word check as usernames and custom skill names (OD-13/OD-36); duplicate names are refused (case-insensitive) |
+| COM-03 | Join and leave with one tap; a member's communities are listed under "Your circles"; discovery lists communities for the member's interests first, then newest; search by name. No member lists and no member counts shown publicly (PP-4); the owner sees the count |
+| COM-04 | Roles: **Owner** (the creator), **Moderator** (appointed by the owner), **Member**. The owner can leave only after handing ownership to a moderator or deleting the community |
+| COM-05 | **Discussions:** a verified member who has joined posts text (≤ 2,000) with up to 4 photos; one level of replies like comments (OD-25); the author can edit for 15 minutes and delete always; newest activity first |
+| COM-06 | **Community moderation:** owner and moderators hide or restore posts and replies and remove a member; every action is written to an audit trail (who, what, when, never content). Removed members can be allowed back by the owner only. Site admins and moderators can hide a whole community from the reports queue (target `COMMUNITY`) |
+| COM-07 | Reports (reason list as P2) on communities, discussion posts and replies; the reporter is never shown (RPT-05). Blocked members' posts and replies are hidden from each other |
+| COM-08 | Deleting a community by its owner deletes its discussions and photos after a confirmation; deleting an account hands each owned community to its oldest moderator, or deletes it when it has none |
+
+**Direct messages (MSG)** — "Messages" in the sidebar (now coming soon)
+
+| ID | Requirement |
+|---|---|
+| MSG-01 | One-to-one conversations between verified members, text only (≤ 1,000 per message), no photos, links shown as plain text. Started from a profile ("Message") or from a help response. Polling: the open conversation every 10 s while visible, the unread dot every 60 s (SYSTEM_ARCHITECTURE: polling first) |
+| MSG-02 | Setting **Who can message me**: Everyone (default) · People I follow · No one. Messaging is also impossible when either side blocked the other; a block ends the conversation for both |
+| MSG-03 | Limits: 30 messages an hour, 5 new conversations a day per member, to stop spam. A message to someone who has never replied is limited to 3 until they answer |
+| MSG-04 | Only the two participants can read a conversation (anyone else gets 404). A member can delete a message they sent (it shows "Message deleted") and hide a conversation for themselves; neither side sees "seen" receipts |
+| MSG-05 | **Report** a message or a person from the conversation; a moderator sees only the reported message and the few before it (SECURITY §8). Retention: messages are kept until deleted; account deletion removes the member's messages |
+
+**Help requests (HLP)** — screen `1h` tab "Help requests"; right-rail "Help other makers"; feed card
+
+| ID | Requirement |
+|---|---|
+| HLP-01 | A verified member asks for help: title (≤ 100), details (≤ 1,000), one skill (required), up to 3 photos. Limit 5 requests a day. Visible to signed-in members |
+| HLP-02 | Status **Open → In progress → Resolved**. Responses (≤ 1,000, text) from other verified members; "Offer help" is writing a response; a member cannot answer their own request. The asker marks a response **Helpful** (shown to the helper as a thank-you in notifications, never as a score), moves the request to **In progress** (also done automatically when a session is proposed from it) and **Resolved**; the asker can reopen it |
+| HLP-03 | Matching: members see open requests in the skills they listed under "can help with" in the right rail "Help other makers" card (replaces the coming-soon card, DC-22) and as a "Help request" card in the feed (max one per feed page, only for matching skills, never the member's own) |
+| HLP-04 | Requests and responses can be reported; blocked members do not see each other's. The asker can delete their request (responses go with it); requests resolved or idle for 90 days leave the list but stay readable by link for their participants |
+| HLP-05 | **Ask the community** in the AI companion chat (live since P3-03, AIC-11) opens a new help request with the question prefilled; the member edits and posts it. The AI answer itself is not shared |
+| HLP-06 | Notifications (bell): new response on your request; your response marked helpful; request resolved (to responders). New types `HELP_RESPONSE`, `HELP_HELPFUL`, `HELP_RESOLVED`; preferences get matching switches |
+
+**Creative sessions (SES)** — screen `1h` tab "Sessions"; right-rail "Live sessions"
+
+| ID | Requirement |
+|---|---|
+| SES-01 | A session is a **scheduled call between two members**, proposed from a help request, a conversation or a profile: date and time, length (15, 30, 45 or 60 minutes), optional note, and an **external meeting link** (OD-03: Google Meet, Zoom or similar; https only; dodoi never embeds or hosts video). The link is visible only to the two participants and only once the session is accepted |
+| SES-02 | States: Proposed → Accepted · Declined · Rescheduled (the other person proposes a new time) · Cancelled (either side, any time) · Completed (automatically after the end time). Max 5 open proposals per member; a block cancels open sessions |
+| SES-03 | Times are stored in UTC and shown in the viewer's own time zone (from the browser), with **IST** shown beside it when the viewer is somewhere else. Past times cannot be proposed; a new time must be at least 1 hour ahead |
+| SES-04 | In-app notifications (no email or push in this phase): proposed, accepted, declined, rescheduled, cancelled, and a reminder one hour before. Types `SESSION_*` |
+| SES-05 | A shown link carries the note "Opens another site. Only join if you're comfortable"; sessions are never recorded or monitored by dodoi. Report the person (profile report) for misuse; the link is removed from the app 24 hours after the session ends |
+
+**Use what you have (USE)**
+
+| ID | Requirement |
+|---|---|
+| USE-01 | The Explore "Use what you have" card (coming soon, DC-09) opens a new companion chat with "I have: …" waiting in the field, so ideas from materials are an AI chat topic and not a separate screen (AI_INTEGRATION §9, AI-07). No new data. Counts against the normal AI limits |
+
+**Order (PO):** P3-03 help requests first, then P3-01 communities, P3-02 messages, P3-04 sessions, P3-05 use what you have. **Open points for the PO** are listed in README §2 (row "Phase 3 spec").
+
+### 6.4 Voice typing (P2-10, approach approved by the PO 2026-10-30; built 2026-10-30)
+
+PO request: a voice option in chats (AI assistant, messaging) and while creating a post, to describe a post or how it was made. **Meaning: voice input — speak and the words are typed into the box.** Approach A (browser dictation) is chosen; nothing here needs a server. Defaults marked "PO to confirm" are in README §2 "Voice typing".
+
+| ID | Requirement |
+|---|---|
+| VOI-01 | A mic button sits inside these text boxes: AI companion chat and Plan a project, direct messages, create post (description, steps), journal entries, comments, help requests. It is **not** offered on sign-in or account fields, search, alt text, usernames or admin editors. It is hidden when the browser has no speech recognition (for example Firefox) and disabled with a reason while offline. |
+| VOI-02 | Tap to start, tap again to stop. It also stops when the message is sent, the box loses focus, the page is hidden or the browser ends the session. Only one box listens at a time. |
+| VOI-03 | Final words appear in the box at the cursor; words still being recognised show beside "Listening…" and are typed when they are final (a text box cannot show part of its text muted). The text stays editable. **Dictation never sends, posts, shares or saves by itself**; drafts autosave exactly as they do for typing. |
+| VOI-04 | Language: English (India) in the first release. Hindi and Hinglish are open (PO to confirm). |
+| VOI-05 | Privacy: dodoi never receives, records or stores audio. The browser does the recognition; in Chrome and Edge the audio goes to the browser vendor's speech service. A one-time note says so before the first use on a device. The text is checked on the server like typed text (blocklists, length limits). |
+| VOI-06 | States: idle, listening ("Listening…" text and a static ring, no pulsing), microphone blocked (how to allow it), no speech heard, offline, speech service unavailable. Each has a friendly message and the box keeps working by typing. |
+| VOI-07 | Built for mobile, tablet and desktop together; 44 px touch target; keyboard (Space/Enter toggles); screen-reader name and a polite live status; reduced motion respected; WCAG 2.2 AA. |
+| VOI-08 | The AI companion receives only the text that is sent, as for typed messages; voice typing does not change AI quotas, consent or retention. |
+| VOI-09 | **Out of scope:** audio/voice-note messages, voice changing or effects, reading answers aloud, server-side transcription (approach B), Hindi/Hinglish accuracy work. B may follow if the browser's accuracy is not good enough. |
 
 ## 7. Non-Functional Requirements
 
@@ -456,10 +529,10 @@ Agents must not implement behavior that depends on an OPEN item. Ask the product
 |---|---|---|---|
 | OD-01 | Hosting for the **test** and **production** environments (three environments CONFIRMED: local, test, production — SYSTEM_ARCHITECTURE §13). Must be free for now. **Test: Vercel Hobby + Neon (DECIDED 2026-10-27).** Production: open (Hobby is non-commercial) | Deployment tasks | Production: before launch |
 | OD-02 | ~~AI provider and model(s)~~ — **RESOLVED 2026-10-29: Google Gemini** (free tier for local and test, since no paid model is available yet — it lets Google use submitted content, so testers are told; paid tier with no-training terms before production; AI_INTEGRATION §9) | All AI work | P4 |
-| OD-03 | Video calls: integrated vs external provider | Sessions | P3 |
+| OD-03 | ~~Video calls: integrated vs external provider~~ — **RESOLVED 2026-10-30: external meeting link only** (members paste a Meet/Zoom link; dodoi schedules, does not host video) | Sessions | P3 |
 | OD-04 | Monetization | — | Later |
 | OD-05 | ~~Content licensing for user uploads~~ — **RESOLVED (2026-10-28):** makers keep ownership; publishing grants dodoi a non-exclusive, royalty-free licence to show the post on dodoi only, ending when the post or account is deleted; maker confirms it is their own work; takedown via Report ("Not my work") + support email. **Legal wording pending (OD-26 / pre-launch legal review)** | — | — |
-| OD-06 | Community creation permissions, private communities | Communities | P3 |
+| OD-06 | ~~Community creation permissions, private communities~~ — **RESOLVED 2026-10-30: any verified member can create a community; public communities only** (private ones are not planned) | Communities | P3 |
 | OD-07 | ~~Age-gate method~~ — **RESOLVED: date of birth, discarded after check** | — | — |
 | OD-08 | ~~Unverified user permissions~~ — **RESOLVED: private features allowed; public actions need verification; delete after 30 days** | — | — |
 | OD-09 | ~~Google ↔ password linking~~ — **RESOLVED: auto-link; remove password if existing account was unverified** | — | — |

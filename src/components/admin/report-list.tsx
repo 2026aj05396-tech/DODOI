@@ -49,6 +49,11 @@ function GroupCard({
     POST: "Post",
     COMMENT: "Comment",
     AI_MESSAGE: "AI answer",
+    HELP_REQUEST: "Help request",
+    HELP_RESPONSE: "Help response",
+    COMMUNITY: "Community",
+    COMMUNITY_POST: "Community post",
+    MESSAGE: "Message",
   }[group.targetType];
   const label = group.target.label ?? "Deleted";
   return (
@@ -82,6 +87,29 @@ function GroupCard({
           · latest {new Date(group.latestAt).toLocaleDateString("en-IN")}
         </span>
       </p>
+      {group.target.thread ? (
+        <ol
+          aria-label="The reported message and the ones before it"
+          className="flex flex-col gap-1.5 rounded-md bg-field p-3"
+        >
+          {group.target.thread.map((line, index) => (
+            <li
+              key={index}
+              className={
+                line.isReported
+                  ? "text-body font-bold text-foreground"
+                  : "text-body text-foreground"
+              }
+            >
+              <span className="text-meta text-foreground-secondary">
+                {line.isReported ? "Reported · " : ""}
+                {line.fromSender ? "Sender" : "Other person"}:{" "}
+              </span>
+              <span className="wrap-break-word whitespace-pre-line">{line.text}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
       {group.notes.length > 0 ? (
         <ul className="flex flex-col gap-1.5 rounded-md bg-field p-3">
           {group.notes.map((note, index) => (
@@ -94,8 +122,11 @@ function GroupCard({
       <div className="flex flex-wrap gap-2">
         {tab === "OPEN" ? (
           <>
-            {/* An AI answer has nothing to hide: the reports are dismissed once read. */}
-            {group.targetType !== "AI_MESSAGE" && !group.target.isHidden && group.target.label ? (
+            {/* An AI answer or a private message has nothing to hide: the reports are dismissed once read. */}
+            {group.targetType !== "AI_MESSAGE" &&
+            group.targetType !== "MESSAGE" &&
+            !group.target.isHidden &&
+            group.target.label ? (
               <Button size="sm" disabled={isBusy} onClick={() => onAct("HIDE_TARGET")}>
                 Hide {kind.toLowerCase()}
               </Button>

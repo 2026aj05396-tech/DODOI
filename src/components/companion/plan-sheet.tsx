@@ -1,10 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/input";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import { AI_TEXT_MAX_LENGTH } from "@/lib/schemas/ai";
 import type { CompanionSetup } from "@/lib/types/ai";
 
@@ -20,6 +22,13 @@ export function PlanSheet({
 }) {
   const id = useId();
   const [text, setText] = useState("");
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  const voice = useVoiceTyping({
+    inputRef: textRef,
+    value: text,
+    maxLength: AI_TEXT_MAX_LENGTH,
+    onValueChange: setText,
+  });
   const [skillId, setSkillId] = useState("");
 
   return (
@@ -42,12 +51,19 @@ export function PlanSheet({
             <Label htmlFor={`${id}-text`}>What would you like to make?</Label>
             <textarea
               id={`${id}-text`}
+              ref={textRef}
               value={text}
               rows={3}
               maxLength={AI_TEXT_MAX_LENGTH}
               onChange={(event) => setText(event.target.value)}
               className="w-full rounded-md border-control border-input bg-background px-3.5 py-3 text-control-lg text-foreground"
             />
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <VoiceInputStatus voice={voice} />
+              </div>
+              <VoiceInputButton voice={voice} />
+            </div>
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor={`${id}-craft`}>Craft (optional)</Label>

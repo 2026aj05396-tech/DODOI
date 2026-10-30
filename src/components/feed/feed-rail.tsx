@@ -1,22 +1,28 @@
-import { Users, Video } from "lucide-react";
+import { Video } from "lucide-react";
 
+import { HelpRailCard } from "@/components/community/help-rail-card";
 import { ComingSoonCard } from "@/components/ui/coming-soon";
 import type { SkillSuggestion } from "@/lib/types/feed";
+import type { HelpRequestCard } from "@/lib/types/help";
 
 import { SkillSuggestionCard } from "./skill-suggestion-card";
 
-// Desktop right rail (`2b`, ≥ 1280px): the "New to you" card, then "Help other makers" (P3) and
-// "Live sessions" (P3) as coming-soon cards (roadmap P1-22).
+// Desktop right rail (`2b`, ≥ 1280px): the "New to you" card, "Help other makers" (live from
+// P3-03) and "Live sessions" (coming soon until P3-04).
 
-export function FeedRail({ suggestion }: { suggestion: SkillSuggestion | null }) {
+export function FeedRail({
+  suggestion,
+  helpRequests,
+  hasCanHelpSkills,
+}: {
+  suggestion: SkillSuggestion | null;
+  helpRequests: HelpRequestCard[];
+  hasCanHelpSkills: boolean;
+}) {
   return (
     <>
       {suggestion ? <SkillSuggestionCard suggestion={suggestion} /> : null}
-      <ComingSoonCard
-        title="Help other makers"
-        description="Answer questions from people learning the skills you know."
-        icon={<Users />}
-      />
+      <HelpRailCard requests={helpRequests} hasCanHelpSkills={hasCanHelpSkills} />
       <ComingSoonCard
         title="Live sessions"
         description="Book a 30-minute call with a maker. We'll let you know when this opens."

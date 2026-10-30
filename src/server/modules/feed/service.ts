@@ -18,6 +18,7 @@ import {
   isPostPublished,
 } from "@/server/modules/content";
 import { getFollowedUserIds } from "@/server/modules/follows";
+import { getMatchingHelpRequests } from "@/server/modules/help";
 import {
   getActiveSkillSummaries,
   getSkillsBySlugs,
@@ -162,6 +163,13 @@ export async function getFeed(
   if (session.filter === "for-you" && session.page === 0) {
     const suggestion = await pickSuggestion(profile, provider);
     if (suggestion) items.unshift(suggestion);
+  }
+
+  // HLP-03: one help request per For you page, for skills the member can help with: page n shows
+  // the n-th newest match, so the same request never repeats within a session.
+  if (session.filter === "for-you") {
+    const match = (await getMatchingHelpRequests(user, session.page + 1))[session.page];
+    if (match) items.splice(Math.min(3, items.length), 0, { kind: "help_request", request: match });
   }
 
   return {

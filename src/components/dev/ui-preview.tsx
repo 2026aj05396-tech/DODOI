@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, Bookmark, Inbox, Plus, Sparkles, Video } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import { EmptyFeedArt } from "@/components/feed/empty-feed-art";
 import { Button } from "@/components/ui/button";
@@ -24,10 +24,37 @@ import { SearchField } from "@/components/ui/search-field";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showToast } from "@/components/ui/toast";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
 import { Wordmark } from "@/components/ui/wordmark";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 
 const FEED_FILTERS = ["For you", "Crochet", "Watercolor", "New to you"];
 const INTERESTS = ["Drawing", "Crochet", "Embroidery", "Pipe cleaner art"];
+
+function VoiceTypingDemo() {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const [text, setText] = useState("");
+  const voice = useVoiceTyping({ inputRef: ref, value: text, onValueChange: setText });
+  return (
+    <div className="flex max-w-md flex-col gap-2">
+      <Label htmlFor="voice-demo">Describe your project</Label>
+      <textarea
+        id="voice-demo"
+        ref={ref}
+        rows={3}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        className="w-full rounded-md border-control border-input bg-background px-3.5 py-3 text-control-lg text-foreground"
+      />
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <VoiceInputStatus voice={voice} />
+        </div>
+        <VoiceInputButton voice={voice} />
+      </div>
+    </div>
+  );
+}
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -131,6 +158,10 @@ export function UiPreview() {
             Couldn&apos;t upload your photo. Check your connection and try again.
           </ErrorBanner>
         </div>
+      </Section>
+
+      <Section title="Voice typing">
+        <VoiceTypingDemo />
       </Section>
 
       <Section title="Tabs">

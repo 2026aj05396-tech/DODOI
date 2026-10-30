@@ -11,6 +11,7 @@ import { NotFoundError, UnauthenticatedError, UnprocessableError } from "@/serve
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { removeFollowsBetween } from "@/server/modules/follows";
 import { removeNotificationsBetween } from "@/server/modules/notifications";
+import { cancelSessionsBetween } from "@/server/modules/sessions";
 import {
   addBlock,
   findBlockedByUser,
@@ -45,6 +46,8 @@ export async function blockUser(actor: Actor, username: string): Promise<void> {
   await addBlock(user.id, blockedId);
   await removeFollowsBetween(user.id, blockedId);
   await removeNotificationsBetween(user.id, blockedId);
+  // Sessions still open between the two are cancelled (SES-02).
+  await cancelSessionsBetween(user.id, blockedId);
 }
 
 /** DELETE /api/blocks/{username}: idempotent. */

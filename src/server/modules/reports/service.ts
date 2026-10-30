@@ -30,10 +30,25 @@ import { recordAudit } from "@/server/modules/admin";
 import { getAnswersForModeration, isOwnAnswer } from "@/server/modules/ai";
 import { getCommentsForModeration, setCommentHidden } from "@/server/modules/comments";
 import {
+  getCommunitiesForModeration,
+  getCommunityPostsForModeration,
+  getReportableCommunityTarget,
+  setCommunityHidden,
+  setCommunityPostHidden,
+} from "@/server/modules/communities";
+import {
   getPostsForModeration,
   getPublishedPostAuthor,
   setPostHidden,
 } from "@/server/modules/content";
+import {
+  getHelpRequestsForModeration,
+  getHelpResponsesForModeration,
+  getReportableHelpTarget,
+  setHelpRequestHidden,
+  setHelpResponseHidden,
+} from "@/server/modules/help";
+import { getMessagesForModeration, getReportableMessage } from "@/server/modules/messages";
 import { getSkillsForModeration, setSkillHidden } from "@/server/modules/skills";
 import {
   getProfilesForModeration,
@@ -117,6 +132,47 @@ async function resolveTarget(user: AuthenticatedActor, input: CreateReportInput)
     }
     return { targetType: "COMMENT", targetId: input.targetId };
   }
+  if (input.targetType === "HELP_REQUEST" || input.targetType === "HELP_RESPONSE") {
+    // Only what the reporter can see (not hidden, not by someone blocked), and not their own.
+    const type = input.targetType === "HELP_REQUEST" ? "REQUEST" : "RESPONSE";
+    const target = await getReportableHelpTarget(user, type, input.targetId);
+    if (!target) throw notFound();
+    if (target.authorId === user.id) {
+      throw new UnprocessableError(
+        type === "REQUEST"
+          ? "You can't report your own request."
+          : "You can't report your own response.",
+        { code: "SELF_REPORT" },
+      );
+    }
+    return { targetType: input.targetType, targetId: target.id };
+  }
+  if (input.targetType === "COMMUNITY" || input.targetType === "COMMUNITY_POST") {
+    // Only what the reporter can see (not hidden, not by someone blocked), and not their own.
+    const isCommunity = input.targetType === "COMMUNITY";
+    const target = await getReportableCommunityTarget(
+      user,
+      isCommunity ? "COMMUNITY" : "POST",
+      input.targetId,
+    );
+    if (!target) throw notFound();
+    if (target.authorId === user.id) {
+      throw new UnprocessableError(
+        isCommunity ? "You can't report your own community." : "You can't report your own post.",
+        { code: "SELF_REPORT" },
+      );
+    }
+    return { targetType: input.targetType, targetId: target.id };
+  }
+  if (input.targetType === "MESSAGE") {
+    // Only a message the other person wrote in a conversation the reporter takes part in.
+    const target = await getReportableMessage(user, input.targetId);
+    if (!target) throw notFound();
+    if (target.authorId === user.id) {
+      throw new UnprocessableError("You can't report your own message.", { code: "SELF_REPORT" });
+    }
+    return { targetType: "MESSAGE", targetId: target.id };
+  }
   if (input.targetType === "AI_MESSAGE") {
     // Only an answer in the reporter's own chat (AIC-06); anything else looks like it isn't there.
     if (!(await isOwnAnswer(user, input.targetId))) throw notFound();
@@ -152,7 +208,7 @@ export async function listReportGroups(
   actor: Actor,
   query: AdminReportsQuery,
 ): Promise<Paginated<ReportGroup>> {
-  requireModerator(actor);
+  const moderator = requireModerator(actor);
   const offset = query.cursor ? decodeCursor(query.cursor, cursorSchema).offset : 0;
   const statuses =
     query.status === "OPEN" ? (["OPEN"] as const) : (["ACTIONED", "DISMISSED"] as const);
@@ -165,14 +221,42 @@ export async function listReportGroups(
   const targets = page.map(({ targetType, targetId }) => ({ targetType, targetId }));
   const idsOf = (type: ReportTargetType) =>
     targets.flatMap((t) => (t.targetType === type ? t.targetId : []));
-  const [reports, skills, profiles, posts, comments, answers] = await Promise.all([
+  const [
+    reports,
+    skills,
+    profiles,
+    posts,
+    comments,
+    answers,
+    helpRequests,
+    helpResponses,
+    communities,
+    communityPosts,
+    messages,
+  ] = await Promise.all([
     findReportsForTargets(targets, [...statuses]),
     getSkillsForModeration(idsOf("SKILL")),
     getProfilesForModeration(idsOf("PROFILE")),
     getPostsForModeration(idsOf("POST")),
     getCommentsForModeration(idsOf("COMMENT")),
     getAnswersForModeration(idsOf("AI_MESSAGE")),
+    getHelpRequestsForModeration(idsOf("HELP_REQUEST")),
+    getHelpResponsesForModeration(idsOf("HELP_RESPONSE")),
+    getCommunitiesForModeration(idsOf("COMMUNITY")),
+    getCommunityPostsForModeration(idsOf("COMMUNITY_POST")),
+    getMessagesForModeration(idsOf("MESSAGE")),
   ]);
+  // A moderator reading someone's messages is itself recorded (SECURITY §8).
+  await Promise.all(
+    [...messages.keys()].map((messageId) =>
+      recordAudit({
+        actorId: moderator.id,
+        action: "message.view",
+        targetType: "message",
+        targetId: messageId,
+      }),
+    ),
+  );
 
   const items = page.map((group): ReportGroup => {
     const mine = reports.filter(
@@ -185,9 +269,24 @@ export async function listReportGroups(
     const post = group.targetType === "POST" ? posts.get(group.targetId) : undefined;
     const comment = group.targetType === "COMMENT" ? comments.get(group.targetId) : undefined;
     const answer = group.targetType === "AI_MESSAGE" ? answers.get(group.targetId) : undefined;
+    const helpRequest =
+      group.targetType === "HELP_REQUEST" ? helpRequests.get(group.targetId) : undefined;
+    const helpResponse =
+      group.targetType === "HELP_RESPONSE" ? helpResponses.get(group.targetId) : undefined;
+    const community =
+      group.targetType === "COMMUNITY" ? communities.get(group.targetId) : undefined;
+    const communityPost =
+      group.targetType === "COMMUNITY_POST" ? communityPosts.get(group.targetId) : undefined;
     const isHidden = skill
       ? skill.status === "HIDDEN"
-      : (profile?.isHidden ?? post?.isHidden ?? comment?.isHidden ?? false);
+      : (profile?.isHidden ??
+        post?.isHidden ??
+        comment?.isHidden ??
+        helpRequest?.isHidden ??
+        helpResponse?.isHidden ??
+        community?.isHidden ??
+        communityPost?.isHidden ??
+        false);
     return {
       reportId: mine[0]?.id ?? "",
       targetType: group.targetType,
@@ -214,15 +313,52 @@ export async function listReportGroups(
                   detail: "Comment",
                   isHidden,
                 }
-              : group.targetType === "AI_MESSAGE"
+              : helpRequest
                 ? {
-                    // Only the reported answer; its chat is gone after 30 days or when deleted.
-                    label: answer?.slice(0, 400) ?? null,
-                    href: null,
-                    detail: "AI answer",
-                    isHidden: false,
+                    label: helpRequest.title,
+                    href: isHidden ? null : `/community/help/${group.targetId}`,
+                    detail: "Help request",
+                    isHidden,
                   }
-                : { label: null, href: null, detail: null, isHidden: false },
+                : community
+                  ? {
+                      label: community.name,
+                      href: isHidden ? null : `/community/circles/${community.slug}`,
+                      detail: "Community",
+                      isHidden,
+                    }
+                  : communityPost
+                    ? {
+                        label: communityPost.body.slice(0, 140),
+                        href: isHidden ? null : `/community/circles/${communityPost.slug}`,
+                        detail: communityPost.isReply ? "Community reply" : "Community post",
+                        isHidden,
+                      }
+                    : helpResponse
+                      ? {
+                          label: helpResponse.body.slice(0, 140),
+                          href: isHidden ? null : `/community/help/${helpResponse.requestId}`,
+                          detail: "Help response",
+                          isHidden,
+                        }
+                      : group.targetType === "MESSAGE"
+                        ? {
+                            // Only the reported message and up to 5 before it, never the rest.
+                            label: messages.get(group.targetId)?.label ?? null,
+                            href: null,
+                            detail: "Message",
+                            isHidden: false,
+                            thread: messages.get(group.targetId)?.thread,
+                          }
+                        : group.targetType === "AI_MESSAGE"
+                          ? {
+                              // Only the reported answer; its chat is gone after 30 days or when deleted.
+                              label: answer?.slice(0, 400) ?? null,
+                              href: null,
+                              detail: "AI answer",
+                              isHidden: false,
+                            }
+                          : { label: null, href: null, detail: null, isHidden: false },
       reportCount: group._count._all,
       reasons,
       notes: mine.flatMap((report) =>
@@ -256,6 +392,18 @@ async function setHidden(target: Target, hidden: boolean): Promise<void> {
       return setPostHidden(target.targetId, hidden);
     case "COMMENT":
       return setCommentHidden(target.targetId, hidden);
+    case "HELP_REQUEST":
+      return setHelpRequestHidden(target.targetId, hidden);
+    case "HELP_RESPONSE":
+      return setHelpResponseHidden(target.targetId, hidden);
+    case "COMMUNITY":
+      return setCommunityHidden(target.targetId, hidden);
+    case "COMMUNITY_POST":
+      return setCommunityPostHidden(target.targetId, hidden);
+    case "MESSAGE":
+      throw new UnprocessableError("A message can't be hidden. Dismiss its reports instead.", {
+        code: "NOT_HIDEABLE",
+      });
     case "AI_MESSAGE":
       throw new UnprocessableError("An AI answer can't be hidden. Dismiss its reports instead.", {
         code: "NOT_HIDEABLE",
@@ -269,6 +417,11 @@ const AUDIT_TARGET = {
   POST: "post",
   COMMENT: "comment",
   AI_MESSAGE: "ai_message",
+  HELP_REQUEST: "help_request",
+  HELP_RESPONSE: "help_response",
+  COMMUNITY: "community",
+  COMMUNITY_POST: "community_post",
+  MESSAGE: "message",
 } as const;
 
 /**

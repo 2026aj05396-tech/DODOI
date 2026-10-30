@@ -66,6 +66,8 @@ const FOLDER_BY_PURPOSE: Record<MediaPurpose, string> = {
   avatar: "avatars",
   entry: "entries",
   ai: "ai",
+  help: "help",
+  community: "community",
 };
 
 /** Everything dodoi stores lives under `dodoi/<APP_ENV>/`, so environments never mix. */

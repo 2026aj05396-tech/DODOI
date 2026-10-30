@@ -4,6 +4,7 @@ import { db } from "@/server/db/client";
 import { mediaProvider as defaultProvider, type MediaProvider } from "@/server/integrations/media";
 import { logger } from "@/server/lib/logger";
 import { deleteCommentsOfUser } from "@/server/modules/comments";
+import { deleteCommunityContentOfUser } from "@/server/modules/communities";
 import { deleteContentOfUser, deleteUnusedMedia } from "@/server/modules/content";
 import { deleteAccountIfDue, getAccountsDueForDeletion } from "@/server/modules/users";
 
@@ -24,6 +25,7 @@ async function deleteAccount(userId: string, now: Date, provider: MediaProvider)
     mediaIds = await db.$transaction(async (tx) => {
       await deleteCommentsOfUser(userId, tx);
       const used = await deleteContentOfUser(userId, tx);
+      used.push(...(await deleteCommunityContentOfUser(userId, tx)));
       if (!(await deleteAccountIfDue(userId, tx, now))) throw new NoLongerDue();
       return used;
     });

@@ -1,0 +1,21 @@
+// Public API of the help module (CODE_QUALITY §3.2): help requests and their responses (P3-03).
+export {
+  createHelpRequest,
+  createHelpResponse,
+  deleteHelpRequest,
+  getHelpBanner,
+  getHelpRequest,
+  getHelpRequestAuthorId,
+  getHelpRequestsForModeration,
+  getHelpResponsesForModeration,
+  getMatchingHelpRequests,
+  getReportableHelpTarget,
+  HELP_LIST_DAYS,
+  HELP_REQUEST_RATE_LIMIT,
+  HELP_RESPONSE_RATE_LIMIT,
+  listHelpRequests,
+  setHelpRequestHidden,
+  setHelpRequestStatus,
+  setHelpResponseHidden,
+  setResponseHelpful,
+} from "./service";

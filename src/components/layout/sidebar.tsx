@@ -3,14 +3,14 @@
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 
 import { LogOutDialog } from "@/components/auth/log-out-dialog";
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
+import { UnreadDot } from "@/components/messages/unread-dot";
 import { Wordmark } from "@/components/ui/wordmark";
 import { cn } from "@/lib/utils/cn";
 
 import { AskDodoiCard } from "./ask-dodoi";
-import { ComingSoonTrigger } from "./coming-soon-trigger";
 import {
   COMMUNITY,
   CREATE,
@@ -26,7 +26,16 @@ import {
 
 const ITEM_CLASSES = "flex h-11 w-full items-center gap-3 rounded-md px-3 text-control-lg";
 
-function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
+function SidebarLink({
+  item,
+  pathname,
+  badge,
+}: {
+  item: NavItem;
+  pathname: string;
+  /** E.g. the unread dot on Messages. */
+  badge?: ReactNode;
+}) {
   const Icon = item.icon;
   const isActive = isActivePath(pathname, item.href);
   return (
@@ -42,22 +51,8 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
     >
       <Icon aria-hidden className="size-5" strokeWidth={isActive ? 1.9 : 1.7} />
       {item.label}
+      {badge}
     </Link>
-  );
-}
-
-function SidebarComingSoon({ item }: { item: NavItem }) {
-  const Icon = item.icon;
-  return (
-    <ComingSoonTrigger
-      label={item.label}
-      hasVisibleLabel
-      className={cn(ITEM_CLASSES, "text-muted-foreground")}
-    >
-      <Icon aria-hidden className="size-5" strokeWidth={1.7} />
-      {item.label}
-      <ComingSoonBadge size="sm" decorative className="ml-auto" />
-    </ComingSoonTrigger>
   );
 }
 
@@ -114,8 +109,8 @@ export function SidebarView({
       </Link>
       <SidebarLink item={HOME} pathname={pathname} />
       <SidebarLink item={EXPLORE} pathname={pathname} />
-      <SidebarComingSoon item={COMMUNITY} />
-      <SidebarComingSoon item={MESSAGES} />
+      <SidebarLink item={COMMUNITY} pathname={pathname} />
+      <SidebarLink item={MESSAGES} pathname={pathname} badge={<UnreadDot className="ml-auto" />} />
       <SidebarLink item={SAVED} pathname={pathname} />
       <SidebarLink item={JOURNAL} pathname={pathname} />
       <SidebarLink item={profileNavItem(username)} pathname={pathname} />

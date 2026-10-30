@@ -1,0 +1,19 @@
+// Public API of the messages module (CODE_QUALITY §3.2): direct messages between two members (P3-02).
+export {
+  canMessage,
+  CONVERSATION_CREATE_RATE_LIMIT,
+  deleteMessage,
+  getConversation,
+  getMessagesForModeration,
+  getReportableMessage,
+  hideConversation,
+  listConversations,
+  listMessages,
+  MESSAGE_PAGE_SIZE,
+  MESSAGE_SEND_RATE_LIMIT,
+  REPORT_CONTEXT_MESSAGES,
+  sendMessage,
+  startConversation,
+  UNANSWERED_MESSAGE_LIMIT,
+  type ModerationMessage,
+} from "./service";
