@@ -7,13 +7,15 @@ import type { AIMessageView, CompanionSetup, SendAIMessageResult } from "@/lib/t
 
 import { ChatPanel, type ChatPanelProps } from "./chat-panel";
 
-const { sendAIMessage, updateAIConsents, createAIPlan, createProject, push } = vi.hoisted(() => ({
-  sendAIMessage: vi.fn(),
-  updateAIConsents: vi.fn(),
-  createAIPlan: vi.fn(),
-  createProject: vi.fn(),
-  push: vi.fn(),
-}));
+const { sendAIMessage, updateAIConsents, createAIPlan, createProject, push, uploadMedia } =
+  vi.hoisted(() => ({
+    uploadMedia: vi.fn(),
+    sendAIMessage: vi.fn(),
+    updateAIConsents: vi.fn(),
+    createAIPlan: vi.fn(),
+    createProject: vi.fn(),
+    push: vi.fn(),
+  }));
 
 vi.mock("@/lib/api-client/ai", () => ({
   sendAIMessage,
@@ -22,6 +24,7 @@ vi.mock("@/lib/api-client/ai", () => ({
   sendAIFeedback: vi.fn(),
 }));
 vi.mock("@/lib/api-client/journal", () => ({ createProject }));
+vi.mock("@/lib/api-client/media", () => ({ uploadMedia }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 const SETUP: CompanionSetup = {
@@ -80,6 +83,9 @@ describe("ChatPanel", () => {
     createAIPlan.mockReset();
     createProject.mockReset();
     push.mockReset();
+    uploadMedia.mockReset();
+    URL.createObjectURL = vi.fn(() => "blob:preview");
+    URL.revokeObjectURL = vi.fn();
   });
 
   it("shows the test-version notice on the free tier and nothing on a paid tier", () => {
@@ -284,6 +290,92 @@ describe("ChatPanel", () => {
         "I couldn't put a plan together. Try again.",
       );
       expect(screen.getByLabelText("Your question")).toBeEnabled();
+    });
+  });
+
+  describe("photos", () => {
+    const photo = () => new File(["x"], "edge.jpg", { type: "image/jpeg" });
+    const input = () => {
+      const element = document.querySelector<HTMLInputElement>('input[type="file"]');
+      if (!element) throw new Error("No file input");
+      return element;
+    };
+
+    it("asks for consent the first time, then uploads the photo and sends it with the question", async () => {
+      updateAIConsents.mockResolvedValue({ AI_IMAGES: true, AI_PROFILE_CONTEXT: false });
+      uploadMedia.mockResolvedValue({ id: "media1" });
+      sendAIMessage.mockResolvedValue(result("Your edge looks wavy."));
+      renderPanel({ setup: { ...SETUP, showFreeTierNotice: true } });
+
+      await userEvent.upload(input(), photo());
+      const sheet = await screen.findByRole("dialog");
+      expect(sheet).toHaveTextContent("Your photo is sent to our AI provider");
+      expect(sheet).toHaveTextContent("Test version: Google may read");
+      expect(uploadMedia).not.toHaveBeenCalled();
+      await userEvent.click(within(sheet).getByRole("button", { name: "Allow" }));
+
+      expect(await screen.findByRole("button", { name: "Remove the photo" })).toBeInTheDocument();
+      expect(updateAIConsents).toHaveBeenCalledWith({ AI_IMAGES: true });
+      expect(uploadMedia).toHaveBeenCalledWith(expect.any(File), { purpose: "ai" });
+
+      await userEvent.type(screen.getByLabelText("Your question"), "Why is it wavy?{Enter}");
+      await screen.findByText("Your edge looks wavy.");
+      expect(sendAIMessage).toHaveBeenCalledWith({
+        text: "Why is it wavy?",
+        imageMediaId: "media1",
+      });
+      expect(screen.queryByRole("button", { name: "Remove the photo" })).toBeNull();
+    });
+
+    it("uploads without asking again once allowed, and a photo can be removed before sending", async () => {
+      uploadMedia.mockResolvedValue({ id: "media1" });
+      renderPanel({
+        setup: { ...SETUP, consents: { AI_IMAGES: true, AI_PROFILE_CONTEXT: false } },
+      });
+
+      await userEvent.upload(input(), photo());
+      await screen.findByRole("button", { name: "Remove the photo" });
+      expect(screen.queryByRole("dialog")).toBeNull();
+
+      await userEvent.click(screen.getByRole("button", { name: "Remove the photo" }));
+      expect(screen.queryByRole("button", { name: "Remove the photo" })).toBeNull();
+    });
+
+    it("uploads nothing when the notice is cancelled, and refuses other file types", async () => {
+      const user = userEvent.setup({ applyAccept: false });
+      renderPanel();
+
+      await user.upload(input(), photo());
+      await user.click(
+        within(await screen.findByRole("dialog")).getByRole("button", { name: "Cancel" }),
+      );
+      expect(uploadMedia).not.toHaveBeenCalled();
+      expect(updateAIConsents).not.toHaveBeenCalled();
+
+      await user.upload(input(), new File(["x"], "a.gif", { type: "image/gif" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Choose a JPEG, PNG or WebP photo.",
+      );
+    });
+
+    it("says today's photos are used up but keeps questions without a photo working", async () => {
+      uploadMedia.mockResolvedValue({ id: "media1" });
+      sendAIMessage.mockRejectedValue(
+        new ApiRequestError(429, "AI_QUOTA", "You've used today's photos. They reset tomorrow.", {
+          resetAt: new Date(Date.now() + 5 * 3600 * 1000).toISOString(),
+        }),
+      );
+      renderPanel({
+        setup: { ...SETUP, consents: { AI_IMAGES: true, AI_PROFILE_CONTEXT: false } },
+      });
+
+      await userEvent.upload(input(), photo());
+      await screen.findByRole("button", { name: "Remove the photo" });
+      await userEvent.type(screen.getByLabelText("Your question"), "Why?{Enter}");
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("You've used today's photos.");
+      expect(screen.getByLabelText("Your question")).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Remove the photo" })).toBeInTheDocument();
     });
   });
 });

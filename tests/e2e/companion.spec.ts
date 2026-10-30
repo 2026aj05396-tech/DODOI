@@ -46,6 +46,7 @@ test("E2E-30: Ask dodoi opens the companion with the test-version notice and a r
   await expect(chat.getByText("The companion is resting. Try again later.")).toBeVisible();
   await expect(chat.getByLabel("Your question")).toBeDisabled();
   await expect(chat.getByRole("button", { name: "Plan a project" })).toBeDisabled();
+  await expect(chat.getByRole("button", { name: "Add a photo" })).toBeDisabled();
 });
 
 test("E2E-30: a saved chat can be reopened, shows the AI label and skill links, and be deleted", async ({

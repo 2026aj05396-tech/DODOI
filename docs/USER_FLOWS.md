@@ -228,6 +228,8 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 2. The photo uploads at once; the message is sent with it; the answer says what can and cannot be seen and how sure it is, and suggests a better photo if needed (design `1f`).
 3. Withdraw: Settings → AI and privacy → switch off "Use my photos in the companion" (stops at once; existing chats stay until deleted).
 
+**Built (P4-04, 2026-10-30):** the camera button sits left of the field (disabled while the companion is off, offline or an answer is on its way). A chosen photo is checked (JPEG, PNG or WebP, else "Choose a JPEG, PNG or WebP photo."), the consent sheet is shown the first time only (Cancel uploads nothing and saves nothing), the photo uploads at once (shrunk in the browser first when over 10 MB; the server scales it to 1,568 px before it goes to the provider) and waits above the field with a remove button; the question text is still required, and the photo is sent with it. When the day's 5 photos are used up: "You've used today's photos. They reset tomorrow." and questions without a photo keep working. If consent was withdrawn elsewhere, the photo is dropped and the sheet is shown again next time. A photo that is removed or never sent is cleaned up with the other unused uploads. Switching the consent off in Settings is P4-07.
+
 ### F-25 Plan a project (AIC-04, approved 2026-10-29)
 
 1. In the chat, **Plan a project** (or the same words typed) → short form: what you want to make (and craft, optional) → plan card: title, craft, materials checklist, steps.

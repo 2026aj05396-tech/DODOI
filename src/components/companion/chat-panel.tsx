@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ExternalLink, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, ExternalLink, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -14,10 +14,12 @@ import type { AIContextView, AIMessageView, AIPlan, CompanionSetup } from "@/lib
 import { cn } from "@/lib/utils/cn";
 
 import { AssistantBubble, BlockedNote, UserBubble } from "./message-bubble";
+import { PhotoConsentSheet } from "./photo-consent-sheet";
 import { PlanCard } from "./plan-card";
 import { PlanSheet } from "./plan-sheet";
 import { ProfileConsentSheet } from "./profile-consent-sheet";
 import { TypingIndicator } from "./typing-indicator";
+import { PHOTO_TYPES, usePhotoAttachment } from "./use-photo-attachment";
 
 // The companion chat (P4-02; designs `1f` mobile and `2c` docked; PRODUCT_REQUIREMENTS AIC-01…06,
 // USER_FLOWS F-23). One panel serves the full page and the docked column. One answer at a time,
@@ -91,9 +93,16 @@ export function ChatPanel({
   const [isPlanning, setIsPlanning] = useState(false);
   // Plans live in this view only; `after` is how many messages came before each one.
   const [plans, setPlans] = useState<{ key: number; plan: AIPlan; after: number }[]>([]);
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
+  const attachment = usePhotoAttachment({
+    hasConsent: setup.consents.AI_IMAGES,
+    onError: setNotice,
+  });
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const isPending = pendingText !== null || isPlanning;
+  const { photo } = attachment;
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ block: "end" });
@@ -114,14 +123,19 @@ export function ChatPanel({
     ? "You're offline"
     : dailyLimit
       ? dailyLimit
-      : variant === "dock"
-        ? "Ask about this…"
-        : "Ask about a technique…";
+      : photo
+        ? "Ask about this photo…"
+        : variant === "dock"
+          ? "Ask about this…"
+          : "Ask about a technique…";
 
   /** Quota, refusal and other failures of a message or a plan (F-23 step 5). */
-  function showError(caught: unknown, onBlocked: () => void) {
+  function showError(caught: unknown, onBlocked: () => void, hadPhoto = false) {
     if (!(caught instanceof ApiRequestError)) {
       setNotice("We couldn't send that. Try again.");
+    } else if (caught.code === "AI_QUOTA" && hadPhoto && caught.message.includes("photos")) {
+      // Today's photos are used up; questions without a photo still work.
+      setNotice(caught.message);
     } else if (caught.code === "AI_QUOTA") {
       const resetAt = caught.fields.resetAt;
       const seconds = resetAt ? (new Date(resetAt).getTime() - Date.now()) / 1000 : 0;
@@ -162,22 +176,31 @@ export function ChatPanel({
     if (!trimmed || isPending || isFieldDisabled) return;
     setNotice(null);
     setPendingText(trimmed);
+    setPendingPhoto(photo?.previewUrl ?? null);
     setDraft("");
+    const sentPhoto = photo;
     try {
       const result = await sendAIMessage({
         text: trimmed,
+        ...(sentPhoto ? { imageMediaId: sentPhoto.mediaId } : {}),
         ...(conversationId ? { conversationId } : newContext ? { context: newContext } : {}),
       });
       setMessages((current) => [...current, result.userMessage, result.assistantMessage]);
+      if (sentPhoto) attachment.clear();
       if (!conversationId) {
         setConversationId(result.conversation.id);
         onConversationStart?.(result.conversation.id);
       }
     } catch (caught) {
       setDraft(trimmed);
-      showError(caught, () => setDraft(""));
+      if (caught instanceof ApiRequestError && caught.code === "AI_CONSENT_REQUIRED") {
+        attachment.forgetConsent();
+        attachment.remove();
+      }
+      showError(caught, () => setDraft(""), sentPhoto !== null);
     } finally {
       setPendingText(null);
+      setPendingPhoto(null);
     }
   }
 
@@ -315,9 +338,19 @@ export function ChatPanel({
         {isPlanning ? <TypingIndicator /> : null}
         {pendingText !== null ? (
           <>
-            <p className="max-w-[85%] self-end rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-body-lg wrap-break-word whitespace-pre-line text-primary-foreground">
-              {pendingText}
-            </p>
+            <div className="flex max-w-[85%] flex-col items-end gap-1.5 self-end">
+              {pendingPhoto ? (
+                // eslint-disable-next-line @next/next/no-img-element -- a local preview, not a hosted image.
+                <img
+                  src={pendingPhoto}
+                  alt="The photo you added"
+                  className="h-32.5 w-42.5 rounded-xl object-cover"
+                />
+              ) : null}
+              <p className="rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-body-lg wrap-break-word whitespace-pre-line text-primary-foreground">
+                {pendingText}
+              </p>
+            </div>
             <TypingIndicator />
           </>
         ) : null}
@@ -339,6 +372,32 @@ export function ChatPanel({
             Plan a project
           </button>
         </div>
+        {attachment.isUploading || photo ? (
+          <div className="flex items-center gap-2">
+            {photo ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element -- a local preview, not a hosted image. */}
+                <img
+                  src={photo.previewUrl}
+                  alt="The photo you added"
+                  className="size-14 rounded-md object-cover"
+                />
+                <button
+                  type="button"
+                  aria-label="Remove the photo"
+                  onClick={attachment.remove}
+                  className="flex size-11 items-center justify-center rounded-full text-foreground-secondary hover:bg-muted"
+                >
+                  <X aria-hidden className="size-4.5" />
+                </button>
+              </>
+            ) : (
+              <p role="status" className="text-control-sm text-foreground-secondary">
+                Uploading your photo…
+              </p>
+            )}
+          </div>
+        ) : null}
         <form
           method="post"
           onSubmit={(event) => {
@@ -347,6 +406,29 @@ export function ChatPanel({
           }}
           className="flex items-end gap-2"
         >
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept={PHOTO_TYPES}
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) attachment.choose(file);
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            aria-label="Add a photo"
+            disabled={isFieldDisabled || isPending || attachment.isUploading}
+            onClick={() => photoInputRef.current?.click()}
+            className="size-11 shrink-0 border-transparent bg-muted p-0"
+          >
+            <Camera aria-hidden className="size-5" strokeWidth={1.7} />
+          </Button>
           <label htmlFor={`${variant}-companion-field`} className="sr-only">
             Your question
           </label>
@@ -386,6 +468,12 @@ export function ChatPanel({
         ) : null}
       </div>
 
+      {attachment.isAskingConsent ? (
+        <PhotoConsentSheet
+          showFreeTierNotice={setup.showFreeTierNotice}
+          onAnswer={(allow) => void attachment.answerConsent(allow)}
+        />
+      ) : null}
       {isPlanFormOpen ? (
         <PlanSheet
           skills={setup.skills}

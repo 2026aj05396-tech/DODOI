@@ -50,7 +50,7 @@ export function AskDodoiCard() {
         Ask dodoi
       </span>
       <span className="text-control-sm text-foreground-secondary">
-        Stuck on a stitch? Ask me about it.
+        Stuck on a stitch? Show me a photo.
       </span>
     </Link>
   );
