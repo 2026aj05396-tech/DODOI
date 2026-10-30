@@ -20,7 +20,7 @@ export default async function MessagesPage() {
       <EmptyState
         icon={<MessageCircle />}
         title="Pick a conversation"
-        description="Or start one from a maker's profile."
+        description="Or use New message to find a maker."
       />
     </div>
   );

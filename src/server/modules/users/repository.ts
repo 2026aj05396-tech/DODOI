@@ -547,6 +547,13 @@ export async function findMessagePolicy(userId: string) {
   return row?.messagePolicy ?? null;
 }
 
+export async function findMessagePolicies(userIds: string[]) {
+  return db.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, messagePolicy: true },
+  });
+}
+
 export async function updateMessagePolicy(
   userId: string,
   messagePolicy: "EVERYONE" | "FOLLOWING" | "NOBODY",

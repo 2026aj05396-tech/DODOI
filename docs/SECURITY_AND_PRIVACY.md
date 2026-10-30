@@ -148,6 +148,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Follow, like (P2) | 200 / hour / user each (built as `like` P2-05 and `follow` P2-06: each counts both directions together) |
 | Block (P2) | 50 / day / user |
 | AI messages (P4, CONFIRMED) | 30 / day and 10 / min / user (photos: 5 / day); global `AI_DAILY_REQUEST_CAP` |
+| People to message search (P3-06, approved 2026-10-30) | 60 / minute / user (shares the search limit); results never explain why a member is absent, and without a query only follows and followers are suggested, so the endpoint cannot be used to list all members (extends §2.5 thinking to member enumeration) |
 
 Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed window), behind the limiter interface; expired rows purged daily. Implemented in `src/server/lib/rate-limit.ts` (P1-08): atomic `INSERT … ON CONFLICT` increment, and bucket keys are `<rule>:<sha256(subject)>` so emails and IPs are never stored in plain text. Custom-interest text rules and blocklist: PRODUCT_REQUIREMENTS §5.2 (OD-13). Additional limit: reports 10 / day / user.
 

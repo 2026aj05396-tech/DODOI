@@ -5,7 +5,7 @@ import type { MessageSettings } from "@/lib/types/messages";
 import type { Actor } from "@/server/lib/actor";
 import { UnauthenticatedError } from "@/server/lib/errors";
 
-import { findMessagePolicy, updateMessagePolicy } from "./repository";
+import { findMessagePolicies, findMessagePolicy, updateMessagePolicy } from "./repository";
 
 // "Who can message me" (MSG-02, F-29 step 4): Everyone (default), People I follow, No one.
 
@@ -30,4 +30,12 @@ export async function getMessagePolicy(
   userId: string,
 ): Promise<MessageSettings["messagePolicy"] | null> {
   return findMessagePolicy(userId);
+}
+
+/** The settings of several members at once, keyed by user id (members that are gone are absent). */
+export async function getMessagePolicies(
+  userIds: string[],
+): Promise<Map<string, MessageSettings["messagePolicy"]>> {
+  if (userIds.length === 0) return new Map();
+  return new Map((await findMessagePolicies(userIds)).map((row) => [row.id, row.messagePolicy]));
 }

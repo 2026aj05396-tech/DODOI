@@ -44,6 +44,12 @@ export type ConversationDetail = {
 
 export type MessagePage = { items: MessageView[]; olderCursor: string | null };
 
+/** A member you can message now (MSG-06). */
+export type MessagePerson = CreatorSummary & {
+  /** The conversation you already have with them, or null. */
+  conversationId: string | null;
+};
+
 export type StartedConversation = { id: string; created: boolean };
 
 export type MessageSettings = { messagePolicy: MessagePolicyName };

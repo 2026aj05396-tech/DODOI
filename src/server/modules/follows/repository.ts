@@ -26,6 +26,27 @@ export async function findFolloweeIds(followerId: string): Promise<string[]> {
   return rows.map((row) => row.followeeId);
 }
 
+/** The people who follow `userId`, newest follow first (at most `take`). */
+export async function findFollowerIds(userId: string, take: number): Promise<string[]> {
+  const rows = await db.follow.findMany({
+    where: { followeeId: userId },
+    orderBy: { createdAt: "desc" },
+    take,
+    select: { followerId: true },
+  });
+  return rows.map((row) => row.followerId);
+}
+
+/** Which of `userIds` follow `followeeId`. */
+export async function findFollowersAmong(followeeId: string, userIds: string[]): Promise<string[]> {
+  if (userIds.length === 0) return [];
+  const rows = await db.follow.findMany({
+    where: { followeeId, followerId: { in: userIds } },
+    select: { followerId: true },
+  });
+  return rows.map((row) => row.followerId);
+}
+
 /** Which of `userIds` the follower follows. */
 export async function findFollowedAmong(followerId: string, userIds: string[]): Promise<string[]> {
   if (userIds.length === 0) return [];

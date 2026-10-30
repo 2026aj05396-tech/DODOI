@@ -35,6 +35,38 @@ export async function findConversationByPair(
   });
 }
 
+/**
+ * Your conversations with each of `peerIds`, keyed by the peer's user id, and whether the peer
+ * has written in it (MSG-02 lets someone who wrote be answered whatever their setting says).
+ */
+export async function findConversationsWithPeers(
+  userId: string,
+  peerIds: string[],
+): Promise<Map<string, { id: string; peerHasWritten: boolean }>> {
+  if (peerIds.length === 0) return new Map();
+  const rows = await db.conversation.findMany({
+    where: {
+      OR: [
+        { userAId: userId, userBId: { in: peerIds } },
+        { userBId: userId, userAId: { in: peerIds } },
+      ],
+    },
+    select: { id: true, userAId: true, userBId: true },
+  });
+  if (rows.length === 0) return new Map();
+  const writers = await db.message.groupBy({
+    by: ["conversationId", "senderId"],
+    where: { conversationId: { in: rows.map((row) => row.id) }, senderId: { not: userId } },
+  });
+  const wrote = new Set(writers.map((row) => row.conversationId));
+  return new Map(
+    rows.map((row) => [
+      row.userAId === userId ? row.userBId : row.userAId,
+      { id: row.id, peerHasWritten: wrote.has(row.id) },
+    ]),
+  );
+}
+
 export async function findConversationById(id: string): Promise<ConversationRow | null> {
   return db.conversation.findUnique({ where: { id }, select: conversationSelect });
 }

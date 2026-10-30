@@ -3,6 +3,7 @@ import type { Paginated } from "@/lib/types/api";
 import type {
   ConversationSummary,
   MessagePage,
+  MessagePerson,
   MessageSettings,
   MessageView,
   StartedConversation,
@@ -17,6 +18,18 @@ export function listConversations(
 ): Promise<Paginated<ConversationSummary>> {
   const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
   return requestJson<Paginated<ConversationSummary>>("GET", `/api/conversations${query}`);
+}
+
+/** People you can message: suggestions without `q`, a search with it (MSG-06). */
+export function listMessagePeople(
+  q: string,
+  cursor: string | null = null,
+): Promise<Paginated<MessagePerson>> {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (cursor) params.set("cursor", cursor);
+  const query = params.size > 0 ? `?${params}` : "";
+  return requestJson<Paginated<MessagePerson>>("GET", `/api/conversations/people${query}`);
 }
 
 export function startConversation(username: string): Promise<StartedConversation> {

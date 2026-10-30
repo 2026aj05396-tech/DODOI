@@ -230,3 +230,62 @@ test("E2E-35: the message screens fit 390, 834 and 1280px with no serious access
     }
   }
 });
+
+test("E2E-35: New message finds a member who can be messaged, hides one who cannot, and opens the chat", async ({
+  browser,
+  page,
+  baseURL,
+}) => {
+  test.setTimeout(150_000);
+  const asha = createPasswordAccount({ interests: ["watercolor"] });
+  const ravi = createPasswordAccount({ interests: ["crochet"] });
+  const meera = createPasswordAccount({ interests: ["crochet"] });
+
+  const raviPage = await newPage(browser, baseURL);
+  await signIn(raviPage, ravi.email, ravi.password);
+  const raviUsername = (await profilePath(raviPage)).split("/").pop() ?? "";
+  const meeraPage = await newPage(browser, baseURL);
+  await signIn(meeraPage, meera.email, meera.password);
+  const meeraUsername = (await profilePath(meeraPage)).split("/").pop() ?? "";
+  // Meera closes messages: she must not appear for Asha.
+  await meeraPage.goto("/settings/messages");
+  await meeraPage.waitForLoadState("networkidle");
+  await meeraPage.getByRole("radio", { name: /No one/ }).check();
+  await expect(
+    meeraPage.getByRole("region", { name: /Notifications/ }).getByText("Saved"),
+  ).toBeVisible();
+
+  await signIn(page, asha.email, asha.password);
+
+  for (const viewport of [VIEWPORTS.mobile, VIEWPORTS.desktop]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/messages");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: "New message" }).click();
+    const panel = page.getByRole("dialog", { name: "New message" });
+    await expect(panel).toBeVisible();
+
+    const field = panel.getByLabel("Search people");
+    await field.fill(meeraUsername);
+    await expect(panel.getByText("No one found that you can message")).toBeVisible();
+
+    await field.fill(raviUsername);
+    await expect(panel.getByRole("button", { name: new RegExp(`@${raviUsername}`) })).toBeVisible();
+    const results = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
+    expect(
+      results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+    ).toEqual([]);
+
+    await panel.getByLabel("Close").click();
+    await expect(panel).toHaveCount(0);
+  }
+
+  // Picking the member opens a conversation and Asha can write in it.
+  await page.getByRole("button", { name: "New message" }).click();
+  const panel = page.getByRole("dialog", { name: "New message" });
+  await panel.getByLabel("Search people").fill(raviUsername);
+  await panel.getByRole("button", { name: new RegExp(`@${raviUsername}`) }).click();
+  await expect(page).toHaveURL(/\/messages\/[^/]+$/);
+  await page.waitForLoadState("networkidle");
+  await send(page, "Found you through New message");
+});

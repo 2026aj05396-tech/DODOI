@@ -5,6 +5,7 @@ import { z } from "zod";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants/pagination";
 import type {
   ConversationListQuery,
+  MessagePeopleQuery,
   MessagesQuery,
   SendMessageInput,
   StartConversationInput,
@@ -14,6 +15,7 @@ import type {
   ConversationDetail,
   ConversationSummary,
   MessagePage,
+  MessagePerson,
   MessageView,
   StartedConversation,
 } from "@/lib/types/messages";
@@ -28,12 +30,21 @@ import {
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { avatarUrl } from "@/server/modules/content";
-import { getFollowedUserIds } from "@/server/modules/follows";
 import {
+  getFollowedUserIds,
+  getFollowersAmong,
+  getFollowerUserIds,
+} from "@/server/modules/follows";
+import {
+  getBlockedUserIds,
   getCreatorProfiles,
+  getMessagePolicies,
   getMessagePolicy,
+  getPublicCreatorProfiles,
   getUserIdByUsername,
+  getUserIdsByUsernames,
   isBlockedEitherWay,
+  searchCreators,
 } from "@/server/modules/users";
 
 import {
@@ -42,6 +53,7 @@ import {
   eraseMessage,
   findConversationById,
   findConversationByPair,
+  findConversationsWithPeers,
   findConversationsFor,
   findLastMessages,
   findLatestFromOthers,
@@ -74,6 +86,17 @@ export const CONVERSATION_CREATE_RATE_LIMIT: RateLimitRule = {
   limit: 5,
   windowSeconds: 24 * 60 * 60,
 };
+/** MSG-06: the people search shares the 60 a minute of global search (same bucket name). */
+export const MESSAGE_PEOPLE_RATE_LIMIT: RateLimitRule = {
+  name: "search-user",
+  limit: 60,
+  windowSeconds: 60,
+};
+/** MSG-06: people shown per page, and how far suggestions and one search page look. */
+const PEOPLE_PAGE_SIZE = 20;
+const SUGGESTION_SOURCE_LIMIT = 200;
+const SEARCH_BATCH = 40;
+const SEARCH_MAX_BATCHES = 5;
 /** MSG-03: until they answer, someone who has never replied gets at most this many messages. */
 export const UNANSWERED_MESSAGE_LIMIT = 3;
 /** Messages returned at once. */
@@ -81,6 +104,7 @@ export const MESSAGE_PAGE_SIZE = 50;
 /** The few messages a moderator sees before a reported one (SECURITY §8). */
 export const REPORT_CONTEXT_MESSAGES = 5;
 
+const offsetCursorSchema = z.object({ offset: z.number().int().min(0) });
 const listCursorSchema = z.object({
   lastMessageAt: z.iso.datetime(),
   id: z.string().min(1).max(40),
@@ -411,4 +435,125 @@ export async function getMessagesForModeration(
     });
   }
   return result;
+}
+
+type Candidate = {
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarPublicId: string | null;
+};
+
+/**
+ * MSG-06: keeps the candidates the member could start or continue a conversation with. It mirrors
+ * `canMessage` for many people at once: not yourself, no block either way, and the person's
+ * setting (someone who already wrote in your conversation always counts). Order is kept.
+ */
+async function keepMessageable(
+  user: AuthenticatedActor,
+  candidates: Candidate[],
+): Promise<MessagePerson[]> {
+  const ids = candidates.map((candidate) => candidate.userId);
+  const [blocked, policies, conversations, followingMe] = await Promise.all([
+    getBlockedUserIds(user.id),
+    getMessagePolicies(ids),
+    findConversationsWithPeers(user.id, ids),
+    getFollowersAmong(user.id, ids),
+  ]);
+  const people: MessagePerson[] = [];
+  for (const candidate of candidates) {
+    const id = candidate.userId;
+    if (id === user.id || blocked.has(id)) continue;
+    const conversation = conversations.get(id);
+    const policy = policies.get(id) ?? "EVERYONE";
+    const open =
+      policy === "EVERYONE" ||
+      conversation?.peerHasWritten === true ||
+      (policy === "FOLLOWING" && followingMe.has(id));
+    if (!open) continue;
+    people.push({
+      username: candidate.username,
+      displayName: candidate.displayName,
+      avatarUrl: candidate.avatarPublicId ? avatarUrl(candidate.avatarPublicId) : null,
+      conversationId: conversation?.id ?? null,
+    });
+  }
+  return people;
+}
+
+/** Before anything is typed: people you follow and people who follow you, by name (MSG-06). */
+async function suggestPeople(
+  user: AuthenticatedActor,
+  offset: number,
+): Promise<Paginated<MessagePerson>> {
+  const [following, followers] = await Promise.all([
+    getFollowedUserIds(user.id),
+    getFollowerUserIds(user.id, SUGGESTION_SOURCE_LIMIT),
+  ]);
+  const ids = [...new Set([...following].slice(0, SUGGESTION_SOURCE_LIMIT).concat(followers))];
+  const profiles = await getPublicCreatorProfiles(ids);
+  const candidates = [...profiles]
+    .map(([userId, profile]) => ({ userId, ...profile }))
+    .sort(
+      (a, b) =>
+        a.displayName.localeCompare(b.displayName, "en", { sensitivity: "base" }) ||
+        a.username.localeCompare(b.username),
+    );
+  const people = await keepMessageable(user, candidates);
+  const items = people.slice(offset, offset + PEOPLE_PAGE_SIZE);
+  const more = people.length > offset + PEOPLE_PAGE_SIZE;
+  return { items, nextCursor: more ? encodeCursor({ offset: offset + PEOPLE_PAGE_SIZE }) : null };
+}
+
+/**
+ * Searching: global search matching (username or a word of the display name, typo tolerant), which
+ * only finds public profiles. Members who fail the rules are dropped, so a page is read in batches
+ * until it is full; the cursor is the position in the match list after the last one shown.
+ */
+async function searchPeople(
+  user: AuthenticatedActor,
+  term: string,
+  offset: number,
+): Promise<Paginated<MessagePerson>> {
+  const found: { person: MessagePerson; next: number }[] = [];
+  let position = offset;
+  for (let round = 0; round < SEARCH_MAX_BATCHES && found.length <= PEOPLE_PAGE_SIZE; round += 1) {
+    const rows = await searchCreators(term, { offset: position, take: SEARCH_BATCH });
+    const ids = await getUserIdsByUsernames(rows.map((row) => row.username));
+    const candidates = rows.flatMap((row) => {
+      const userId = ids.get(row.username);
+      return userId ? [{ userId, ...row }] : [];
+    });
+    const kept = new Map(
+      (await keepMessageable(user, candidates)).map((person) => [person.username, person]),
+    );
+    rows.forEach((row, index) => {
+      const person = kept.get(row.username);
+      if (person) found.push({ person, next: position + index + 1 });
+    });
+    position += rows.length;
+    if (rows.length < SEARCH_BATCH) break;
+  }
+  const shown = found.slice(0, PEOPLE_PAGE_SIZE);
+  const last = shown.at(-1);
+  return {
+    items: shown.map((entry) => entry.person),
+    nextCursor:
+      last && found.length > PEOPLE_PAGE_SIZE ? encodeCursor({ offset: last.next }) : null,
+  };
+}
+
+/**
+ * GET /api/conversations/people: the members you can message now (MSG-06). Never says why someone
+ * is missing, and without a search only your follows and followers are offered, so it can't be used
+ * to list every member.
+ */
+export async function listMessagePeople(
+  actor: Actor,
+  query: MessagePeopleQuery,
+): Promise<Paginated<MessagePerson>> {
+  const user = requireVerified(actor, "send messages");
+  await enforceRateLimit(MESSAGE_PEOPLE_RATE_LIMIT, user.id);
+  const offset = query.cursor ? decodeCursor(query.cursor, offsetCursorSchema).offset : 0;
+  return query.q ? searchPeople(user, query.q.toLowerCase(), offset) : suggestPeople(user, offset);
 }

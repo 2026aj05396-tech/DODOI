@@ -3,6 +3,8 @@ export {
   FOLLOW_RATE_LIMIT,
   followUser,
   getFollowedUserIds,
+  getFollowersAmong,
+  getFollowerUserIds,
   getFollowState,
   getOwnFollowCounts,
   listOwnFollowers,

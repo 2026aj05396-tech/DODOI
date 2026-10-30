@@ -19,6 +19,13 @@ export const startConversationSchema = z.object({
 });
 export type StartConversationInput = z.output<typeof startConversationSchema>;
 
+/** GET /api/conversations/people: who you can message; `q` empty means suggestions (MSG-06). */
+export const messagePeopleQuerySchema = z.object({
+  q: z.string().trim().max(100).optional(),
+  cursor: z.string().max(500).optional(),
+});
+export type MessagePeopleQuery = z.output<typeof messagePeopleQuerySchema>;
+
 export const sendMessageSchema = z.object({
   body: z
     .string()

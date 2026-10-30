@@ -20,6 +20,8 @@ import {
   deleteFollow,
   deleteFollowsBetween,
   findFolloweeIds,
+  findFollowerIds,
+  findFollowersAmong,
   findFollowers,
   findFollowing,
   hasFollow,
@@ -104,6 +106,16 @@ export async function removeFollowsBetween(a: string, b: string): Promise<void> 
 /** The makers a user follows, for the feed's boost and "Following" filter (FLW-04). */
 export async function getFollowedUserIds(userId: string): Promise<Set<string>> {
   return new Set(await findFolloweeIds(userId));
+}
+
+/** Up to `limit` people who follow the user, newest first (suggestions for who to message, MSG-06). */
+export async function getFollowerUserIds(userId: string, limit: number): Promise<string[]> {
+  return findFollowerIds(userId, limit);
+}
+
+/** Which of `userIds` follow `userId` (the "People I follow" message setting, MSG-02). */
+export async function getFollowersAmong(userId: string, userIds: string[]): Promise<Set<string>> {
+  return new Set(await findFollowersAmong(userId, userIds));
 }
 
 /** Follower and following counts: the owner's own only (FLW-03). */

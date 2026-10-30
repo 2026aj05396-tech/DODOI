@@ -1,9 +1,10 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, SquarePen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { Avatar } from "@/components/profile/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { listConversations } from "@/lib/api-client/messages";
 import { cn } from "@/lib/utils/cn";
 import { timeAgo } from "@/lib/utils/time-ago";
 
+import { NewMessagePanel } from "./new-message-panel";
+
 // Your conversations (F-29 step 2, MSG-01): the person, the last line, how long ago, and a dot for
 // unread. Phones and tablet show it as the page at `/messages`; from 1280px it is the left pane.
 
@@ -21,6 +24,7 @@ const LIST_POLL_MS = 60_000;
 
 export function ConversationList({ className }: { className?: string }) {
   const pathname = usePathname();
+  const [isPickingPerson, setIsPickingPerson] = useState(false);
   const query = useInfiniteQuery({
     queryKey: ["conversations", "list"],
     queryFn: ({ pageParam }) => listConversations(pageParam),
@@ -41,7 +45,14 @@ export function ConversationList({ className }: { className?: string }) {
         className,
       )}
     >
-      <h1 className="text-title text-foreground md:text-title-web xl:text-title">Messages</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-title text-foreground md:text-title-web xl:text-title">Messages</h1>
+        <Button size="sm" onClick={() => setIsPickingPerson(true)}>
+          <SquarePen aria-hidden className="size-4" />
+          New message
+        </Button>
+      </div>
+      {isPickingPerson ? <NewMessagePanel onClose={() => setIsPickingPerson(false)} /> : null}
 
       {query.isPending ? (
         <div role="status" aria-label="Loading your conversations" className="flex flex-col gap-2">
@@ -58,7 +69,7 @@ export function ConversationList({ className }: { className?: string }) {
         <EmptyState
           icon={<MessageCircle />}
           title="No messages yet"
-          description="Start one from a maker's profile, or from a reply to your help request."
+          description="Use New message to find a maker, or start one from a profile or a reply to your help request."
         />
       ) : (
         <ul className="flex flex-col gap-2">

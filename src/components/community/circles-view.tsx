@@ -3,13 +3,14 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/error-state";
 import { SearchField } from "@/components/ui/search-field";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDebounced } from "@/hooks/use-debounced";
 import { listCommunities } from "@/lib/api-client/communities";
 import type { CommunityCard as CommunityCardData } from "@/lib/types/communities";
 
@@ -19,15 +20,6 @@ import { CommunityCard } from "./community-card";
 // communities" with a name search (interests first, then newest), and Start a community.
 
 type Page = { items: CommunityCardData[]; nextCursor: string | null };
-
-function useDebounced(value: string, delayMs: number): string {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(timer);
-  }, [value, delayMs]);
-  return debounced;
-}
 
 function CardList({ items }: { items: CommunityCardData[] }) {
   return (

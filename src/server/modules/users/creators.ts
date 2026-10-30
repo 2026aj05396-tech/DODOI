@@ -37,6 +37,37 @@ export async function getCreatorProfiles(userIds: string[]): Promise<Map<string,
 }
 
 /**
+ * Like `getCreatorProfiles`, but only public profiles (OD-10): for lists that offer people to
+ * contact, where a private profile must not appear (MSG-06).
+ */
+export async function getPublicCreatorProfiles(
+  userIds: string[],
+): Promise<Map<string, CreatorProfile>> {
+  if (userIds.length === 0) return new Map();
+  const rows = await findCreatorRows(userIds);
+  const creators = new Map<string, CreatorProfile>();
+  for (const row of rows) {
+    const profile = row.profile;
+    if (!profile || profile.isHidden || profile.visibility !== "PUBLIC" || row.deletionRequestedAt) {
+      continue;
+    }
+    creators.set(row.id, {
+      username: profile.username,
+      displayName: profile.displayName,
+      avatarPublicId: profile.avatar?.publicId ?? null,
+    });
+  }
+  return creators;
+}
+
+/** User ids keyed by username (usernames are stored lowercase); unknown names are absent. */
+export async function getUserIdsByUsernames(usernames: string[]): Promise<Map<string, string>> {
+  if (usernames.length === 0) return new Map();
+  const rows = await findUsersByUsernames(usernames.map((name) => name.toLowerCase()));
+  return new Map(rows.map((row) => [row.username, row.userId]));
+}
+
+/**
  * The owner shown on a public collection, or null when others may not see their public content:
  * private profile (OD-10), hidden after a report, or deactivated.
  */
