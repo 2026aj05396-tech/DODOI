@@ -64,7 +64,7 @@ Read the documents in this order before writing any code.
 | Package manager | pnpm | CONFIRMED |
 | Testing | Vitest (+ Testing Library) and Playwright (+ axe) | CONFIRMED |
 | Real-time messaging (Phase 3) | Polling first; realtime service later if needed | CONFIRMED |
-| AI provider (Phase 4) | — | OPEN |
+| AI provider (Phase 4) | Google Gemini via the Gemini API, behind `AIProvider` (OD-02, PO 2026-10-29); free tier for local and test only, paid before production | CONFIRMED |
 | Minimum age | **18+**, checked by date of birth (discarded after the check) | CONFIRMED |
 | Launch market | India first: English UI, INR, IST default, DPDP Act applies | CONFIRMED |
 | Post types | First attempt · Tutorial · Work in progress · Journal · Finished · Tip | CONFIRMED |
@@ -300,7 +300,7 @@ See [docs/SYSTEM_ARCHITECTURE.md §5](docs/SYSTEM_ARCHITECTURE.md#5-folder-struc
 | 1 | Discovery Foundation | **MVP** |
 | 2 | Creative Expression | Post-MVP |
 | 3 | Community and Peer Learning | Post-MVP |
-| 4 | AI Creative Companion | Post-MVP (P4-00 spec approved 2026-10-29; P4-01 in progress) |
+| 4 | AI Creative Companion | Post-MVP (P4-00 spec approved 2026-10-29; **P4-01…P4-07 built 2026-10-30**, PO reviews pending; Phase 3 not started) |
 | 5 | Refinement and Growth | Post-MVP |
 
 Details: [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md).
