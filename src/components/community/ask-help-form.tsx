@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { showToast } from "@/components/ui/toast";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import { createHelpRequest } from "@/lib/api-client/help";
 import { uploadMedia } from "@/lib/api-client/media";
 import { ApiRequestError } from "@/lib/api-client/request";
@@ -33,6 +35,13 @@ export function AskHelpForm({
   const fileRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(initial.title);
   const [body, setBody] = useState(initial.body);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const voice = useVoiceTyping({
+    inputRef: bodyRef,
+    value: body,
+    maxLength: HELP_BODY_MAX,
+    onValueChange: setBody,
+  });
   const [skillId, setSkillId] = useState(initial.skillId);
   const [photos, setPhotos] = useState<Media[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -126,6 +135,7 @@ export function AskHelpForm({
         <Label htmlFor={`${id}-body`}>What do you need help with?</Label>
         <Textarea
           id={`${id}-body`}
+          ref={bodyRef}
           value={body}
           rows={6}
           maxLength={HELP_BODY_MAX}
@@ -133,9 +143,13 @@ export function AskHelpForm({
           aria-describedby={`${id}-body-count${errors.body ? ` ${id}-body-error` : ""}`}
           onChange={(event) => setBody(event.target.value)}
         />
-        <p id={`${id}-body-count`} className="text-meta text-foreground-secondary">
-          {body.length} / {HELP_BODY_MAX}
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p id={`${id}-body-count`} className="text-meta text-foreground-secondary">
+            {body.length} / {HELP_BODY_MAX}
+          </p>
+          <VoiceInputButton voice={voice} />
+        </div>
+        <VoiceInputStatus voice={voice} />
         <FieldError id={`${id}-body-error`}>{errors.body}</FieldError>
       </div>
 

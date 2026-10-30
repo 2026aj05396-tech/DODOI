@@ -282,6 +282,18 @@ Settings → **AI and privacy**: two switches (photos; interests and levels), "Y
 
 **Built (P3-04, 2026-10-30):** **Propose a session** is on a public profile, in a conversation's ⋯ menu, and next to **Message** on each reply to your help request (which links the session to the request). The form (`/community/sessions/new`) takes a date, a time (read in your time zone, with the IST equivalent shown underneath when you are elsewhere), a length of 15, 30, 45 or 60 minutes, your own **meeting link** (https only; "dodoi doesn't host or record the call. Only they see it, and only once they accept") and an optional note; a time less than an hour ahead is refused. The other person is notified and finds the proposal under Sessions with **Accept**, **Decline** and **Suggest another time** (a new proposal goes back to you; the old card reads "New time suggested"). Once accepted, both see **Join the call** with "Opens another site. Only join if you're comfortable." Either side can **Cancel session** (after a confirmation) until it ends; the link is removed. An hour before it starts, both get a reminder in the bell, created when either opens the app, sessions or notifications. After the end time the card shows Completed, and the link disappears 24 hours later. A proposal nobody answered before it started shows as Cancelled. A block cancels sessions still open between the two. Sessions shows Upcoming (soonest first) and Past (newest first). Notification wording: "{name} proposed a session on …", "accepted your session on …", "declined …", "suggested a new time for your session: …", "cancelled the session on …", "Your session with {name} starts soon, on …".
 
+### F-31 Voice typing (VOI-01…09, approved and built 2026-10-30, P2-10)
+
+**Entry:** the mic button inside a text box (AI chat, Plan a project, message, create-post description or step, journal entry, comment, help request).
+1. The button shows only if the browser supports speech recognition. Without support (Firefox) there is no button and nothing else changes.
+2. First tap on a device: a short note "Your browser turns your speech into text. In Chrome and Edge the audio goes to Google's speech service. dodoi never stores it." with **Continue** / **Cancel**. Continue is remembered on this device.
+3. The browser asks for microphone permission (first time only). Allowed → listening starts: the button becomes a stop button with a static ring, and "Listening…" is announced. Blocked → "Microphone is blocked. Allow it in your browser's site settings, or type instead." The box stays usable.
+4. Speaking fills the box at the cursor: words still being recognised show beside "Listening…", and are typed once final. The person can edit, delete or type at any time.
+5. Stop: tap the button again, send/share, leave the box or the page. Nothing is sent or saved by stopping; the person still presses Send / Share / Save as usual.
+6. Errors: no speech heard → "We didn't hear anything. Tap the mic and try again."; offline → button disabled, tooltip "Voice typing needs a connection"; service unavailable → "Voice typing isn't working right now. You can type instead."
+7. Starting voice typing in another box stops the first one.
+**Edge cases:** a draft autosaves as it does for typing; text over the box limit is cut off with the normal counter message; dictation inside the AI chat counts as one normal message when sent (quotas unchanged).
+
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 
 | Phase | Flow |

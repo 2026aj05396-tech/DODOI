@@ -482,6 +482,8 @@ All need a signed-in, verified user unless noted; all answer `503 AI_UNAVAILABLE
 
 Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only). **Built P4-02:** `targetId` is the answer's message id; only an answer in the reporter's own chat can be reported (anything else, including their own question, is `404`); the moderators' list shows that answer's text (up to 400 characters) and nothing else from the chat, with no link; `HIDE_TARGET` / `RESTORE_TARGET` answer `422 NOT_HIDEABLE` (an answer has nothing to hide), so moderators can only Dismiss; audit target `ai_message`.
 
+**Voice typing (P2-10, PROPOSED) adds no endpoints.** Dictation happens in the browser; the text is sent through the existing routes (messages, comments, posts, journal, help requests, `POST /api/ai/messages`) and validated like typed text.
+
 ### 9.3 Phase 3 endpoints (CONFIRMED — P3-00 approved 2026-10-30; help requests built in P3-03, communities in P3-01, messages in P3-02, sessions in P3-04)
 
 All need a signed-in, **verified** member unless noted; lists use `cursor`, 20 per page, newest first; blocked members are filtered both ways; others' private data answers `404`. Errors use the standard format.

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Textarea } from "@/components/ui/input";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import { ApiRequestError } from "@/lib/api-client/request";
 import { MAX_COMMENT_LENGTH } from "@/lib/schemas/comments";
 
@@ -35,6 +37,14 @@ export function CommentComposer({
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const body = value.trim();
+  const fieldRef = useRef<HTMLTextAreaElement>(null);
+  const voice = useVoiceTyping({
+    inputRef: fieldRef,
+    value,
+    maxLength: MAX_COMMENT_LENGTH,
+    disabled: isSending,
+    onValueChange: setValue,
+  });
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -62,6 +72,7 @@ export function CommentComposer({
       </label>
       <Textarea
         id={`composer-${label}`}
+        ref={fieldRef}
         value={value}
         onChange={(event) => setValue(event.target.value)}
         placeholder={placeholder ?? label}
@@ -77,6 +88,7 @@ export function CommentComposer({
           event.currentTarget.setSelectionRange(end, end);
         }}
       />
+      <VoiceInputStatus voice={voice} />
       {error ? <FieldError id={`composer-${label}-error`}>{error}</FieldError> : null}
       <div className="flex items-center justify-end gap-2.5">
         {value.length >= COUNTER_FROM ? (
@@ -84,6 +96,7 @@ export function CommentComposer({
             {value.length} / {MAX_COMMENT_LENGTH}
           </span>
         ) : null}
+        <VoiceInputButton voice={voice} disabled={isSending} />
         {onCancel ? (
           <Button type="button" variant="outline" size="sm" onClick={onCancel}>
             Cancel

@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slot } from "radix-ui";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -29,7 +29,8 @@ const buttonVariants = cva(
   },
 );
 
-export type ButtonProps = ComponentPropsWithoutRef<"button"> &
+// Includes `ref` (a plain prop in React 19).
+export type ButtonProps = ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     /** Render the child element (e.g. a Next.js Link) with button styles instead of a <button>. */
     asChild?: boolean;

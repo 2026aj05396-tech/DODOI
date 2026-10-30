@@ -157,6 +157,20 @@ Defined now so it is not forgotten; implemented in P4. **P4-00 additions (2026-1
 - `tests/e2e/accessibility.spec.ts`: axe (WCAG 2.0/2.1/2.2 A + AA tags) on every Phase 1 screen — signed out, onboarding, signed in, admin, theme — at 390, 834 and 1280px; serious/critical violations fail. Plus a keyboard sweep (30 Tab stops on feed, explore, post, saved, account at 390 and 1280): every focused element visible and showing the focus ring.
 - Manual keyboard walkthrough (PO): sign in → onboarding → feed (save, Not interested, Load more) → post (gallery arrows, tick a step, collection picker, Escape) → saved → settings, using only Tab/Shift+Tab/Enter/Space/Escape/arrows.
 
+## 8c. Voice typing tests (P2-10, built 2026-10-30)
+
+Real speech cannot be automated, so the browser API is faked.
+- **Helper:** `tests/helpers/fake-speech.ts` — a fake `SpeechRecognition` that lets a test emit interim and final results, errors (`not-allowed`, `no-speech`, `network`, `service-not-allowed`) and `end`.
+- **Unit (hook):** start/stop, interim vs final text, inserts at the cursor, stops on blur/page hide/offline, one listener at a time, unsupported → not offered, `en-IN` set.
+- **Component:** `VoiceInputButton` states (idle, listening, disabled offline, error messages), `aria-pressed` and name changes, live status, first-use note remembered; added to the `/dev/ui` axe check.
+- **Chat panel / composers:** dictated text lands in the field and is not sent until Send; sending stops listening.
+- **E2E-37** (`voice-typing.spec.ts`, mobile + desktop, fake injected with `addInitScript`): dictate into the create-post description, an AI chat message and a direct message; mic hidden when the API is missing; blocked microphone shows the message and typing still works; nothing is saved or sent by dictation alone. Added to the axe sweep.
+- **Headers test:** `Permissions-Policy` contains `microphone=(self)` and still disables camera, geolocation and the others.
+- **Manual (PO, per device):** Chrome Android, Chrome and Edge desktop, Safari iPhone (browser and installed app — dictation may not work in the installed app, to be recorded), Firefox (no button). Accuracy for Indian English and noisy rooms; permission prompt wording.
+- **Built:** `tests/helpers/fake-speech.ts`; `src/lib/utils/voice-text.test.ts` (9); `src/components/ui/voice-input.test.tsx` (17: unsupported, first-use note once, language, interim vs final, caret insertion, length limit, blocked / no-speech / unavailable messages, offline, page hidden, blur, send, one listener at a time, announcements); `chat-panel.test.tsx` (+3); `security-headers.test.ts` (+1); E2E-37 `tests/e2e/voice-typing.spec.ts` (comment dictation with the first-use note and an axe scan while listening, blocked microphone, no button without the API, create-post story and a step; mobile + desktop). Steps, messages, journal, help requests and Plan a project share the same hook and are covered by the unit tests plus the manual check below, not one E2E each.
+- **Gotcha:** the E2E server on port 3100 is reused when it is already running, so a header or code change needs that server stopped (and rebuilt) before E2E results mean anything.
+- Not run in CI: real speech, real microphones.
+
 ## 9. Running Tests
 
 | Command | Runs |

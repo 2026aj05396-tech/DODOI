@@ -9,6 +9,7 @@ test("pages are served with the security headers", async ({ request }) => {
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
   expect(headers["permissions-policy"]).toContain("camera=()");
+  expect(headers["permissions-policy"]).toContain("microphone=(self)");
   expect(headers["x-robots-tag"]).toBe("noindex, nofollow");
   expect(headers["strict-transport-security"]).toBeUndefined();
   expect(headers["x-powered-by"]).toBeUndefined();

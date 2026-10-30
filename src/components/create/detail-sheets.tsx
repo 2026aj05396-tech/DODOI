@@ -11,7 +11,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { SkillPicker } from "@/components/onboarding/skill-picker";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import { ToggleChip } from "@/components/ui/chip";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input, Label } from "@/components/ui/input";
 import { PatternTile, type PatternAccent } from "@/components/ui/pattern-tile";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import type { ExperienceLevel } from "@/lib/schemas/me";
 import { MAX_OWN_POST_ITEMS, MAX_OWN_POST_SKILLS, MAX_OWN_POST_TAGS } from "@/lib/schemas/posts";
 import type { Media } from "@/lib/types/media";
@@ -238,15 +240,20 @@ function AddField({
   label,
   placeholder,
   disabled,
+  hasVoice = false,
   onAdd,
 }: {
   id: string;
   label: string;
   placeholder: string;
   disabled?: boolean;
+  /** Offers voice typing (steps, VOI-01). */
+  hasVoice?: boolean;
   onAdd: (value: string) => void;
 }) {
   const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const voice = useVoiceTyping({ inputRef, value, onValueChange: setValue, disabled });
   function add() {
     const text = value.trim();
     if (!text) return;
@@ -265,6 +272,7 @@ function AddField({
       <div className="flex gap-2">
         <Input
           id={id}
+          ref={inputRef}
           value={value}
           placeholder={placeholder}
           disabled={disabled}
@@ -272,10 +280,12 @@ function AddField({
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={onKeyDown}
         />
+        {hasVoice ? <VoiceInputButton voice={voice} disabled={disabled} /> : null}
         <Button variant="outline" onClick={add} disabled={disabled || !value.trim()}>
           Add
         </Button>
       </div>
+      {hasVoice ? <VoiceInputStatus voice={voice} /> : null}
     </div>
   );
 }
@@ -437,6 +447,7 @@ export function ExtrasSheet({
         ) : null}
         <AddField
           id="add-step"
+          hasVoice
           label={`Add step ${steps.length + 1}`}
           placeholder="e.g. Make a magic ring with 6 stitches"
           disabled={steps.length >= MAX_OWN_POST_ITEMS}

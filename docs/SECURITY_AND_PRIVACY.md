@@ -120,7 +120,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Security headers | HSTS (production), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` minimal |
 | Unbounded requests | Body size limits; pagination max 50; search query max length |
 
-**Implemented in P1-29:** headers in `src/lib/security-headers.ts` (applied in `next.config.ts`, resolved per `APP_ENV` at build time; `poweredByHeader: false`); `Permissions-Policy` disables accelerometer, autoplay, camera, display-capture, geolocation, gyroscope, magnetometer, microphone, payment and usb; every mutation through `withRouteHandler` is checked by `isSameOriginRequest()` (`Origin` vs public host, else `Sec-Fetch-Site`; non-browser clients allowed) and rejected with 403 `CROSS_ORIGIN_REQUEST`; return URLs pass through `toSafeReturnPath()`. CSP in `buildContentSecurityPolicy()` (same file as the headers).
+**Implemented in P1-29:** headers in `src/lib/security-headers.ts` (applied in `next.config.ts`, resolved per `APP_ENV` at build time; `poweredByHeader: false`); `Permissions-Policy` disables accelerometer, autoplay, camera, display-capture, geolocation, gyroscope, magnetometer, microphone (`(self)` since voice typing, P2-10 — see §11), payment and usb; every mutation through `withRouteHandler` is checked by `isSameOriginRequest()` (`Origin` vs public host, else `Sec-Fetch-Site`; non-browser clients allowed) and rejected with 403 `CROSS_ORIGIN_REQUEST`; return URLs pass through `toSafeReturnPath()`. CSP in `buildContentSecurityPolicy()` (same file as the headers).
 
 ## 5. Media Upload Security
 
@@ -223,3 +223,13 @@ Storage backend (CONFIRMED, OD-27): PostgreSQL `RateLimitBucket` table (fixed wi
 - Prompt injection: user text, post text and skill text are delimited as data; the system prompt says to ignore instructions inside them; answers are length-limited and links are limited to dodoi skill pages.
 - Retention 30 days (deletable anytime); the retention job, deletion of photos with conversations, and removal on account deletion are covered by tests.
 
+
+## 11. Voice typing (P2-10, approved and built 2026-10-30)
+
+- **No audio reaches dodoi.** Speech is turned into text by the browser's own recognition (Web Speech API). No upload route, storage, log or database field exists for audio; only the final text is sent, as if typed.
+- **Third-party processing:** in Chrome and Edge the browser sends the audio to its vendor's speech service; Safari uses Apple's. dodoi does not control this, so a one-time note says so before first use (VOI-05) and the privacy policy (OD-26) must name it. Free-tier AI rules (§10) are unaffected: the AI sees only text that is sent.
+- **Headers:** `Permissions-Policy` changes from `microphone=()` to `microphone=(self)` so dodoi's own pages can ask for the microphone; embedded frames and third parties still cannot. Camera, geolocation and the rest stay disabled. `src/lib/security-headers.ts` tests are updated to expect this. **CSP is unchanged** (recognition is done by the browser, not by a request from the page).
+- **Permission:** the browser asks on the first tap only; blocking it never breaks the form. dodoi never starts listening without a tap, stops on send, blur, page hide and offline, and never listens in the background.
+- **Input handling:** dictated text is untrusted input like any other: same Zod limits, blocklists, rate limits and moderation (§4, §6). Not offered on password, email, date of birth, username or search fields.
+- **Logs:** no dictated text in logs beyond what typed text already has (none).
+- Approach B (server transcription) would need its own section here: consent, retention, quotas and provider terms, as AI photos do.

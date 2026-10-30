@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input, Label, Textarea } from "@/components/ui/input";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import { addEntry, updateEntry } from "@/lib/api-client/journal";
 import { uploadMedia } from "@/lib/api-client/media";
 import { ApiRequestError } from "@/lib/api-client/request";
@@ -40,6 +42,13 @@ export function EntrySheet({
 }) {
   const [title, setTitle] = useState(entry?.title ?? "");
   const [body, setBody] = useState(entry?.body ?? "");
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const voice = useVoiceTyping({
+    inputRef: bodyRef,
+    value: body,
+    maxLength: 2_000,
+    onValueChange: setBody,
+  });
   const [photos, setPhotos] = useState<Photo[]>(
     () =>
       entry?.media.map((media) => ({
@@ -127,12 +136,19 @@ export function EntrySheet({
             <Label htmlFor="entry-body">What happened</Label>
             <Textarea
               id="entry-body"
+              ref={bodyRef}
               rows={4}
               maxLength={2_000}
               placeholder="What worked, what didn't, what's next?"
               value={body}
               onChange={(event) => setBody(event.target.value)}
             />
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <VoiceInputStatus voice={voice} />
+              </div>
+              <VoiceInputButton voice={voice} />
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">

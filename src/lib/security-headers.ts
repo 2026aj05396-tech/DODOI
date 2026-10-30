@@ -8,7 +8,8 @@ export type AppEnv = "local" | "test" | "production";
 export type HeaderEntry = { key: string; value: string };
 
 // Browser features dodoi does not use are switched off. Revisit when a feature needs one
-// (e.g. camera for in-app capture).
+// (e.g. camera for in-app capture). The microphone is allowed for dodoi's own pages only, for
+// voice typing (P2-10, SECURITY_AND_PRIVACY §11); embedded frames still cannot use it.
 const PERMISSIONS_POLICY = [
   "accelerometer=()",
   "autoplay=()",
@@ -17,7 +18,7 @@ const PERMISSIONS_POLICY = [
   "geolocation=()",
   "gyroscope=()",
   "magnetometer=()",
-  "microphone=()",
+  "microphone=(self)",
   "payment=()",
   "usb=()",
 ].join(", ");

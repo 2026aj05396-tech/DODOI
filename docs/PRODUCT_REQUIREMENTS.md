@@ -483,6 +483,22 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 
 **Order (PO):** P3-03 help requests first, then P3-01 communities, P3-02 messages, P3-04 sessions, P3-05 use what you have. **Open points for the PO** are listed in README §2 (row "Phase 3 spec").
 
+### 6.4 Voice typing (P2-10, approach approved by the PO 2026-10-30; built 2026-10-30)
+
+PO request: a voice option in chats (AI assistant, messaging) and while creating a post, to describe a post or how it was made. **Meaning: voice input — speak and the words are typed into the box.** Approach A (browser dictation) is chosen; nothing here needs a server. Defaults marked "PO to confirm" are in README §2 "Voice typing".
+
+| ID | Requirement |
+|---|---|
+| VOI-01 | A mic button sits inside these text boxes: AI companion chat and Plan a project, direct messages, create post (description, steps), journal entries, comments, help requests. It is **not** offered on sign-in or account fields, search, alt text, usernames or admin editors. It is hidden when the browser has no speech recognition (for example Firefox) and disabled with a reason while offline. |
+| VOI-02 | Tap to start, tap again to stop. It also stops when the message is sent, the box loses focus, the page is hidden or the browser ends the session. Only one box listens at a time. |
+| VOI-03 | Final words appear in the box at the cursor; words still being recognised show beside "Listening…" and are typed when they are final (a text box cannot show part of its text muted). The text stays editable. **Dictation never sends, posts, shares or saves by itself**; drafts autosave exactly as they do for typing. |
+| VOI-04 | Language: English (India) in the first release. Hindi and Hinglish are open (PO to confirm). |
+| VOI-05 | Privacy: dodoi never receives, records or stores audio. The browser does the recognition; in Chrome and Edge the audio goes to the browser vendor's speech service. A one-time note says so before the first use on a device. The text is checked on the server like typed text (blocklists, length limits). |
+| VOI-06 | States: idle, listening ("Listening…" text and a static ring, no pulsing), microphone blocked (how to allow it), no speech heard, offline, speech service unavailable. Each has a friendly message and the box keeps working by typing. |
+| VOI-07 | Built for mobile, tablet and desktop together; 44 px touch target; keyboard (Space/Enter toggles); screen-reader name and a polite live status; reduced motion respected; WCAG 2.2 AA. |
+| VOI-08 | The AI companion receives only the text that is sent, as for typed messages; voice typing does not change AI quotas, consent or retention. |
+| VOI-09 | **Out of scope:** audio/voice-note messages, voice changing or effects, reading answers aloud, server-side transcription (approach B), Hindi/Hinglish accuracy work. B may follow if the browser's accuracy is not good enough. |
+
 ## 7. Non-Functional Requirements
 
 | ID | Requirement |

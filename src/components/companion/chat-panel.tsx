@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
 import { useIsOnline } from "@/hooks/use-is-online";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import { createAIPlan, sendAIMessage, updateAIConsents } from "@/lib/api-client/ai";
 import { ApiRequestError } from "@/lib/api-client/request";
 import { AI_TEXT_MAX_LENGTH, type AIContextInput } from "@/lib/schemas/ai";
@@ -119,6 +121,18 @@ export function ChatPanel({
       ? "Verify your email to ask dodoi."
       : null;
   const isFieldDisabled = stateNotice !== null || !isOnline || dailyLimit !== null;
+  const voice = useVoiceTyping({
+    inputRef: fieldRef,
+    value: draft,
+    maxLength: AI_TEXT_MAX_LENGTH,
+    disabled: isFieldDisabled || isPending,
+    onValueChange: (next) => {
+      setDraft(next);
+      requestAnimationFrame(() => {
+        if (fieldRef.current) resize(fieldRef.current);
+      });
+    },
+  });
   const placeholder = !isOnline
     ? "You're offline"
     : dailyLimit
@@ -460,6 +474,7 @@ export function ChatPanel({
             }}
             className="max-h-32 min-h-11 flex-1 resize-none rounded-3xl border-control border-input bg-background px-4 py-2.5 text-body-lg text-foreground placeholder:text-foreground-secondary disabled:bg-muted"
           />
+          <VoiceInputButton voice={voice} disabled={isFieldDisabled || isPending} />
           <Button
             type="submit"
             aria-label="Send"
@@ -469,6 +484,7 @@ export function ChatPanel({
             <ArrowRight aria-hidden className="size-4.5" strokeWidth={2} />
           </Button>
         </form>
+        <VoiceInputStatus voice={voice} />
         {showCounter ? (
           <p className="text-right text-meta text-foreground-secondary">
             {draft.length} / {AI_TEXT_MAX_LENGTH}

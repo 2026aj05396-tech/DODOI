@@ -113,6 +113,8 @@ Authorization is checked **before** any data is placed in a prompt.
 - Retention of AI conversations: OPEN. PROPOSED default: store conversation for the user's history for 30 days, user can delete anytime; usage metadata (tokens, cost, latency, no content) retained longer.
 - Logs never contain prompt text or images.
 
+**Voice typing (P2-10, PROPOSED).** Speaking into the companion box is browser dictation (approach A): the browser turns speech into text before anything is sent, so the provider, the quotas, the consent switches and the retention rules see only ordinary text messages. Audio is never sent to the AI provider. Server-side transcription with Gemini audio (approach B) is a possible later step and would need consent, quota and retention rules of its own (SECURITY §11).
+
 ## 8. Cost Controls
 
 Free-tier/zero-budget constraint applies until changed.

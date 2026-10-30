@@ -355,6 +355,23 @@ Built from design `1h` (Community: tabs **Your circles · Help requests · Sessi
 | Built (P3-04, 2026-10-30) | `CommunityTabs` is now three live links (Sessions has no coming-soon dot). `src/components/sessions/`: `SessionsView` (Upcoming / Past chips, 2 columns from 768px, "Show more" on Past), `SessionCard` (avatar and name, "You proposed" / "Proposed to you", a status chip with a dot and text, the time in the viewer's zone with " · {IST time} IST" beside it elsewhere, the length, the note, a lavender link box "Join the call" with "Opens another site. Only join if you're comfortable.", and Accept / Decline / Suggest another time / Cancel session), `RescheduleDialog` (sheet on phones, centred from 768px), `ProposeSessionForm` (date and time with the IST preview, length, meeting link with its hint, note with counter), `ProposeSessionLink` (outline button on profiles, help replies and the conversation menu). Built from the system tokens, not in the design file (PO to review at 390/834/1280) |
 | Empty, loading, error | Every list has an empty state with one action, skeletons sized like the final content, and an inline error with retry; offline: lists show the last loaded data read-only (SYSTEM_ARCHITECTURE offline matrix), sending is disabled with "You're offline" |
 | Accessibility | Status and unread are text plus shape; polling updates go into an `aria-live="polite"` log; all controls 44px; reduced motion removes new-message animation |
+### 8.4 Voice typing (P2-10, approved and built 2026-10-30)
+
+No design exists; built from the system (rule for undesigned screens) and shown to the PO at 390 / 834 / 1280. **Deviation to confirm:** a new control with no `3b` counterpart.
+
+| Element | Spec |
+|---|---|
+| Component | `VoiceInputButton` (`components/ui/`) with the `useVoiceInput` hook (`src/hooks/`); added to the `/dev/ui` preview. Icon: lucide `Mic` (idle), `Square` (listening). |
+| Placement (as built) | **Chat composers** (AI chat, messages): between the field and Send, 44 px. **Comments**: in the button row, left of Post. **Create post story, journal entry, Plan a project**: a row under the field, status on the left and the mic on the right. **Help request**: in the row with the character counter. **Steps** (Materials and steps sheet): between the field and Add. The mic never overlaps the text. |
+| Idle | Quiet icon button (ink-soft), tooltip/label "Start voice typing". |
+| Listening | Stop icon, coral accent, **static** ring and the visible text "Listening…" next to or under the field. **No pulsing or looping animation** (PO decision 2026-10-28); only a one-time colour change, none under reduced motion. |
+| Interim text | Shown in italics beside "Listening…" and typed into the field only when final (a text box cannot style part of its text); no animation. |
+| Disabled | Offline: disabled, tooltip "Voice typing needs a connection". |
+| Errors | Inline message under the field (FieldError style): blocked, no speech, unavailable (copy in F-31). Never a blocking dialog. |
+| First-use note | Small sheet (mobile) / dialog (desktop) with Continue and Cancel; text in F-31. |
+| Accessibility | `aria-pressed` on the button, name changes between "Start voice typing" and "Stop voice typing"; polite live region announces "Listening" and "Stopped"; focus stays in the field; Space/Enter toggles; visible focus ring; reduced motion respected. |
+| Not offered | Sign-in/account fields, search, alt text, usernames, admin editors. |
+
 ## 9. Design Deliverables Status
 
 | Item | Status |

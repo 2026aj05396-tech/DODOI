@@ -14,6 +14,8 @@ import { BlockDialog } from "@/components/safety/block-dialog";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { showToast } from "@/components/ui/toast";
+import { VoiceInputButton, VoiceInputStatus } from "@/components/ui/voice-input";
+import { useVoiceTyping } from "@/hooks/use-voice-typing";
 import {
   deleteMessage,
   hideConversation,
@@ -57,6 +59,13 @@ export function ConversationView({
   const [olderCursor, setOlderCursor] = useState(initial.olderCursor);
   const [canSend, setCanSend] = useState(initial.canSend);
   const [draft, setDraft] = useState("");
+  const draftRef = useRef<HTMLTextAreaElement>(null);
+  const voice = useVoiceTyping({
+    inputRef: draftRef,
+    value: draft,
+    maxLength: MESSAGE_MAX,
+    onValueChange: setDraft,
+  });
   const [isSending, setIsSending] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -294,6 +303,7 @@ export function ConversationView({
             </label>
             <textarea
               id="message-field"
+              ref={draftRef}
               value={draft}
               rows={1}
               maxLength={MESSAGE_MAX}
@@ -309,11 +319,13 @@ export function ConversationView({
                 "max-h-32 min-h-11 flex-1 resize-none rounded-md border-control border-input bg-background px-3.5 py-2.5 text-control-lg text-foreground placeholder:text-muted-foreground",
               )}
             />
+            <VoiceInputButton voice={voice} disabled={isSending} />
             <Button type="submit" disabled={isSending || draft.trim() === ""}>
               {isSending ? "Sending…" : "Send"}
             </Button>
           </div>
         )}
+        <VoiceInputStatus voice={voice} />
         {draft.length > MESSAGE_MAX * 0.8 ? (
           <p className="text-meta text-foreground-secondary">
             {draft.length} / {MESSAGE_MAX}
