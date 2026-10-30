@@ -116,7 +116,7 @@ Authorization is checked **before** any data is placed in a prompt.
 Free-tier/zero-budget constraint applies until changed.
 
 - Per-user daily quota (requests and/or tokens) — values OPEN.
-- Global daily spend cap with kill switch (`AI_ENABLED` env flag + automatic disable on cap).
+- Global daily spend cap with kill switch (`AI_ENABLED` env flag + automatic disable on cap). **Built P4-05 (2026-10-30):** the switch is also stored in the database (`app_setting.ai_enabled`) and changed on `/admin/ai`; the cap counts requests that reached the provider (quota refusals excluded) and rests the companion until the next UTC day.
 - `maxOutputTokens` limit per request; context trimming (last N messages).
 - Image downscaling before sending.
 - Cache responses for identical non-personal prompts (e.g. skill explainers) — PROPOSED.

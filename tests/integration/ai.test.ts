@@ -8,6 +8,10 @@ import {
   AI_PHOTO_LIMIT,
   createPlan,
   deleteAllConversations,
+  getAiSwitch,
+  getCompanionSetup,
+  getUsageReport,
+  setAiSwitch,
   deleteConversation,
   getConsents,
   getConversation,
@@ -736,6 +740,158 @@ describe("ai companion", () => {
         ["Cotton yarn", false],
         ["4 mm hook", false],
       ]);
+    });
+  });
+  describe("usage report and kill switch (P4-05)", () => {
+    async function admin() {
+      const user = await db.user.create({
+        data: {
+          email: `admin-${Math.random()}@example.test`,
+          role: "ADMIN",
+          emailVerified: new Date(),
+        },
+      });
+      return actorFor(user, "ADMIN");
+    }
+    const NOW = new Date("2026-10-30T12:00:00.000Z");
+
+    it("adds up requests, tokens, cost, errors and blocked per day, without quota refusals or text", async () => {
+      const asha = await member();
+      const base = { userId: asha.userId, model: "m", latencyMs: 5, hasImage: false };
+      await db.aIUsage.createMany({
+        data: [
+          {
+            ...base,
+            status: "OK",
+            inputTokens: 100,
+            outputTokens: 20,
+            costMicros: 7,
+            createdAt: new Date("2026-10-30T01:00:00Z"),
+          },
+          {
+            ...base,
+            status: "OK",
+            inputTokens: 50,
+            outputTokens: 10,
+            costMicros: 3,
+            createdAt: new Date("2026-10-30T09:00:00Z"),
+          },
+          {
+            ...base,
+            status: "ERROR",
+            inputTokens: 0,
+            outputTokens: 0,
+            costMicros: 0,
+            createdAt: new Date("2026-10-29T23:59:00Z"),
+          },
+          {
+            ...base,
+            status: "BLOCKED",
+            inputTokens: 10,
+            outputTokens: 0,
+            costMicros: 1,
+            createdAt: new Date("2026-10-29T10:00:00Z"),
+          },
+          {
+            ...base,
+            status: "QUOTA",
+            inputTokens: 0,
+            outputTokens: 0,
+            costMicros: 0,
+            createdAt: new Date("2026-10-30T10:00:00Z"),
+          },
+          {
+            ...base,
+            status: "OK",
+            inputTokens: 1,
+            outputTokens: 1,
+            costMicros: 1,
+            createdAt: new Date("2026-09-01T10:00:00Z"),
+          },
+        ],
+      });
+
+      const report = await getUsageReport(
+        await admin(),
+        { from: "2026-10-29", to: "2026-10-30" },
+        { now: NOW },
+      );
+
+      expect(report.totals).toEqual({
+        requests: 4,
+        inputTokens: 160,
+        outputTokens: 30,
+        costMicros: 11,
+        errors: 1,
+        blocked: 1,
+      });
+      expect(report.byDay.map((day) => [day.date, day.requests, day.errors, day.blocked])).toEqual([
+        ["2026-10-29", 2, 1, 1],
+        ["2026-10-30", 2, 0, 0],
+      ]);
+      expect(report.dailyCap).toEqual({ used: 2, limit: expect.any(Number) });
+    });
+
+    it("defaults to the last 30 days with empty days filled in, refuses bad ranges, and is for admins only", async () => {
+      const report = await getUsageReport(await admin(), {}, { now: NOW });
+      expect(report.byDay).toHaveLength(30);
+      expect(report.byDay.at(-1)?.date).toBe("2026-10-30");
+      expect(report.totals.requests).toBe(0);
+
+      await expect(
+        getUsageReport(await admin(), { from: "2025-01-01", to: "2026-10-30" }, { now: NOW }),
+      ).rejects.toMatchObject({ status: 400 });
+
+      const asha = await member();
+      const moderator = await db.user.create({
+        data: { email: "m@example.test", role: "MODERATOR", emailVerified: new Date() },
+      });
+      await expect(getUsageReport(asha.actor, {})).rejects.toMatchObject({ status: 404 });
+      await expect(getUsageReport(actorFor(moderator, "MODERATOR"), {})).rejects.toMatchObject({
+        status: 404,
+      });
+      await expect(getUsageReport(null, {})).rejects.toMatchObject({ status: 404 });
+      await expect(setAiSwitch(asha.actor, false)).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("switching the companion off stops messages and plans at once, on again brings them back, and it is audited", async () => {
+      const asha = await member();
+      const boss = await admin();
+      const provider = createFakeAIProvider({
+        reply: () => JSON.stringify({ title: "T", craft: "C", materials: ["m"], steps: ["s"] }),
+      });
+      expect((await getAiSwitch(boss, { provider })).isOn).toBe(true);
+      expect((await getCompanionSetup(asha.actor, { provider })).isAvailable).toBe(true);
+
+      const off = await setAiSwitch(boss, false, { provider });
+      expect(off).toEqual({ isOn: false, isConfigured: true, isSwitchedOff: true });
+      expect((await getCompanionSetup(asha.actor, { provider })).isAvailable).toBe(false);
+      await expect(
+        sendMessage(asha.actor, { text: "Hi" }, { provider, loadImage }),
+      ).rejects.toMatchObject({ status: 503, code: "AI_UNAVAILABLE" });
+      await expect(
+        createPlan(asha.actor, { text: "A coaster" }, { provider }),
+      ).rejects.toMatchObject({ status: 503 });
+      expect(provider.calls).toHaveLength(0);
+
+      await setAiSwitch(boss, true, { provider });
+      await expect(
+        sendMessage(asha.actor, { text: "Hi" }, { provider, loadImage }),
+      ).resolves.toBeDefined();
+
+      const audit = await db.auditLog.findMany({
+        where: { targetType: "setting" },
+        orderBy: { createdAt: "asc" },
+      });
+      expect(audit.map((row) => row.action)).toEqual(["ai.switch_off", "ai.switch_on"]);
+    });
+
+    it("cannot be switched on without a provider", async () => {
+      expect(await getAiSwitch(await admin(), { provider: null })).toEqual({
+        isOn: false,
+        isConfigured: false,
+        isSwitchedOff: false,
+      });
     });
   });
 });

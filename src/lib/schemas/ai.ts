@@ -67,3 +67,13 @@ export const consentsSchema = z
   .object({ AI_IMAGES: z.boolean(), AI_PROFILE_CONTEXT: z.boolean() })
   .partial();
 export type ConsentsInput = z.output<typeof consentsSchema>;
+
+const day = z.iso.date();
+
+/** GET /api/admin/ai/usage: UTC days, both inclusive; the last 30 days when left out. */
+export const aiUsageQuerySchema = z.object({ from: day.optional(), to: day.optional() });
+export type AIUsageQuery = z.output<typeof aiUsageQuerySchema>;
+
+/** PUT /api/admin/ai/switch. */
+export const aiSwitchSchema = z.object({ enabled: z.boolean() });
+export type AISwitchInput = z.output<typeof aiSwitchSchema>;

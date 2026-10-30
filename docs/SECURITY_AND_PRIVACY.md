@@ -77,6 +77,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Theme | User* (published) | Admin | Admin | Admin |
 | Media asset | Via parent resource | Admin (+ User for avatar, PROPOSED) | Owner/Admin | Owner/Admin |
 | Audit log | Admin | System | — | — |
+| AI usage numbers and the companion kill switch (P4-05) | Admin only (moderators get 404) | — | Admin (switch), audited as `ai.switch_on` / `ai.switch_off` | — (usage rows hold no text and are purged after 12 months) |
 
 `User*` = signed-in users only, **except** published post detail and related posts, which are Public read-only (OD-29).
 

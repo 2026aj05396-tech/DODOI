@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants/pagination";
-import { aiPlanSchema } from "@/lib/schemas/ai";
+import { aiPlanSchema, type AIUsageQuery } from "@/lib/schemas/ai";
 import type {
   AIFeedbackInput,
   AIListQuery,
@@ -18,6 +18,9 @@ import type {
   AIConversationSummary,
   AIMessageView,
   AIPlan,
+  AISwitchState,
+  AIUsageReport,
+  AIUsageTotals,
   CompanionSetup,
   SendAIMessageResult,
 } from "@/lib/types/ai";
@@ -34,7 +37,7 @@ import {
   mediaProvider as defaultMediaProvider,
   type MediaProvider,
 } from "@/server/integrations/media";
-import type { Actor, AuthenticatedActor } from "@/server/lib/actor";
+import { requireAdmin, type Actor, type AuthenticatedActor } from "@/server/lib/actor";
 import { serverEnv } from "@/server/lib/env";
 import {
   ForbiddenError,
@@ -43,10 +46,12 @@ import {
   ServiceUnavailableError,
   UnauthenticatedError,
   UnprocessableError,
+  ValidationError,
 } from "@/server/lib/errors";
 import { logger } from "@/server/lib/logger";
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { consumeRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
+import { recordAudit } from "@/server/modules/admin";
 import {
   deleteUnusedMedia,
   getMedia,
@@ -70,6 +75,9 @@ import {
   findActiveConsents,
   findConversation,
   findAnswersByIds,
+  findSetting,
+  findUsageByDay,
+  upsertSetting,
   findConversations,
   findImageIdsOfConversations,
   findMessageForFeedback,
@@ -145,6 +153,13 @@ function resting(): ServiceUnavailableError {
   return new ServiceUnavailableError(RESTING, { code: "AI_UNAVAILABLE" });
 }
 
+const SWITCH_KEY = "ai_enabled";
+
+/** The admin kill switch (AIC-10): off only when an admin turned it off; the default is on. */
+async function isSwitchedOff(): Promise<boolean> {
+  return (await findSetting(SWITCH_KEY)) === false;
+}
+
 function startOfUtcDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
@@ -164,7 +179,7 @@ export async function getCompanionSetup(
   const user = requireSignedIn(actor);
   const [consents, skills] = await Promise.all([getConsents(user), getActivePredefinedSkills()]);
   return {
-    isAvailable: provider !== null,
+    isAvailable: provider !== null && !(await isSwitchedOff()),
     showFreeTierNotice: serverEnv.AI_TIER === "free",
     consents,
     skills: skills.map(({ id, name, slug }) => ({ id, name, slug })),
@@ -387,7 +402,7 @@ export async function sendMessage(
   }: Options = {},
 ): Promise<SendAIMessageResult> {
   const user = requireVerified(actor);
-  if (!provider) throw resting();
+  if (!provider || (await isSwitchedOff())) throw resting();
   if ((await countProviderRequestsSince(startOfUtcDay(now))) >= serverEnv.AI_DAILY_REQUEST_CAP) {
     throw resting();
   }
@@ -582,7 +597,7 @@ export async function createPlan(
   { provider = defaultProvider, now = new Date() }: Pick<Options, "provider" | "now"> = {},
 ): Promise<AIPlan> {
   const user = requireVerified(actor);
-  if (!provider) throw resting();
+  if (!provider || (await isSwitchedOff())) throw resting();
   if ((await countProviderRequestsSince(startOfUtcDay(now))) >= serverEnv.AI_DAILY_REQUEST_CAP) {
     throw resting();
   }
@@ -762,4 +777,107 @@ export async function purgeExpiredConversations({
 /** Daily job: usage rows (counts only) older than 12 months. */
 export async function purgeOldUsage(now = new Date()): Promise<number> {
   return deleteUsageBefore(new Date(now.getTime() - USAGE_RETENTION_DAYS * DAY_MS));
+}
+
+// --- Admin: usage and the kill switch (P4-05, AIC-10) -----------------------------------------------
+
+const DEFAULT_RANGE_DAYS = 30;
+const MAX_RANGE_DAYS = 366;
+
+const emptyTotals = (): AIUsageTotals => ({
+  requests: 0,
+  inputTokens: 0,
+  outputTokens: 0,
+  costMicros: 0,
+  errors: 0,
+  blocked: 0,
+});
+
+function isoDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * GET /api/admin/ai/usage: requests, tokens, estimated cost, errors and blocked per UTC day, and
+ * today's count against the global cap. Numbers only. Quota refusals never reached the provider
+ * and are left out, like in the global cap.
+ */
+export async function getUsageReport(
+  actor: Actor,
+  query: AIUsageQuery,
+  { now = new Date() }: Pick<Options, "now"> = {},
+): Promise<AIUsageReport> {
+  requireAdmin(actor);
+  const today = startOfUtcDay(now);
+  const to = query.to ? new Date(`${query.to}T00:00:00.000Z`) : today;
+  const from = query.from
+    ? new Date(`${query.from}T00:00:00.000Z`)
+    : new Date(to.getTime() - (DEFAULT_RANGE_DAYS - 1) * DAY_MS);
+  const days = Math.round((to.getTime() - from.getTime()) / DAY_MS) + 1;
+  if (days < 1 || days > MAX_RANGE_DAYS) {
+    throw new ValidationError(`Choose a range of 1 to ${MAX_RANGE_DAYS} days.`, {
+      fields: { from: "Choose a range of 1 to 366 days." },
+    });
+  }
+
+  const [rows, used] = await Promise.all([
+    findUsageByDay(from, new Date(to.getTime() + DAY_MS)),
+    countProviderRequestsSince(today),
+  ]);
+  const byDate = new Map<string, AIUsageTotals>();
+  for (let index = 0; index < days; index += 1) {
+    byDate.set(isoDay(new Date(from.getTime() + index * DAY_MS)), emptyTotals());
+  }
+  const totals = emptyTotals();
+  for (const row of rows) {
+    if (row.status === "QUOTA") continue;
+    const day = byDate.get(isoDay(row.day));
+    if (!day) continue;
+    for (const target of [day, totals]) {
+      target.requests += Number(row.requests);
+      target.inputTokens += Number(row.inputTokens);
+      target.outputTokens += Number(row.outputTokens);
+      target.costMicros += Number(row.costMicros);
+      if (row.status === "ERROR") target.errors += Number(row.requests);
+      if (row.status === "BLOCKED") target.blocked += Number(row.requests);
+    }
+  }
+  return {
+    from: isoDay(from),
+    to: isoDay(to),
+    totals,
+    byDay: [...byDate].map(([date, day]) => ({ date, ...day })),
+    dailyCap: { used, limit: serverEnv.AI_DAILY_REQUEST_CAP },
+  };
+}
+
+/** The switch as the admin screen shows it. */
+export async function getAiSwitch(
+  actor: Actor,
+  { provider = defaultProvider }: Pick<Options, "provider"> = {},
+): Promise<AISwitchState> {
+  requireAdmin(actor);
+  const isSwitchedOffNow = await isSwitchedOff();
+  return {
+    isOn: provider !== null && !isSwitchedOffNow,
+    isConfigured: provider !== null,
+    isSwitchedOff: isSwitchedOffNow,
+  };
+}
+
+/** PUT /api/admin/ai/switch: stored in the database, on top of `AI_ENABLED`; audited. */
+export async function setAiSwitch(
+  actor: Actor,
+  enabled: boolean,
+  options: Pick<Options, "provider"> = {},
+): Promise<AISwitchState> {
+  const admin = requireAdmin(actor);
+  await upsertSetting(SWITCH_KEY, enabled, admin.id);
+  await recordAudit({
+    actorId: admin.id,
+    action: enabled ? "ai.switch_on" : "ai.switch_off",
+    targetType: "setting",
+    targetId: SWITCH_KEY,
+  });
+  return getAiSwitch(actor, options);
 }

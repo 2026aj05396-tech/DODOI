@@ -223,3 +223,45 @@ export async function deleteUsageBefore(cutoff: Date): Promise<number> {
   const { count } = await db.aIUsage.deleteMany({ where: { createdAt: { lt: cutoff } } });
   return count;
 }
+
+// --- Switch and usage (P4-05) ------------------------------------------------------------------
+
+export async function findSetting(key: string): Promise<unknown> {
+  return (await db.appSetting.findUnique({ where: { key }, select: { value: true } }))?.value;
+}
+
+export async function upsertSetting(
+  key: string,
+  value: Prisma.InputJsonValue,
+  updatedById: string,
+) {
+  await db.appSetting.upsert({
+    where: { key },
+    create: { key, value, updatedById },
+    update: { value, updatedById },
+  });
+}
+
+export type UsageDayRow = {
+  day: Date;
+  status: AIUsageStatus;
+  requests: bigint;
+  inputTokens: bigint;
+  outputTokens: bigint;
+  costMicros: bigint;
+};
+
+/** Usage per UTC day and status between `from` (inclusive) and `to` (exclusive). No text is stored. */
+export async function findUsageByDay(from: Date, to: Date): Promise<UsageDayRow[]> {
+  return db.$queryRaw<UsageDayRow[]>`
+    SELECT date_trunc('day', created_at AT TIME ZONE 'UTC') AS "day",
+           status,
+           COUNT(*) AS "requests",
+           COALESCE(SUM(input_tokens), 0) AS "inputTokens",
+           COALESCE(SUM(output_tokens), 0) AS "outputTokens",
+           COALESCE(SUM(cost_micros), 0) AS "costMicros"
+    FROM ai_usage
+    WHERE created_at >= ${from} AND created_at < ${to}
+    GROUP BY 1, status
+    ORDER BY 1`;
+}
