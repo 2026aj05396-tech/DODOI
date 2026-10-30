@@ -126,7 +126,7 @@ src/
 │   └── admin/ auth/ collections/ comments/ community/ companion/ create/ dev/ explore/ feed/
 │       journal/ layout/ marketing/ messages/ notifications/ onboarding/ posts/ profile/
 │       providers/ pwa/ reports/ safety/ search/ sessions/ settings/ skills/
-├── hooks/                              # Domain-free client hooks: use-is-online, use-unsaved-changes, use-voice-typing
+├── hooks/                              # Domain-free client hooks: use-debounced, use-is-online, use-unsaved-changes, use-voice-typing
 ├── server/
 │   ├── auth/                           # Auth.js config, adapter, callbacks, session helpers, password utils
 │   ├── db/                             # Prisma client singleton
@@ -322,6 +322,7 @@ A client-only capability: `useVoiceTyping` (`src/hooks/use-voice-typing.ts`) wra
 
 - **Modules:** `help`, `communities`, `messages` and `sessions` each own their tables and call `content`, `users`, `skills`, `notifications` or `follows` only through public `index.ts` (§5.1). `reports` hides and restores their content; `blocks` ends follows and cancels sessions between two users, and `messages` refuses blocked pairs.
 - **Messaging uses polling, not sockets** (ADR 0008): an open conversation polls for new messages every 10 s (`after` cursor); the conversation list, the unread dot and the notification bell poll every 60 s and stop in a background tab.
+- **Find people to message (MSG-06, P3-06):** `GET /api/conversations/people` lists the members the caller may message (follows and followers without `q`, a search with it), applying the same eligibility as starting a conversation (not yourself, no block either way, visible profile, the other person's message setting). It shares the `search-user` rate bucket (60 a minute) and reads people through `users` and `follows`.
 - **Creative sessions:** Completed and lapsed states are worked out when read and saved by the daily `settle-sessions` job; the one-hour reminder notification is created when the member reads their sessions or notifications.
 - **Media:** purposes `help` and `community` (§8).
 
