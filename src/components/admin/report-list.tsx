@@ -49,6 +49,8 @@ function GroupCard({
     POST: "Post",
     COMMENT: "Comment",
     AI_MESSAGE: "AI answer",
+    HELP_REQUEST: "Help request",
+    HELP_RESPONSE: "Help response",
   }[group.targetType];
   const label = group.target.label ?? "Deleted";
   return (

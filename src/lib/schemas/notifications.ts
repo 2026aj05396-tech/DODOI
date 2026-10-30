@@ -12,6 +12,9 @@ export const notificationPreferencesSchema = z
     REPLY: z.boolean(),
     FOLLOW: z.boolean(),
     LIKE: z.boolean(),
+    HELP_RESPONSE: z.boolean(),
+    HELP_HELPFUL: z.boolean(),
+    HELP_RESOLVED: z.boolean(),
   })
   .partial();
 export type NotificationPreferencesInput = z.output<typeof notificationPreferencesSchema>;

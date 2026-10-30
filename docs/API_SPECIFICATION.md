@@ -482,19 +482,19 @@ All need a signed-in, verified user unless noted; all answer `503 AI_UNAVAILABLE
 
 Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only). **Built P4-02:** `targetId` is the answer's message id; only an answer in the reporter's own chat can be reported (anything else, including their own question, is `404`); the moderators' list shows that answer's text (up to 400 characters) and nothing else from the chat, with no link; `HIDE_TARGET` / `RESTORE_TARGET` answer `422 NOT_HIDEABLE` (an answer has nothing to hide), so moderators can only Dismiss; audit target `ai_message`.
 
-### 9.3 Phase 3 endpoints (PROPOSED — P3-00, 2026-10-30; none built)
+### 9.3 Phase 3 endpoints (CONFIRMED — P3-00 approved 2026-10-30; help requests built in P3-03, the rest not built)
 
 All need a signed-in, **verified** member unless noted; lists use `cursor`, 20 per page, newest first; blocked members are filtered both ways; others' private data answers `404`. Errors use the standard format.
 
 | Method & path | Who | Purpose |
 |---|---|---|
-| `GET /api/help-requests?status=&skill=&cursor=` | User | Open requests (default), filter by status and skill; `matching=true` limits to the member's can-help skills |
-| `POST /api/help-requests` | Verified | `{ title (≤100), body (≤1000), skillId, mediaIds? (≤3) }` → `201`; `429` at 5 a day |
-| `GET /api/help-requests/{id}` | User | Request with responses (`isHelpful` flags), `isOwn`, `canRespond` |
-| `PATCH /api/help-requests/{id}` | Owner | `{ status: "OPEN" \| "IN_PROGRESS" \| "RESOLVED" }` → `200` (reopen allowed) |
-| `DELETE /api/help-requests/{id}` | Owner | → `204` with its responses |
-| `POST /api/help-requests/{id}/responses` | Verified | `{ body (≤1000) }` → `201`; `422 OWN_REQUEST`; `429` at 30 a day |
-| `PUT /api/help-responses/{id}/helpful` / `DELETE` | Owner of the request | Mark / unmark helpful → `204` |
+| `GET /api/help-requests?status=&skillId=&matching=&mine=&cursor=` (**built P3-03**) | User | `{ items: HelpRequestCard[], nextCursor }` newest first, 20 a page, status `OPEN` by default; `mine=true` only your own; `matching=true` other people's requests in your can-help skills; hidden requests, blocked authors and requests resolved or idle for 90 days are left out. A card is `{ id, title, status, skill: { id, name, slug, accent } \| null, author: { username, displayName, avatarUrl } \| null, responseCount, isOwn, createdAt }` |
+| `POST /api/help-requests` (**built**) | Verified | `{ title (≤100), body (≤1000), skillId, mediaIds? (≤3) }` → `201`; `429` at 5 a day |
+| `GET /api/help-requests/{id}` (**built**) | User | The card plus `{ body, photos: Media[], responses: [{ id, body, author, isOwn, isHelpful, createdAt }], canRespond, isHidden }`; `404` for hidden (except the asker), blocked or unknown |
+| `PATCH /api/help-requests/{id}` (**built**) | Owner | `{ status: "OPEN" \| "IN_PROGRESS" \| "RESOLVED" }` → `200` (reopen allowed) |
+| `DELETE /api/help-requests/{id}` (**built**) | Owner | → `204` with its responses |
+| `POST /api/help-requests/{id}/responses` (**built**, answers `201` with the request) | Verified | `{ body (≤1000) }` → `201`; `422 OWN_REQUEST`; `429` at 30 a day |
+| `PUT /api/help-responses/{id}/helpful` / `DELETE` (**built**) | Owner of the request | Mark / unmark helpful → `204` |
 | `GET /api/communities?q=&skill=&cursor=` · `POST /api/communities` | User · Verified | Discover (interests first) / create `{ name, skillId, description, rules[] }` → `201`; `422 NAME_TAKEN`; `429` at 2 a day; `422 COMMUNITY_LIMIT` at 10 owned |
 | `GET /api/communities/{slug}` | User | Details, rules, `myRole`; `404` when hidden |
 | `PUT` / `DELETE /api/communities/{slug}/membership` | Verified | Join / leave → `204` (`403 REMOVED` after removal; `422 OWNER_MUST_HAND_OVER`) |
@@ -509,6 +509,6 @@ All need a signed-in, **verified** member unless noted; lists use `cursor`, 20 p
 | `GET` / `PUT /api/me/message-settings` | User | `{ messagePolicy: "EVERYONE" \| "FOLLOWING" \| "NOBODY" }` |
 | `GET /api/sessions?scope=upcoming\|past` · `POST /api/sessions` | User · Verified | List / propose `{ inviteeUsername, startsAt (ISO, ≥1 h ahead), durationMin, note?, meetingUrl (https), helpRequestId? }` → `201`; `422 TOO_MANY_OPEN` at 5 |
 | `PATCH /api/sessions/{id}` | Invitee / either | `{ action: "ACCEPT" \| "DECLINE" \| "CANCEL" \| "RESCHEDULE", startsAt?, meetingUrl? }`; the link is returned only to participants and only once accepted |
-| `POST /api/reports` | Verified | `targetType` gains `HELP_REQUEST`, `HELP_RESPONSE`, `COMMUNITY`, `COMMUNITY_POST`, `MESSAGE` (a message report carries that message and up to 5 before it) |
-| Notifications | — | New types listed in DATABASE_SCHEMA §9.3 with matching preference switches |
+| `POST /api/reports` | Verified | `targetType` gains `HELP_REQUEST`, `HELP_RESPONSE` (**built P3-03**: `targetId` is the request or response id, the target must be visible to the reporter and not their own, `422 SELF_REPORT`; moderators see the title or reply text and can hide / restore) and, when built, `COMMUNITY`, `COMMUNITY_POST`, `MESSAGE` (a message report carries that message and up to 5 before it) |
+| Notifications | — | **Built P3-03:** `HELP_RESPONSE` (to the asker), `HELP_HELPFUL` (to the helper, once per mark) and `HELP_RESOLVED` (to everyone who answered) with matching switches in `GET` / `PUT /api/me/notification-preferences`; an item carries `helpRequest: { id, title } \| null` and opens `/community/help/{id}`. Session types follow in P3-04 |
 

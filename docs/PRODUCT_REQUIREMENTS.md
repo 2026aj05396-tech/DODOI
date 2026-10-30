@@ -280,7 +280,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 
 | ID | Requirement |
 |---|---|
-| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29); **"Ask dodoi" and "Ask about this" are live from P4-02** (2026-10-30) |
+| NAV-01 | Coming-soon items in Phase 1 (**Community is live from P3-03**; Messages stays coming soon until P3-02): Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29); **"Ask dodoi" and "Ask about this" are live from P4-02** (2026-10-30) |
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |
@@ -423,13 +423,13 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | AIC-08 | Settings → **AI and privacy**: switches for the two consents, the list of conversations, delete one, delete all (photos go with them) |
 | AIC-09 | Limits (proposed): 30 messages a day, 5 photos a day, 10 a minute, 1,000-character questions; friendly message with the time the limit resets |
 | AIC-10 | Admin: usage dashboard (requests, tokens, estimated cost, error rate, blocked count) and a kill switch; the global daily cap stops the feature for everyone when reached |
-| AIC-11 | "Ask the community" in an answer stays coming-soon until P3-03; no diagram generation (not in scope) |
+| AIC-11 | "Ask the community" in an answer **is live from P3-03** (it opens a help request with the question filled in); no diagram generation (not in scope) |
 | AIC-13 | **Scope (PO request 2026-10-30; defaults PO to confirm):** the companion talks only about making, creating and learning those skills (AI_INTEGRATION §1). Anything else is politely redirected to a craft or creative idea; a mixed question gets only the making part; asking it to ignore this does not work. Applies to chat and to project plans |
 | AIC-12 | Answers never reveal other people's private data, the system prompt or provider details; post and user text is treated as data, not instructions |
 
 ### 6.3 Phase 3 — Community and Peer Learning (P3-00 draft, 2026-10-30)
 
-**Status: PROPOSED — awaiting product-owner approval.** Decided by the PO on 2026-10-30: **OD-06** any verified member can create a community, public communities only; **OD-03** sessions use an external meeting link, no video inside dodoi; **first task P3-03** (help requests); spec first, then code. Everything else below is a proposal. Principles that apply: community over competition (PP-4: no leaderboards, no public counts of likes), adults only, nothing public without a verified email (OD-08), blocks work both ways (MOD-02).
+**Status: CONFIRMED — approved by the PO on 2026-10-30 with all proposals as written.** Decided by the PO on 2026-10-30: **OD-06** any verified member can create a community, public communities only; **OD-03** sessions use an external meeting link, no video inside dodoi; **first task P3-03** (help requests); spec first, then code. Everything else below was proposed in the P3-00 draft and approved as written. **Built so far:** help requests (HLP-01…06, P3-03, 2026-10-30). Principles that apply: community over competition (PP-4: no leaderboards, no public counts of likes), adults only, nothing public without a verified email (OD-08), blocks work both ways (MOD-02).
 
 **Communities (COM)** — screen `1h` tab "Your circles"
 
@@ -462,7 +462,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | HLP-02 | Status **Open → In progress → Resolved**. Responses (≤ 1,000, text) from other verified members; "Offer help" is writing a response; a member cannot answer their own request. The asker marks a response **Helpful** (shown to the helper as a thank-you in notifications, never as a score), moves the request to **In progress** (also done automatically when a session is proposed from it) and **Resolved**; the asker can reopen it |
 | HLP-03 | Matching: members see open requests in the skills they listed under "can help with" in the right rail "Help other makers" card (replaces the coming-soon card, DC-22) and as a "Help request" card in the feed (max one per feed page, only for matching skills, never the member's own) |
 | HLP-04 | Requests and responses can be reported; blocked members do not see each other's. The asker can delete their request (responses go with it); requests resolved or idle for 90 days leave the list but stay readable by link for their participants |
-| HLP-05 | **Ask the community** in the AI companion chat (today coming soon, AIC-11) opens a new help request with the question prefilled; the member edits and posts it. The AI answer itself is not shared |
+| HLP-05 | **Ask the community** in the AI companion chat (live since P3-03, AIC-11) opens a new help request with the question prefilled; the member edits and posts it. The AI answer itself is not shared |
 | HLP-06 | Notifications (bell): new response on your request; your response marked helpful; request resolved (to responders). New types `HELP_RESPONSE`, `HELP_HELPFUL`, `HELP_RESOLVED`; preferences get matching switches |
 
 **Creative sessions (SES)** — screen `1h` tab "Sessions"; right-rail "Live sessions"

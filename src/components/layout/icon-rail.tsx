@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { Wordmark } from "@/components/ui/wordmark";
 import { cn } from "@/lib/utils/cn";
 
-import { ComingSoonTrigger } from "./coming-soon-trigger";
 import {
   COMMUNITY,
   CREATE,
@@ -58,7 +56,6 @@ export function IconRailView({
   className?: string;
   pathname: string;
 }) {
-  const CommunityIcon = COMMUNITY.icon;
   const CreateIcon = CREATE.icon;
 
   return (
@@ -74,13 +71,7 @@ export function IconRailView({
       </Link>
       <RailLink item={HOME} pathname={pathname} />
       <RailLink item={EXPLORE} pathname={pathname} />
-      <ComingSoonTrigger
-        label={COMMUNITY.label}
-        className={cn(ITEM_CLASSES, "text-muted-foreground")}
-      >
-        <CommunityIcon aria-hidden className="size-5" strokeWidth={1.7} />
-        <ComingSoonBadge size="dot" decorative className="absolute top-2 right-2" />
-      </ComingSoonTrigger>
+      <RailLink item={COMMUNITY} pathname={pathname} />
       <RailLink item={SAVED} pathname={pathname} />
       <RailLink item={profileNavItem(username)} pathname={pathname} />
       <Link

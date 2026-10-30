@@ -15,6 +15,21 @@ const OPTIONS: { type: NotificationTypeName; label: string; description: string 
   { type: "REPLY", label: "Replies", description: "Someone replies to your comment" },
   { type: "FOLLOW", label: "New followers", description: "Someone follows you" },
   { type: "LIKE", label: "Likes", description: "Someone likes your post" },
+  {
+    type: "HELP_RESPONSE",
+    label: "Help on my requests",
+    description: "Someone offers help on your request",
+  },
+  {
+    type: "HELP_HELPFUL",
+    label: "Thanks for my help",
+    description: "Someone finds your help useful",
+  },
+  {
+    type: "HELP_RESOLVED",
+    label: "Requests resolved",
+    description: "A request you helped with is resolved",
+  },
 ];
 
 export function NotificationPreferencesForm({ initial }: { initial: NotificationPreferences }) {

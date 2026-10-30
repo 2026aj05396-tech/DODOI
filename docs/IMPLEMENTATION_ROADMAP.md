@@ -242,14 +242,14 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 ## 5. Phase 3 — Community & Peer Learning (Milestones M9–M10)
 
-**Before starting:** **OD-03** and **OD-06** were decided by the PO on 2026-10-30 (external meeting link; any verified member creates public communities). The P3-00 spec is drafted below and in PRODUCT_REQUIREMENTS §6.3, USER_FLOWS F-27…F-30, DATABASE_SCHEMA §9.3, API_SPECIFICATION §9.3, UI_UX §8.3, SECURITY §8 and TESTING_STRATEGY; **no Phase 3 code until the PO approves it.** Order chosen by the PO: **P3-03 first**.
+**Before starting:** **OD-03** and **OD-06** were decided by the PO on 2026-10-30 (external meeting link; any verified member creates public communities). The P3-00 spec is drafted below and in PRODUCT_REQUIREMENTS §6.3, USER_FLOWS F-27…F-30, DATABASE_SCHEMA §9.3, API_SPECIFICATION §9.3, UI_UX §8.3, SECURITY §8 and TESTING_STRATEGY; **approved by the PO on 2026-10-30.** Order chosen by the PO: **P3-03 first**.
 
 | ID | Task |
 |---|---|
-| P3-00 | Phase 3 spec update. **◐ Drafted 2026-10-30, PROPOSED — awaiting PO approval** (open points in README §2 "Phase 3 spec") |
+| P3-00 | Phase 3 spec update. **☑ Drafted and approved by the PO on 2026-10-30 (all proposals as written)** |
 | P3-01 | Communities: discover, join/leave, rules, discussions, moderation audit |
 | P3-02 | Direct messaging via polling (participants-only, rate limits, report/block) |
-| P3-03 | **First.** Help requests (open / in progress / resolved) + responses; activate "Help other makers" and the "Help request" feed card; "Ask the community" in the AI chat (HLP-01…06, F-27, E2E-33) |
+| P3-03 | **First.** Help requests (open / in progress / resolved) + responses; activate "Help other makers" and the "Help request" feed card; "Ask the community" in the AI chat (HLP-01…06, F-27, E2E-33) | **◐ Built 2026-10-30:** migration `help_requests` (`help_request`, `help_request_media`, `help_response`, notification `help_request_id` + `subject`, enums for status, report targets and notification types, media purpose `help`); `help` module (create with photos and limits, list with filters / mine / matching / 90-day idle rule, detail, status, delete with photos, responses, helpful, banner, matching list, moderation hooks); routes under `/api/help-requests` and `/api/help-responses/{id}/helpful`; reports of requests and responses (moderators hide / restore); notifications `HELP_RESPONSE` / `HELP_HELPFUL` / `HELP_RESOLVED` with preferences; UI: Community goes live in tab bar, sidebar and rail with `/community` (tabs, banner, chips, list), ask form, request page; right-rail "Help other makers" and feed "Help request" card; "Ask the community" in AI answers. Tests: `help.test.ts` (14), `help-request-view.test.tsx` (6), `ask-help-form.test.tsx` (5), `time-ago.test.ts`, notification text, E2E-33 (`help-requests.spec.ts`, 2), E2E-16 moved to the Sessions tab. **Left:** PO review at 390/834/1280; per-response Message / Propose a session buttons (P3-02, P3-04); edit or delete a response; circles and sessions tabs (P3-01, P3-04)
 | P3-04 | Creative sessions: propose / accept / decline / reschedule / cancel, IST + user time zones; activate "Live sessions" |
 | P3-05 | "Use what you have" (materials-based ideas, Phase 2/3 per DC-09): the Explore card opens a companion chat with "I have: …" waiting in the field (USE-01) |
 

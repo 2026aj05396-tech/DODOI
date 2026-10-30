@@ -37,7 +37,15 @@ import {
 // likes and follows call `notify` after they succeed; a notification never blocks the action that
 // caused it. Likes are grouped per post per day when the list is read.
 
-const TYPES: NotificationTypeName[] = ["COMMENT", "REPLY", "FOLLOW", "LIKE"];
+const TYPES: NotificationTypeName[] = [
+  "COMMENT",
+  "REPLY",
+  "FOLLOW",
+  "LIKE",
+  "HELP_RESPONSE",
+  "HELP_HELPFUL",
+  "HELP_RESOLVED",
+];
 /** NTF-05: notifications are kept this long. */
 export const NOTIFICATION_RETENTION_DAYS = 90;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -57,6 +65,9 @@ type NotifyInput = {
   actorId: string;
   postId?: string;
   commentId?: string;
+  /** Help requests (P3-03): the request and its title, kept so the list needs no other module. */
+  helpRequestId?: string;
+  subject?: string;
 };
 
 /**
@@ -166,6 +177,10 @@ export async function listNotifications(
         // A person whose account is gone still counts as one.
         actorCount: Math.max(actorIds.length, 1),
         post: newest.postId && title !== undefined ? { id: newest.postId, title } : null,
+        helpRequest:
+          newest.helpRequestId && newest.subject
+            ? { id: newest.helpRequestId, title: newest.subject }
+            : null,
         commentId: newest.commentId,
         isUnread: group.some((row) => row.readAt === null),
         createdAt: newest.createdAt.toISOString(),

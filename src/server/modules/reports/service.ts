@@ -34,6 +34,13 @@ import {
   getPublishedPostAuthor,
   setPostHidden,
 } from "@/server/modules/content";
+import {
+  getHelpRequestsForModeration,
+  getHelpResponsesForModeration,
+  getReportableHelpTarget,
+  setHelpRequestHidden,
+  setHelpResponseHidden,
+} from "@/server/modules/help";
 import { getSkillsForModeration, setSkillHidden } from "@/server/modules/skills";
 import {
   getProfilesForModeration,
@@ -117,6 +124,21 @@ async function resolveTarget(user: AuthenticatedActor, input: CreateReportInput)
     }
     return { targetType: "COMMENT", targetId: input.targetId };
   }
+  if (input.targetType === "HELP_REQUEST" || input.targetType === "HELP_RESPONSE") {
+    // Only what the reporter can see (not hidden, not by someone blocked), and not their own.
+    const type = input.targetType === "HELP_REQUEST" ? "REQUEST" : "RESPONSE";
+    const target = await getReportableHelpTarget(user, type, input.targetId);
+    if (!target) throw notFound();
+    if (target.authorId === user.id) {
+      throw new UnprocessableError(
+        type === "REQUEST"
+          ? "You can't report your own request."
+          : "You can't report your own response.",
+        { code: "SELF_REPORT" },
+      );
+    }
+    return { targetType: input.targetType, targetId: target.id };
+  }
   if (input.targetType === "AI_MESSAGE") {
     // Only an answer in the reporter's own chat (AIC-06); anything else looks like it isn't there.
     if (!(await isOwnAnswer(user, input.targetId))) throw notFound();
@@ -165,14 +187,17 @@ export async function listReportGroups(
   const targets = page.map(({ targetType, targetId }) => ({ targetType, targetId }));
   const idsOf = (type: ReportTargetType) =>
     targets.flatMap((t) => (t.targetType === type ? t.targetId : []));
-  const [reports, skills, profiles, posts, comments, answers] = await Promise.all([
-    findReportsForTargets(targets, [...statuses]),
-    getSkillsForModeration(idsOf("SKILL")),
-    getProfilesForModeration(idsOf("PROFILE")),
-    getPostsForModeration(idsOf("POST")),
-    getCommentsForModeration(idsOf("COMMENT")),
-    getAnswersForModeration(idsOf("AI_MESSAGE")),
-  ]);
+  const [reports, skills, profiles, posts, comments, answers, helpRequests, helpResponses] =
+    await Promise.all([
+      findReportsForTargets(targets, [...statuses]),
+      getSkillsForModeration(idsOf("SKILL")),
+      getProfilesForModeration(idsOf("PROFILE")),
+      getPostsForModeration(idsOf("POST")),
+      getCommentsForModeration(idsOf("COMMENT")),
+      getAnswersForModeration(idsOf("AI_MESSAGE")),
+      getHelpRequestsForModeration(idsOf("HELP_REQUEST")),
+      getHelpResponsesForModeration(idsOf("HELP_RESPONSE")),
+    ]);
 
   const items = page.map((group): ReportGroup => {
     const mine = reports.filter(
@@ -185,9 +210,18 @@ export async function listReportGroups(
     const post = group.targetType === "POST" ? posts.get(group.targetId) : undefined;
     const comment = group.targetType === "COMMENT" ? comments.get(group.targetId) : undefined;
     const answer = group.targetType === "AI_MESSAGE" ? answers.get(group.targetId) : undefined;
+    const helpRequest =
+      group.targetType === "HELP_REQUEST" ? helpRequests.get(group.targetId) : undefined;
+    const helpResponse =
+      group.targetType === "HELP_RESPONSE" ? helpResponses.get(group.targetId) : undefined;
     const isHidden = skill
       ? skill.status === "HIDDEN"
-      : (profile?.isHidden ?? post?.isHidden ?? comment?.isHidden ?? false);
+      : (profile?.isHidden ??
+        post?.isHidden ??
+        comment?.isHidden ??
+        helpRequest?.isHidden ??
+        helpResponse?.isHidden ??
+        false);
     return {
       reportId: mine[0]?.id ?? "",
       targetType: group.targetType,
@@ -214,15 +248,29 @@ export async function listReportGroups(
                   detail: "Comment",
                   isHidden,
                 }
-              : group.targetType === "AI_MESSAGE"
+              : helpRequest
                 ? {
-                    // Only the reported answer; its chat is gone after 30 days or when deleted.
-                    label: answer?.slice(0, 400) ?? null,
-                    href: null,
-                    detail: "AI answer",
-                    isHidden: false,
+                    label: helpRequest.title,
+                    href: isHidden ? null : `/community/help/${group.targetId}`,
+                    detail: "Help request",
+                    isHidden,
                   }
-                : { label: null, href: null, detail: null, isHidden: false },
+                : helpResponse
+                  ? {
+                      label: helpResponse.body.slice(0, 140),
+                      href: isHidden ? null : `/community/help/${helpResponse.requestId}`,
+                      detail: "Help response",
+                      isHidden,
+                    }
+                  : group.targetType === "AI_MESSAGE"
+                    ? {
+                        // Only the reported answer; its chat is gone after 30 days or when deleted.
+                        label: answer?.slice(0, 400) ?? null,
+                        href: null,
+                        detail: "AI answer",
+                        isHidden: false,
+                      }
+                    : { label: null, href: null, detail: null, isHidden: false },
       reportCount: group._count._all,
       reasons,
       notes: mine.flatMap((report) =>
@@ -256,6 +304,10 @@ async function setHidden(target: Target, hidden: boolean): Promise<void> {
       return setPostHidden(target.targetId, hidden);
     case "COMMENT":
       return setCommentHidden(target.targetId, hidden);
+    case "HELP_REQUEST":
+      return setHelpRequestHidden(target.targetId, hidden);
+    case "HELP_RESPONSE":
+      return setHelpResponseHidden(target.targetId, hidden);
     case "AI_MESSAGE":
       throw new UnprocessableError("An AI answer can't be hidden. Dismiss its reports instead.", {
         code: "NOT_HIDEABLE",
@@ -269,6 +321,8 @@ const AUDIT_TARGET = {
   POST: "post",
   COMMENT: "comment",
   AI_MESSAGE: "ai_message",
+  HELP_REQUEST: "help_request",
+  HELP_RESPONSE: "help_response",
 } as const;
 
 /**

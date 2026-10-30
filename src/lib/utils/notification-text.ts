@@ -25,6 +25,12 @@ export function notificationText(item: NotificationItem): string {
       return `${who} liked ${title}`;
     case "FOLLOW":
       return `${who} followed you`;
+    case "HELP_RESPONSE":
+      return `${who} offered help on ${item.helpRequest?.title ?? "your request"}`;
+    case "HELP_HELPFUL":
+      return `${who} found your help useful on ${item.helpRequest?.title ?? "a request"}`;
+    case "HELP_RESOLVED":
+      return `${who} marked ${item.helpRequest?.title ?? "a request"} as resolved`;
   }
 }
 
@@ -34,6 +40,7 @@ export function notificationHref(item: NotificationItem): string | null {
     const follower = item.actors[0];
     return follower ? `/u/${follower.username}` : null;
   }
+  if (item.helpRequest) return `/community/help/${item.helpRequest.id}`;
   if (!item.post) return null;
   const hash = item.commentId ? `#comment-${item.commentId}` : "";
   return `/p/${item.post.id}${hash}`;

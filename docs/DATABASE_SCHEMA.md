@@ -785,7 +785,7 @@ model Consent {
 
 **Rules:** `AI_IMAGES` is needed before a message with a photo, `AI_PROFILE_CONTEXT` before interests and levels go into a prompt; a revoked or missing consent is the same as none. Quotas are counted from `AIUsage` and the rate-limit buckets (`ai-message`, `ai-message-minute`). The daily jobs delete conversations whose `updatedAt` is over 30 days old (with their photos) and `AIUsage` rows over 12 months old. `Media` gains purpose `ai` (images only, folder `ai/`, uploader-owned, counted as used while a message references it, removed by the orphan cleanup otherwise).
 
-### 9.3 Phase 3 models (PROPOSED — P3-00, 2026-10-30; not migrated)
+### 9.3 Phase 3 models (CONFIRMED — P3-00 approved 2026-10-30; help requests migrated in P3-03)
 
 Built in the order help requests → communities → messages → sessions, one migration per task. Every relation names its `onDelete`; users are `Cascade` unless stated. Content tables hold no more than the requirement needs.
 
@@ -906,6 +906,8 @@ model CreativeSession {
   @@index([proposerId, state, startsAt])
 }
 ```
+
+**Built (P3-03, migration `help_requests`, 2026-10-30):** `HelpStatus`, `HelpRequest` (`help_request`), `HelpRequestMedia` (`help_request_media`, also unique on request + media), `HelpResponse` (`help_response`), with explicit `onDelete` (author and request `Cascade`, skill `Restrict`, media `Restrict`) and the indexes above plus `help_request(skill_id)` and `help_response(author_id)`; `ReportTargetType` gains `HELP_REQUEST` and `HELP_RESPONSE`; `NotificationType` gains `HELP_RESPONSE`, `HELP_HELPFUL`, `HELP_RESOLVED`; `Notification` gains `help_request_id` (FK `Cascade`) and `subject` (the request's title when it was made, so the notification list needs nothing from the help module); media purpose `help` (folder `help`, images only, orphan cleanup counts `help_request_media` as use). List ordering is by `created_at` and the 90-day rule reads `updated_at`, which a new response refreshes.
 
 **Also (when each task is built):** `ReportTargetType` gains `HELP_REQUEST`, `HELP_RESPONSE`, `COMMUNITY`, `COMMUNITY_POST`, `MESSAGE`; `NotificationType` gains `HELP_RESPONSE`, `HELP_HELPFUL`, `HELP_RESOLVED`, `SESSION_PROPOSED`, `SESSION_ACCEPTED`, `SESSION_DECLINED`, `SESSION_RESCHEDULED`, `SESSION_CANCELLED`, `SESSION_REMINDER`; `MediaPurpose` gains `help` and `community`; account deletion cascades as noted; the daily job removes meeting links 24 h after a session ends and marks past accepted sessions Completed.
 

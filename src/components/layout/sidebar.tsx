@@ -114,7 +114,7 @@ export function SidebarView({
       </Link>
       <SidebarLink item={HOME} pathname={pathname} />
       <SidebarLink item={EXPLORE} pathname={pathname} />
-      <SidebarComingSoon item={COMMUNITY} />
+      <SidebarLink item={COMMUNITY} pathname={pathname} />
       <SidebarComingSoon item={MESSAGES} />
       <SidebarLink item={SAVED} pathname={pathname} />
       <SidebarLink item={JOURNAL} pathname={pathname} />

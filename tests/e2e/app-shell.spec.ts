@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
+import { createPasswordAccount, resetRateLimits } from "./helpers/accounts";
+
 const VIEWPORTS = {
   mobile: { width: 390, height: 844 },
   tablet: { width: 834, height: 1112 },
@@ -55,7 +57,15 @@ test.describe("app shell layout", () => {
 });
 
 test("E2E-16: coming-soon items show a tooltip and make no network requests", async ({ page }) => {
-  await page.goto("/shell-preview");
+  // The Sessions tab on Community stays coming soon until P3-04 (it is behind sign-in).
+  resetRateLimits();
+  const { email, password } = createPasswordAccount();
+  await page.goto("/sign-in");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/feed$/);
+  await page.goto("/community");
   // The service worker registers after load and precaches the app (P1-27); let it finish first.
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
@@ -66,12 +76,12 @@ test("E2E-16: coming-soon items show a tooltip and make no network requests", as
 
   // aria-disabled controls stay tappable for real users; Playwright needs `force` to click them.
   await page
-    .getByRole("button", { name: /Community\s*, coming soon/ })
+    .getByRole("button", { name: /Sessions\s*, coming soon/ })
     .filter({ visible: true })
     .click({ force: true });
 
   await expect(page.getByRole("tooltip")).toHaveText("Coming soon");
-  await expect(page).toHaveURL(/\/shell-preview$/);
+  await expect(page).toHaveURL(/\/community$/);
   expect(requests).toEqual([]);
 });
 

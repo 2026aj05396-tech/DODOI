@@ -17,6 +17,7 @@ function item(overrides: Partial<NotificationItem>): NotificationItem {
     actors: [person("Asha")],
     actorCount: 1,
     post: { id: "p1", title: "Cherry blossom hoop" },
+    helpRequest: null,
     commentId: null,
     isUnread: true,
     createdAt: "2026-10-29T10:00:00.000Z",
@@ -25,6 +26,20 @@ function item(overrides: Partial<NotificationItem>): NotificationItem {
 }
 
 describe("notification text", () => {
+  it("words help notifications and links them to the request", () => {
+    const base = { post: null, helpRequest: { id: "h1", title: "Blotchy sky" } } as const;
+    expect(notificationText(item({ ...base, type: "HELP_RESPONSE" }))).toBe(
+      "Asha offered help on Blotchy sky",
+    );
+    expect(notificationText(item({ ...base, type: "HELP_HELPFUL" }))).toBe(
+      "Asha found your help useful on Blotchy sky",
+    );
+    expect(notificationText(item({ ...base, type: "HELP_RESOLVED" }))).toBe(
+      "Asha marked Blotchy sky as resolved",
+    );
+    expect(notificationHref(item({ ...base, type: "HELP_RESPONSE" }))).toBe("/community/help/h1");
+  });
+
   it("names who did what to which post", () => {
     expect(notificationText(item({ type: "COMMENT" }))).toBe(
       "Asha commented on Cherry blossom hoop",

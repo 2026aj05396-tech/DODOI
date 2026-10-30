@@ -119,6 +119,19 @@ describe("ChatPanel", () => {
     await waitFor(() => expect(field).toHaveFocus());
   });
 
+  it("offers to take the question to the community from an answer", async () => {
+    sendAIMessage.mockResolvedValue(result("Start with a magic ring."));
+    renderPanel();
+
+    await userEvent.type(screen.getByLabelText("Your question"), "How do I start?{Enter}");
+    await screen.findByText("Start with a magic ring.");
+
+    expect(screen.getByRole("link", { name: "Ask the community" })).toHaveAttribute(
+      "href",
+      "/community/help/new?q=How%20do%20I%20start%3F",
+    );
+  });
+
   it("starts a chat about a post with that context, and continues it with the conversation id", async () => {
     sendAIMessage.mockResolvedValue(result("It is a coaster."));
     renderPanel({

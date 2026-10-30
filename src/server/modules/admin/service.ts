@@ -13,7 +13,17 @@ export type AuditEntry = {
   /** `<target>.<verb>`, e.g. "post.publish", "skill.hide". */
   action: string;
   targetType:
-    "post" | "comment" | "theme" | "skill" | "media" | "user" | "report" | "ai_message" | "setting";
+    | "post"
+    | "comment"
+    | "theme"
+    | "skill"
+    | "media"
+    | "user"
+    | "report"
+    | "ai_message"
+    | "setting"
+    | "help_request"
+    | "help_response";
   targetId: string;
   /** Changed field names and similar; never sensitive content. */
   metadata?: Prisma.InputJsonValue;

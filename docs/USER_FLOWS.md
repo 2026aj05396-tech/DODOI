@@ -252,6 +252,8 @@ Settings → **AI and privacy**: two switches (photos; interests and levels), "Y
 3. **Resolve:** the asker opens the request → marks a response **Helpful** → **Mark as resolved** (or **Reopen**). The request shows Open / In progress / Resolved chips as in `1h`. From a response the asker can **Message** the helper (F-29) or **Propose a session** (F-30).
 4. **Safety:** ⋯ menu on requests and responses → Report / Block (as in F-22). Blocked members vanish for each other.
 
+**Built (P3-03, 2026-10-30):** `/community` shows the tabs (Your circles and Sessions stay coming soon), a lavender banner "You can help with: … · {n} open requests match your skills" (or a link to choose skills), the chips Open · In progress · Resolved · My requests, and the list (2 columns from 768px, newest first, "Show more"). **Ask for help** → `/community/help/new` (title, craft, details with a 1,000-character counter, up to 3 photos, **Post request**; unverified members can write but not post) → the request page. On the request page the asker sees **Mark as in progress / Mark as resolved / Reopen / Delete request** (with a confirmation) and **This helped** on each reply; helpers see **Offer help**; a resolved request says "This request is resolved."; a hidden one shows "Hidden after a report." to its asker. ⋯ menus offer Report and Block. **Ask the community** under an AI answer opens the form with the member's question filled in. Per-reply **Message** and **Propose a session** arrive with F-29 and F-30.
+
 ### F-28 Communities (COM-01…08, PROPOSED 2026-10-30)
 
 1. **Discover:** Community → *Your circles* → "Find communities" (matching your interests first, search by name) → community page (rules, discussions).

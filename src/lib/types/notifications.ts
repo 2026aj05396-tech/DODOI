@@ -2,7 +2,8 @@ import type { CreatorSummary } from "@/lib/types/posts";
 
 // Notification views returned by the API (API_SPECIFICATION §9.1, P2-07).
 
-export type NotificationTypeName = "COMMENT" | "REPLY" | "FOLLOW" | "LIKE";
+export type NotificationTypeName =
+  "COMMENT" | "REPLY" | "FOLLOW" | "LIKE" | "HELP_RESPONSE" | "HELP_HELPFUL" | "HELP_RESOLVED";
 
 export type NotificationItem = {
   /** The newest notification of a group. */
@@ -14,6 +15,8 @@ export type NotificationItem = {
   actorCount: number;
   /** The post it is about; null for a new follower. */
   post: { id: string; title: string } | null;
+  /** The help request it is about (P3-03), with its title; null for the other types. */
+  helpRequest: { id: string; title: string } | null;
   /** The comment or reply, to scroll to. */
   commentId: string | null;
   isUnread: boolean;

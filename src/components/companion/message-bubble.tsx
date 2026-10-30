@@ -1,6 +1,7 @@
 "use client";
 
-import { Flag, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Flag, HandHeart, ThumbsDown, ThumbsUp } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { ReportDialog } from "@/components/reports/report-button";
@@ -40,9 +41,12 @@ export function UserBubble({ message }: { message: AIMessageView }) {
 export function AssistantBubble({
   message,
   skills,
+  question,
 }: {
   message: AIMessageView;
   skills: CompanionSetup["skills"];
+  /** What the member asked, so "Ask the community" can start a help request from it (HLP-05). */
+  question: string | null;
 }) {
   const [helpful, setHelpful] = useState<boolean | null>(message.feedback?.helpful ?? null);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
@@ -90,6 +94,15 @@ export function AssistantBubble({
           <ThumbsDown aria-hidden className="size-4" />
           Not helpful
         </button>
+        {question ? (
+          <Link
+            href={`/community/help/new?q=${encodeURIComponent(question.slice(0, 1_000))}`}
+            className={ACTION}
+          >
+            <HandHeart aria-hidden className="size-4" />
+            Ask the community
+          </Link>
+        ) : null}
         <button type="button" onClick={() => setIsReporting(true)} className={ACTION}>
           <Flag aria-hidden className="size-4" />
           Report

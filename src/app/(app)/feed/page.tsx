@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { feedGreeting, firstName } from "@/lib/utils/greeting";
 import { getActor } from "@/server/auth";
 import { getFeed, getFeedFilters, getSkillSuggestion } from "@/server/modules/feed";
+import { getHelpBanner, getMatchingHelpRequests } from "@/server/modules/help";
 import { getDisplayName } from "@/server/modules/users";
 
 export const metadata: Metadata = {
@@ -30,16 +31,26 @@ export default function FeedPage() {
 async function FeedContent() {
   const actor = await getActor();
   if (!actor) redirect("/sign-in?returnTo=%2Ffeed");
-  const [displayName, chips, firstPage, suggestion] = await Promise.all([
+  const [displayName, chips, firstPage, suggestion, helpRequests, helpBanner] = await Promise.all([
     getDisplayName(actor.id),
     getFeedFilters(actor),
     getFeed(actor, { filter: "for-you", limit: 20 }),
     getSkillSuggestion(actor),
+    getMatchingHelpRequests(actor, 3),
+    getHelpBanner(actor),
   ]);
   const initial = (displayName ? firstName(displayName) : null)?.charAt(0) ?? "d";
 
   return (
-    <PageWithRail rail={<FeedRail suggestion={suggestion} />}>
+    <PageWithRail
+      rail={
+        <FeedRail
+          suggestion={suggestion}
+          helpRequests={helpRequests}
+          hasCanHelpSkills={helpBanner.canHelpSkills.length > 0}
+        />
+      }
+    >
       <div className="px-5 pt-2 pb-6 md:px-7 md:pt-6 xl:px-8">
         <FeedHeader initial={initial} />
         <h1 className="mt-2 mb-4 text-greeting text-balance text-foreground md:mt-6 md:mb-5 md:text-greeting-web">

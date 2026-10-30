@@ -103,6 +103,9 @@ enum ReportTargetType {
   COMMENT
   /// An AI companion answer, reported by the member it was written for (P4-02).
   AI_MESSAGE
+  /// A help request or one of its responses (P3-03).
+  HELP_REQUEST
+  HELP_RESPONSE
 }
 
 enum ReportReason {
@@ -177,6 +180,8 @@ model User {
   notificationsReceived   Notification[]           @relation("NotificationsReceived")
   notificationsCaused     Notification[]           @relation("NotificationsCaused")
   notificationPreferences NotificationPreference[]
+  helpRequests            HelpRequest[]
+  helpResponses           HelpResponse[]
   blocking                Block[]                  @relation("Blocking")
   blockedBy               Block[]                  @relation("BlockedBy")
 
@@ -276,13 +281,14 @@ model Skill {
   createdAt      DateTime    @default(now()) @map("created_at")
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
-  createdBy   User?           @relation("SkillCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  coverMedia  MediaAsset?     @relation("SkillCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
-  userSkills  UserSkill[]
-  postSkills  PostSkill[]
-  projects    Project[]
-  relatedFrom SkillRelation[] @relation("SkillRelationFrom")
-  relatedTo   SkillRelation[] @relation("SkillRelationTo")
+  createdBy    User?           @relation("SkillCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  coverMedia   MediaAsset?     @relation("SkillCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  userSkills   UserSkill[]
+  postSkills   PostSkill[]
+  projects     Project[]
+  helpRequests HelpRequest[]
+  relatedFrom  SkillRelation[] @relation("SkillRelationFrom")
+  relatedTo    SkillRelation[] @relation("SkillRelationTo")
 
   @@index([origin, status])
   @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "skill_name_trgm_idx")
@@ -442,6 +448,7 @@ model MediaAsset {
   themeCovers   Theme[]             @relation("ThemeCover")
   entryMedia    ProjectEntryMedia[]
   aiMessages    AIMessage[]
+  helpMedia     HelpRequestMedia[]
 
   @@index([ownerId])
   @@map("media_asset")
@@ -864,26 +871,35 @@ enum NotificationType {
   REPLY
   FOLLOW
   LIKE
+  /// Help requests (P3-03): a response to yours, your response marked helpful, a request resolved.
+  HELP_RESPONSE
+  HELP_HELPFUL
+  HELP_RESOLVED
 }
 
 /// One in-app notification for `recipientId` (NTF-01). Likes stay one row each and are grouped
 /// per post per day when read. Kept 90 days (NTF-05).
 model Notification {
-  id          String           @id @default(cuid())
-  recipientId String           @map("recipient_id")
-  type        NotificationType
+  id            String           @id @default(cuid())
+  recipientId   String           @map("recipient_id")
+  type          NotificationType
   /// Who commented, replied, followed or liked; null once their account is deleted.
-  actorId     String?          @map("actor_id")
+  actorId       String?          @map("actor_id")
   /// The post, and for COMMENT / REPLY the comment; both go with the post or comment.
-  postId      String?          @map("post_id")
-  commentId   String?          @map("comment_id")
-  readAt      DateTime?        @map("read_at")
-  createdAt   DateTime         @default(now()) @map("created_at")
+  postId        String?          @map("post_id")
+  commentId     String?          @map("comment_id")
+  /// The help request (P3-03) and its title when the notification was made, so the list needs
+  /// nothing from the help module; both go with the request.
+  helpRequestId String?          @map("help_request_id")
+  subject       String?          @db.VarChar(100)
+  readAt        DateTime?        @map("read_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
 
-  recipient User     @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
-  actor     User?    @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  recipient   User         @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User?        @relation("NotificationsCaused", fields: [actorId], references: [id], onDelete: SetNull)
+  post        Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment     Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  helpRequest HelpRequest? @relation(fields: [helpRequestId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, createdAt(sort: Desc)])
   @@index([recipientId, readAt])
@@ -1054,4 +1070,72 @@ model AppSetting {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("app_setting")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Help requests (P3-03, PRODUCT_REQUIREMENTS HLP-01…06)
+// ---------------------------------------------------------------------------------------------
+
+enum HelpStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+/// A member's question to other makers: one skill, up to 3 photos, answered by responses (HLP-01).
+model HelpRequest {
+  id         String     @id @default(cuid())
+  authorId   String     @map("author_id")
+  skillId    String     @map("skill_id")
+  title      String     @db.VarChar(100)
+  body       String     @db.VarChar(1000)
+  status     HelpStatus @default(OPEN)
+  /// Hidden after a report (like `Post.hiddenAt`): out of lists, 404 for everyone but moderators.
+  hiddenAt   DateTime?  @map("hidden_at")
+  resolvedAt DateTime?  @map("resolved_at")
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  author        User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  skill         Skill              @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  photos        HelpRequestMedia[]
+  responses     HelpResponse[]
+  notifications Notification[]
+
+  @@index([status, skillId, updatedAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@index([skillId])
+  @@map("help_request")
+}
+
+model HelpRequestMedia {
+  requestId String @map("request_id")
+  mediaId   String @map("media_id")
+  position  Int
+
+  request HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  media   MediaAsset  @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([requestId, position])
+  @@unique([requestId, mediaId])
+  @@index([mediaId])
+  @@map("help_request_media")
+}
+
+/// One answer to a request. `isHelpful` is set by the asker only; it is a thank-you, never a score.
+model HelpResponse {
+  id        String    @id @default(cuid())
+  requestId String    @map("request_id")
+  authorId  String    @map("author_id")
+  body      String    @db.VarChar(1000)
+  isHelpful Boolean   @default(false) @map("is_helpful")
+  hiddenAt  DateTime? @map("hidden_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  request HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author  User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@index([authorId])
+  @@map("help_response")
 }

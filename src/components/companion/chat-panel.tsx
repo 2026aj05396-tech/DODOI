@@ -330,7 +330,15 @@ export function ChatPanel({
                 {message.status === "BLOCKED" ? <BlockedNote /> : null}
               </>
             ) : message.status === "OK" ? (
-              <AssistantBubble message={message} skills={setup.skills} />
+              <AssistantBubble
+                message={message}
+                skills={setup.skills}
+                question={
+                  messages[index - 1]?.role === "USER"
+                    ? (messages[index - 1]?.content ?? null)
+                    : null
+                }
+              />
             ) : null}
             {plansAfter(index + 1)}
           </div>

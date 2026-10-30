@@ -150,6 +150,9 @@ describe("notifications", () => {
       REPLY: true,
       FOLLOW: true,
       LIKE: true,
+      HELP_RESPONSE: true,
+      HELP_HELPFUL: true,
+      HELP_RESOLVED: true,
     });
 
     expect(await updateNotificationPreferences(meera.actor, { FOLLOW: false })).toMatchObject({
