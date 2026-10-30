@@ -242,16 +242,16 @@ P1-19 seed content production runs in parallel from day one (PO)
 
 ## 5. Phase 3 — Community & Peer Learning (Milestones M9–M10)
 
-**Before starting:** decide **OD-03** (video calls) and **OD-06** (community creation); write the Phase 3 specs.
+**Before starting:** **OD-03** and **OD-06** were decided by the PO on 2026-10-30 (external meeting link; any verified member creates public communities). The P3-00 spec is drafted below and in PRODUCT_REQUIREMENTS §6.3, USER_FLOWS F-27…F-30, DATABASE_SCHEMA §9.3, API_SPECIFICATION §9.3, UI_UX §8.3, SECURITY §8 and TESTING_STRATEGY; **no Phase 3 code until the PO approves it.** Order chosen by the PO: **P3-03 first**.
 
 | ID | Task |
 |---|---|
-| P3-00 | Phase 3 spec update |
+| P3-00 | Phase 3 spec update. **◐ Drafted 2026-10-30, PROPOSED — awaiting PO approval** (open points in README §2 "Phase 3 spec") |
 | P3-01 | Communities: discover, join/leave, rules, discussions, moderation audit |
 | P3-02 | Direct messaging via polling (participants-only, rate limits, report/block) |
-| P3-03 | Help requests (open / in progress / resolved) + responses; activate "Help other makers" and the "Help request" feed card |
+| P3-03 | **First.** Help requests (open / in progress / resolved) + responses; activate "Help other makers" and the "Help request" feed card; "Ask the community" in the AI chat (HLP-01…06, F-27, E2E-33) |
 | P3-04 | Creative sessions: propose / accept / decline / reschedule / cancel, IST + user time zones; activate "Live sessions" |
-| P3-05 | "Use what you have" (materials-based ideas, Phase 2/3 per DC-09) |
+| P3-05 | "Use what you have" (materials-based ideas, Phase 2/3 per DC-09): the Explore card opens a companion chat with "I have: …" waiting in the field (USE-01) |
 
 **Exit:** users can find relevant people and collaborate in a structured way.
 

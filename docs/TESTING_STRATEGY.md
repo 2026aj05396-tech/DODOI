@@ -112,6 +112,8 @@ Later phases add the master doc scenarios: create/edit post, comment, join commu
 
 Every Phase 1 scenario above has a test whose title starts with its ID (`grep -rn "E2E-04" tests/e2e`).
 
+**Phase 3 test plan (P3-00, PROPOSED 2026-10-30):** per task, integration tests for the service rules (authorization with an explicit actor: private conversation 404 for outsiders, owner-only status changes, moderators only inside their community, blocks both ways, unverified refused, every limit and its error code, reports of each new target, notifications created and failures never failing the action, retention and account deletion), component tests for the forms and states, and one E2E per journey: **E2E-33** help request (ask → answer → helpful → resolved, plus matching rail card), **E2E-34** communities (create → join → post → moderate → report), **E2E-35** messages (start → polling shows a reply → block ends it → setting "No one"), **E2E-36** sessions (propose → accept → link shown only after accept → cancel; time zone shown with IST). Polling is tested with a fake clock in components and a real 2-browser E2E.
+
 ## 6. Accessibility Testing
 
 - Automated: axe on every page visited in E2E; **fail on serious/critical violations**.

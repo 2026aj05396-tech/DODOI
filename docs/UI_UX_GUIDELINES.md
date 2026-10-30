@@ -337,6 +337,20 @@ Limits on the motion: `prefers-reduced-motion` turns every animation into a plai
 | Community · help requests (`1h`) | P3 |
 | Right-rail help/session cards (`2b`) | P3 |
 
+### 8.3 Phase 3 community screens (P3-00, PROPOSED 2026-10-30)
+
+Built from design `1h` (Community: tabs **Your circles · Help requests · Sessions**, a "You can help with" banner listing the member's skills and matching open requests, request cards with a craft chip, a status chip Open / In progress / Resolved, the asker, the age and the reply count, and the action button) and the existing tokens; the tablet and desktop layouts, the community page, discussions, messages and the session screens are **not designed** and are built from the system, flagged for PO review with screenshots (§8 rule).
+
+| Element | Spec |
+|---|---|
+| Entry points | Community (tab bar, sidebar, rail) and Messages (sidebar) leave coming-soon; "Help other makers" right-rail card and the feed "Help request" card go live; "Ask the community" in the AI chat and "Use what you have" on Explore go live |
+| Help request card | Craft chip, status chip (dot plus text, never colour alone), title (2 lines), "{name} · {age} · {n} replies" and **Offer help** / **View**; own requests say **View**. Status chips reuse the `StatusBadge` pattern |
+| Help request page | Title, details, photos, status, responses with **Helpful** (asker only), reply field; asker sees **Mark as resolved / Reopen**, **Message**, **Propose a session** |
+| Communities | List cards with a pattern tile in the skill's accent (no photos), name, skill, short description; page with rules, **Join / Leave**, discussion list and composer; owner's **Manage** sheet (moderators, removed members, audit list) |
+| Messages | Conversation list (name, last line, unread dot) and chat bubbles like the companion's but without the AI label; phones: full-screen chat; desktop: list and chat side by side like `/companion` |
+| Sessions | Card with date and time in the viewer's zone and "IST …" beside it when different, length, status chip and the right button (Accept / Decline / Suggest another time / Cancel / Join link); the link carries the "Opens another site" note |
+| Empty, loading, error | Every list has an empty state with one action, skeletons sized like the final content, and an inline error with retry; offline: lists show the last loaded data read-only (SYSTEM_ARCHITECTURE offline matrix), sending is disabled with "You're offline" |
+| Accessibility | Status and unread are text plus shape; polling updates go into an `aria-live="polite"` log; all controls 44px; reduced motion removes new-message animation |
 ## 9. Design Deliverables Status
 
 | Item | Status |

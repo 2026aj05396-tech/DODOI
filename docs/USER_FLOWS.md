@@ -245,12 +245,41 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 
 Settings → **AI and privacy**: two switches (photos; interests and levels), "Your conversations" list with Delete, **Delete all conversations** (confirmation; photos go too), and a note on retention (30 days).
 
+### F-27 Help requests (HLP-01…06, PROPOSED 2026-10-30; first Phase 3 task)
+
+1. **Ask:** Community → *Help requests* → **Ask for help** (or **Ask the community** in the AI chat, which pre-fills the question) → title, details, skill, up to 3 photos → Post. Unverified members are asked to verify first.
+2. **Answer:** a maker whose "can help with" skills match sees the request in the right rail "Help other makers" card and as a feed card → request page → **Offer help** → response (text) → the asker is notified (bell).
+3. **Resolve:** the asker opens the request → marks a response **Helpful** → **Mark as resolved** (or **Reopen**). The request shows Open / In progress / Resolved chips as in `1h`. From a response the asker can **Message** the helper (F-29) or **Propose a session** (F-30).
+4. **Safety:** ⋯ menu on requests and responses → Report / Block (as in F-22). Blocked members vanish for each other.
+
+### F-28 Communities (COM-01…08, PROPOSED 2026-10-30)
+
+1. **Discover:** Community → *Your circles* → "Find communities" (matching your interests first, search by name) → community page (rules, discussions).
+2. **Join / leave:** **Join** on the community page; **Leave** in its ⋯ menu. Joined communities are listed under *Your circles*.
+3. **Create:** *Your circles* → **Start a community** → name, skill, description, rules → created; you are its Owner. Name checks and limits as COM-01/02.
+4. **Discuss:** members post text with up to 4 photos; one level of replies; edit for 15 minutes; delete any time.
+5. **Moderate:** Owner and moderators hide or restore posts and replies and remove members from the ⋯ menu; the owner appoints moderators in *Manage*. A short audit list shows who did what. Members report posts, replies and the community itself.
+
+### F-29 Direct messages (MSG-01…05, PROPOSED 2026-10-30)
+
+1. **Start:** profile → **Message** (hidden when their setting is "No one", or "People I follow" and they don't follow you; also hidden when either side blocked the other).
+2. **Chat:** Messages (sidebar; phones: from Community) → conversation list → conversation (text only; updates about every 10 s while open; unread dot about every minute). Rate-limit messages: "You're sending messages fast. Try again in a few minutes."
+3. **Manage:** delete your own message ("Message deleted"), hide a conversation for yourself, **Report** a message or the person, **Block** (ends the conversation for both).
+4. **Setting:** Settings → *Messages*: Who can message me (Everyone · People I follow · No one).
+
+### F-30 Creative sessions (SES-01…05, PROPOSED 2026-10-30)
+
+1. **Propose:** from a help request response, a conversation or a profile → **Propose a session** → date and time (shown in your time zone, with IST beside it when you are elsewhere), length, note, **meeting link** (https) → Send.
+2. **Respond:** the other person is notified → **Accept**, **Decline** or **Suggest another time** (that becomes a new proposal). Either side can **Cancel** later.
+3. **Join:** once accepted both see the link, with "Opens another site. Only join if you're comfortable"; a reminder arrives an hour before. After the end time the session shows as Completed and the link is removed 24 hours later.
+4. Sessions are listed under Community → *Sessions* (upcoming, then past).
+
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)
 
 | Phase | Flow |
 |---|---|
-| P3 | Discover/join community → read rules → post discussion |
-| P3 | Start conversation → send messages (polling) → block/report |
-| P3 | Create help request → receive responses → mark resolved |
+| P3 | Discover/join community → read rules → post discussion — **drafted as F-28** |
+| P3 | Start conversation → send messages (polling) → block/report — **drafted as F-29** |
+| P3 | Create help request → receive responses → mark resolved — **drafted as F-27**; sessions **F-30** |
 | P3 | Propose session → accept/decline/reschedule/cancel with timezone display |
 | P4 | Open AI companion from persistent entry point → ask with optional image (consent) → receive guidance → feedback (helpful / not helpful) |

@@ -482,3 +482,33 @@ All need a signed-in, verified user unless noted; all answer `503 AI_UNAVAILABLE
 
 Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only). **Built P4-02:** `targetId` is the answer's message id; only an answer in the reporter's own chat can be reported (anything else, including their own question, is `404`); the moderators' list shows that answer's text (up to 400 characters) and nothing else from the chat, with no link; `HIDE_TARGET` / `RESTORE_TARGET` answer `422 NOT_HIDEABLE` (an answer has nothing to hide), so moderators can only Dismiss; audit target `ai_message`.
 
+### 9.3 Phase 3 endpoints (PROPOSED — P3-00, 2026-10-30; none built)
+
+All need a signed-in, **verified** member unless noted; lists use `cursor`, 20 per page, newest first; blocked members are filtered both ways; others' private data answers `404`. Errors use the standard format.
+
+| Method & path | Who | Purpose |
+|---|---|---|
+| `GET /api/help-requests?status=&skill=&cursor=` | User | Open requests (default), filter by status and skill; `matching=true` limits to the member's can-help skills |
+| `POST /api/help-requests` | Verified | `{ title (≤100), body (≤1000), skillId, mediaIds? (≤3) }` → `201`; `429` at 5 a day |
+| `GET /api/help-requests/{id}` | User | Request with responses (`isHelpful` flags), `isOwn`, `canRespond` |
+| `PATCH /api/help-requests/{id}` | Owner | `{ status: "OPEN" \| "IN_PROGRESS" \| "RESOLVED" }` → `200` (reopen allowed) |
+| `DELETE /api/help-requests/{id}` | Owner | → `204` with its responses |
+| `POST /api/help-requests/{id}/responses` | Verified | `{ body (≤1000) }` → `201`; `422 OWN_REQUEST`; `429` at 30 a day |
+| `PUT /api/help-responses/{id}/helpful` / `DELETE` | Owner of the request | Mark / unmark helpful → `204` |
+| `GET /api/communities?q=&skill=&cursor=` · `POST /api/communities` | User · Verified | Discover (interests first) / create `{ name, skillId, description, rules[] }` → `201`; `422 NAME_TAKEN`; `429` at 2 a day; `422 COMMUNITY_LIMIT` at 10 owned |
+| `GET /api/communities/{slug}` | User | Details, rules, `myRole`; `404` when hidden |
+| `PUT` / `DELETE /api/communities/{slug}/membership` | Verified | Join / leave → `204` (`403 REMOVED` after removal; `422 OWNER_MUST_HAND_OVER`) |
+| `GET /api/communities/{slug}/posts?cursor=` · `POST …/posts` | Member · Member | Discussions with one level of replies; post `{ body (≤2000), mediaIds? (≤4), parentId? }` |
+| `PATCH` / `DELETE /api/community-posts/{id}` | Author (edit 15 min) / author, moderators | Edit, delete |
+| `POST /api/communities/{slug}/moderation` | Owner, moderator | `{ action: "HIDE_POST" \| "RESTORE_POST" \| "REMOVE_MEMBER" \| "ALLOW_MEMBER" \| "SET_ROLE", targetId, role? }` → `204`, logged; `GET …/moderation-log` lists it |
+| `DELETE /api/communities/{slug}` | Owner | → `204` with discussions and photos |
+| `GET /api/conversations` · `POST /api/conversations` | User · Verified | List (unread flags) / start `{ username }` → `200` existing or `201`; `403 MESSAGES_CLOSED`; `429` at 5 new a day |
+| `GET /api/conversations/{id}/messages?after=` | Participant | Messages since `after` (polling), oldest first; `404` for others |
+| `POST /api/conversations/{id}/messages` | Participant | `{ body (≤1000) }` → `201`; `429` at 30 an hour; `422 AWAITING_REPLY` after 3 unanswered |
+| `DELETE /api/messages/{id}` · `DELETE /api/conversations/{id}` | Sender · Participant | Delete one of your messages / hide the conversation for you → `204` |
+| `GET` / `PUT /api/me/message-settings` | User | `{ messagePolicy: "EVERYONE" \| "FOLLOWING" \| "NOBODY" }` |
+| `GET /api/sessions?scope=upcoming\|past` · `POST /api/sessions` | User · Verified | List / propose `{ inviteeUsername, startsAt (ISO, ≥1 h ahead), durationMin, note?, meetingUrl (https), helpRequestId? }` → `201`; `422 TOO_MANY_OPEN` at 5 |
+| `PATCH /api/sessions/{id}` | Invitee / either | `{ action: "ACCEPT" \| "DECLINE" \| "CANCEL" \| "RESCHEDULE", startsAt?, meetingUrl? }`; the link is returned only to participants and only once accepted |
+| `POST /api/reports` | Verified | `targetType` gains `HELP_REQUEST`, `HELP_RESPONSE`, `COMMUNITY`, `COMMUNITY_POST`, `MESSAGE` (a message report carries that message and up to 5 before it) |
+| Notifications | — | New types listed in DATABASE_SCHEMA §9.3 with matching preference switches |
+

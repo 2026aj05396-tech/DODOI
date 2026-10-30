@@ -532,7 +532,7 @@ Text-search configuration: **`'simple'`** (CONFIRMED, OD-32) — language-neutra
 | Phase | Entities |
 |---|---|
 | P2 | Specified in §9.1 (CONFIRMED, P2-00) |
-| P3 | Community, Membership, CommunityPost, Conversation, ConversationParticipant, Message, HelpRequest, HelpResponse, Session (rename to `CreativeSession` to avoid clashing with Auth.js `Session`) |
+| P3 | Drafted in §9.3 (PROPOSED, P3-00, 2026-10-30): HelpRequest, HelpResponse, Community, CommunityMember, CommunityPost, CommunityModerationLog, Conversation, Message, CreativeSession |
 | P4 | Specified in §9.2 (CONFIRMED, P4-00) |
 
 ### 9.1 Phase 2 models (CONFIRMED — P2-00 approved 2026-10-28)
@@ -784,3 +784,128 @@ model Consent {
 **Built (P4-01, migration `ai_companion`, 2026-10-29):** all five models as above, with `AIMessage.imageMediaId` → `MediaAsset` (SetNull; the orphan cleanups treat a photo referenced by a message as used), `AIUsage.userId` SetNull, the rest Cascade, an extra index on `AIConversation.updatedAt` for the retention job. Table names `ai_conversation`, `ai_message`, `ai_usage`, `ai_feedback`, `consent`.
 
 **Rules:** `AI_IMAGES` is needed before a message with a photo, `AI_PROFILE_CONTEXT` before interests and levels go into a prompt; a revoked or missing consent is the same as none. Quotas are counted from `AIUsage` and the rate-limit buckets (`ai-message`, `ai-message-minute`). The daily jobs delete conversations whose `updatedAt` is over 30 days old (with their photos) and `AIUsage` rows over 12 months old. `Media` gains purpose `ai` (images only, folder `ai/`, uploader-owned, counted as used while a message references it, removed by the orphan cleanup otherwise).
+
+### 9.3 Phase 3 models (PROPOSED — P3-00, 2026-10-30; not migrated)
+
+Built in the order help requests → communities → messages → sessions, one migration per task. Every relation names its `onDelete`; users are `Cascade` unless stated. Content tables hold no more than the requirement needs.
+
+```prisma
+// --- Help requests (P3-03) ---
+enum HelpStatus { OPEN IN_PROGRESS RESOLVED }
+model HelpRequest {
+  id          String     @id @default(cuid())
+  authorId    String                                // Cascade
+  skillId     String                                // Restrict (skills are hidden, not deleted)
+  title       String     @db.VarChar(100)
+  body        String     @db.VarChar(1000)
+  status      HelpStatus @default(OPEN)
+  hiddenAt    DateTime?                             // moderator hide, as Post.hiddenAt
+  resolvedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  photos      HelpRequestMedia[]                    // up to 3, MediaAsset purpose `help`
+  responses   HelpResponse[]
+  @@index([status, skillId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+}
+model HelpRequestMedia { requestId String; mediaId String; position Int; @@id([requestId, position]) }   // Cascade / Restrict
+model HelpResponse {
+  id        String   @id @default(cuid())
+  requestId String                                  // Cascade
+  authorId  String                                  // Cascade
+  body      String   @db.VarChar(1000)
+  isHelpful Boolean  @default(false)                // set by the asker only
+  hiddenAt  DateTime?
+  createdAt DateTime @default(now())
+  @@index([requestId, createdAt])
+}
+
+// --- Communities (P3-01) ---
+enum CommunityRole { OWNER MODERATOR MEMBER }
+model Community {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(40)
+  normalizedName String @unique                     // case-insensitive uniqueness
+  slug        String   @unique
+  skillId     String                                // Restrict
+  description String   @db.VarChar(300)
+  rules       String[]                              // up to 5, validated in the service
+  createdById String?                               // SetNull (ownership is handed over, COM-08)
+  hiddenAt    DateTime?
+  createdAt   DateTime @default(now())
+  @@index([skillId, createdAt(sort: Desc)])
+}
+model CommunityMember {
+  communityId String                                // Cascade
+  userId      String                                // Cascade
+  role        CommunityRole @default(MEMBER)
+  removedAt   DateTime?                             // removed by moderators: cannot rejoin until the owner allows it
+  joinedAt    DateTime @default(now())
+  @@id([communityId, userId])
+  @@index([userId])
+}
+model CommunityPost {                                // replies: parentId set, one level only
+  id          String   @id @default(cuid())
+  communityId String                                // Cascade
+  authorId    String?                               // SetNull
+  parentId    String?                               // Cascade
+  body        String   @db.VarChar(2000)
+  hiddenAt    DateTime?
+  editedAt    DateTime?
+  createdAt   DateTime @default(now())
+  photos      CommunityPostMedia[]                  // up to 4, MediaAsset purpose `community`
+  @@index([communityId, createdAt(sort: Desc)])
+  @@index([parentId])
+}
+model CommunityPostMedia { postId String; mediaId String; position Int; @@id([postId, position]) }
+model CommunityModerationLog {                       // COM-06: never content
+  id String @id @default(cuid()); communityId String /* Cascade */; actorId String? /* SetNull */
+  action String /* post.hide, post.restore, member.remove, member.allow, role.change … */
+  targetType String; targetId String; createdAt DateTime @default(now())
+  @@index([communityId, createdAt(sort: Desc)])
+}
+
+// --- Direct messages (P3-02) ---
+model Conversation {
+  id          String   @id @default(cuid())
+  userAId     String                                // the smaller user id of the pair: one row per pair, unique below
+  userBId     String
+  lastMessageAt DateTime @default(now())
+  hiddenForA  Boolean  @default(false)
+  hiddenForB  Boolean  @default(false)
+  @@unique([userAId, userBId])
+  @@index([userAId, lastMessageAt(sort: Desc)])
+  @@index([userBId, lastMessageAt(sort: Desc)])
+}
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String                             // Cascade
+  senderId       String                             // Cascade (account deletion removes the member's messages)
+  body           String   @db.VarChar(1000)
+  deletedAt      DateTime?                          // "Message deleted"; the text is erased
+  createdAt      DateTime @default(now())
+  @@index([conversationId, createdAt])
+}
+// User gains `messagePolicy MessagePolicy @default(EVERYONE)` (EVERYONE FOLLOWING NOBODY) and an unread marker per participant (lastReadAt on Conversation side A/B).
+
+// --- Creative sessions (P3-04), `CreativeSession` to avoid Auth.js `Session` ---
+enum SessionState { PROPOSED ACCEPTED DECLINED RESCHEDULED CANCELLED COMPLETED }
+model CreativeSession {
+  id           String       @id @default(cuid())
+  proposerId   String                               // Cascade
+  inviteeId    String                               // Cascade
+  helpRequestId String?                             // SetNull
+  startsAt     DateTime                             // UTC
+  durationMin  Int                                  // 15 | 30 | 45 | 60
+  note         String?      @db.VarChar(300)
+  meetingUrl   String       @db.VarChar(500)        // https only; cleared 24 h after the end
+  state        SessionState @default(PROPOSED)
+  replacesId   String?                              // the session this one reschedules
+  createdAt    DateTime     @default(now())
+  @@index([inviteeId, state, startsAt])
+  @@index([proposerId, state, startsAt])
+}
+```
+
+**Also (when each task is built):** `ReportTargetType` gains `HELP_REQUEST`, `HELP_RESPONSE`, `COMMUNITY`, `COMMUNITY_POST`, `MESSAGE`; `NotificationType` gains `HELP_RESPONSE`, `HELP_HELPFUL`, `HELP_RESOLVED`, `SESSION_PROPOSED`, `SESSION_ACCEPTED`, `SESSION_DECLINED`, `SESSION_RESCHEDULED`, `SESSION_CANCELLED`, `SESSION_REMINDER`; `MediaPurpose` gains `help` and `community`; account deletion cascades as noted; the daily job removes meeting links 24 h after a session ends and marks past accepted sessions Completed.
+
