@@ -43,6 +43,10 @@ export function deleteAIConversation(id: string): Promise<void> {
   return requestJson("DELETE", `/api/ai/conversations/${encodeURIComponent(id)}`);
 }
 
+export function deleteAllAIConversations(): Promise<void> {
+  return requestJson("DELETE", "/api/ai/conversations");
+}
+
 export function sendAIFeedback(messageId: string, input: AIFeedbackInput): Promise<void> {
   return requestJson("PUT", `/api/ai/messages/${encodeURIComponent(messageId)}/feedback`, input);
 }

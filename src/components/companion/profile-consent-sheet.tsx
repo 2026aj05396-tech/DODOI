@@ -20,7 +20,8 @@ export function ProfileConsentSheet({
         <DialogTitle>Use your interests to suggest ideas?</DialogTitle>
         <DialogDescription>
           Your interests, levels and the skills you want to learn are sent to our AI provider so the
-          suggestions fit you. Your collections and messages are never shared.
+          suggestions fit you. Your collections and messages are never shared. You can turn this off
+          any time in Settings → AI and privacy.
         </DialogDescription>
         {showFreeTierNotice ? (
           <p className="text-control-sm text-foreground-secondary">

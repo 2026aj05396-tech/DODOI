@@ -239,6 +239,9 @@ Requirements: PRODUCT_REQUIREMENTS §6.1. Public actions below need a verified e
 
 ### F-26 AI and privacy settings (AIC-07, AIC-08, approved 2026-10-29)
 
+**Built (P4-07, 2026-10-30):** Settings → **AI and privacy** (`/settings/ai`, between Privacy and Notifications) shows the "Test version" line on the free tier, then **What the companion can use**: switches "Use my photos in the companion" and "Use my interests and levels", both off until allowed, saved as soon as they change (put back with a toast if saving fails) and effective at once. **Your conversations** lists the member's chats (newest first, 20 at a time, "Show more") with a Delete button each → "Delete this chat?" sheet; **Delete all conversations** → "Delete all conversations?" sheet; a failed delete keeps the sheet open with a toast. Empty state "No conversations". The photo and interests consent sheets in the chat now point here ("You can turn this off … in Settings → AI and privacy").
+
+
 Settings → **AI and privacy**: two switches (photos; interests and levels), "Your conversations" list with Delete, **Delete all conversations** (confirmation; photos go too), and a note on retention (30 days).
 
 ## 2. Post-MVP Flow Outlines (to be detailed before each phase)

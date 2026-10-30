@@ -20,7 +20,8 @@ export function PhotoConsentSheet({
         <DialogTitle>Send this photo to the companion?</DialogTitle>
         <DialogDescription>
           Your photo is sent to our AI provider to answer this question. It is kept with this chat
-          for 30 days, and you can delete it any time.
+          for 30 days, and you can delete it any time. You can turn this off in Settings → AI and
+          privacy.
         </DialogDescription>
         {showFreeTierNotice ? (
           <p className="text-control-sm text-foreground-secondary">

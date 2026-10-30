@@ -268,7 +268,7 @@ P1-19 seed content production runs in parallel from day one (PO)
 | P4-04 | Photo troubleshooting (in the first release, PO 2026-10-29): photo in the chat, consent sheet, shrunk before sending. **◐ Built 2026-10-30:** camera button, type check, first-time consent sheet with the free-tier line, upload at once as purpose `ai` (browser shrink over 10 MB; the server already scales to 1,568 px), thumbnail with remove, photo sent with the question, daily-photo and consent-withdrawn handling, photo shown in the bubble. The server side was P4-01 (consent gate, own-photo check, 5 a day, deleted with the chat). Tests: `chat-panel.test.tsx` (+4). **Left:** PO review at 390/834/1280; the withdraw switch is P4-07; a real-API photo run through the UI was not repeated (the adapter was verified with a photo in P4-01) |
 | P4-05 | Admin usage dashboard, global spend cap and kill switch |
 | P4-06 | AI evaluation suite (TESTING_STRATEGY §7) |
-| P4-07 | Settings → AI and privacy: consents, conversation list and deletion, 30-day and 12-month retention jobs, report an AI answer |
+| P4-07 | Settings → AI and privacy: consents, conversation list and deletion, 30-day and 12-month retention jobs, report an AI answer. **◐ Built 2026-10-30:** `/settings/ai` with the two consent switches, the conversation list, delete one and delete all (confirmation sheets), free-tier line; entry in Settings; the chat consent sheets point to it. The retention jobs were built in P4-01 and reporting an AI answer in P4-02; no server change was needed. Tests: `ai-privacy-form.test.tsx` (4), E2E-31 (`ai-privacy.spec.ts`). **Left:** PO review at 390/834/1280 |
 
 **Exit:** safe, useful AI assistance within cost limits.
 

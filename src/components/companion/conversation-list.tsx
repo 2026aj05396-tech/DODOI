@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +15,8 @@ import { ApiRequestError } from "@/lib/api-client/request";
 import type { AIConversationSummary } from "@/lib/types/ai";
 import { cn } from "@/lib/utils/cn";
 import { relativeDay } from "@/lib/utils/relative-day";
+
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 // Past chats (F-23 step 2, AIC-01): kept 30 days, reopen or delete. Phones and tablet show it as
 // the page at `/companion`; from 1280px it is the left pane beside the open chat.
@@ -166,32 +167,14 @@ export function ConversationList({ className }: { className?: string }) {
       ) : null}
 
       {deleting ? (
-        <Dialog open onOpenChange={(open) => (open || isDeleting ? undefined : setDeleting(null))}>
-          <DialogContent layout="sheet">
-            <DialogTitle>Delete this chat?</DialogTitle>
-            <DialogDescription>
-              The chat and any photos in it are deleted for good. This can&apos;t be undone.
-            </DialogDescription>
-            <div className="flex flex-col gap-2 md:flex-row-reverse">
-              <Button
-                variant="destructive"
-                onClick={() => void confirmDelete()}
-                disabled={isDeleting}
-                className="md:flex-1"
-              >
-                {isDeleting ? "Deleting…" : "Delete chat"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setDeleting(null)}
-                disabled={isDeleting}
-                className="md:flex-1"
-              >
-                Cancel
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <ConfirmDeleteDialog
+          title="Delete this chat?"
+          description="The chat and any photos in it are deleted for good. This can't be undone."
+          confirmLabel="Delete chat"
+          isBusy={isDeleting}
+          onConfirm={() => void confirmDelete()}
+          onCancel={() => setDeleting(null)}
+        />
       ) : null}
     </nav>
   );
