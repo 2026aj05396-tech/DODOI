@@ -91,10 +91,7 @@ export function NewMessagePanel({ onClose }: { onClose: () => void }) {
               ))}
             </div>
           ) : people.isError ? (
-            <ErrorState
-              message="We couldn't load people."
-              onRetry={() => void people.refetch()}
-            />
+            <ErrorState message="We couldn't load people." onRetry={() => void people.refetch()} />
           ) : items.length === 0 ? (
             <EmptyState
               icon={<Users />}

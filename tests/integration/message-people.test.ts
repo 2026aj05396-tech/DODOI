@@ -163,9 +163,9 @@ describe("people to message", () => {
     });
     expect(second.items).toHaveLength(4);
     expect(second.nextCursor).toBeNull();
-    expect(
-      [...first.items, ...second.items].map((person) => person.username).sort(),
-    ).toEqual([...names].sort());
+    expect([...first.items, ...second.items].map((person) => person.username).sort()).toEqual(
+      [...names].sort(),
+    );
   });
 
   it("is rate limited to 60 a minute", async () => {

@@ -48,7 +48,12 @@ export async function getPublicCreatorProfiles(
   const creators = new Map<string, CreatorProfile>();
   for (const row of rows) {
     const profile = row.profile;
-    if (!profile || profile.isHidden || profile.visibility !== "PUBLIC" || row.deletionRequestedAt) {
+    if (
+      !profile ||
+      profile.isHidden ||
+      profile.visibility !== "PUBLIC" ||
+      row.deletionRequestedAt
+    ) {
       continue;
     }
     creators.set(row.id, {
