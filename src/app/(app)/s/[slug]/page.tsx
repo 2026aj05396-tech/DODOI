@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { AskAboutLink } from "@/components/companion/ask-about-link";
+import { CompanionDock } from "@/components/companion/companion-dock";
 import { MasonrySkeleton } from "@/components/posts/masonry-skeleton";
 import { ReportButton } from "@/components/reports/report-button";
 import { InterestToggle } from "@/components/skills/interest-toggle";
@@ -12,6 +14,7 @@ import { PatternTile, type PatternAccent } from "@/components/ui/pattern-tile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActor } from "@/server/auth";
 import { orNotFound } from "@/server/lib/not-found";
+import { getCompanionSetup } from "@/server/modules/ai";
 import { listSkillPosts } from "@/server/modules/content";
 import { getSkillBySlug } from "@/server/modules/skills";
 import { getInterestProfile } from "@/server/modules/users";
@@ -26,11 +29,15 @@ type Params = PageProps<"/s/[slug]">["params"];
 // description, "Add to my interests" (PO decision), related skills and its posts, newest first.
 export default function SkillPage({ params }: PageProps<"/s/[slug]">) {
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 pt-4 pb-10 md:px-7 md:pt-8 xl:px-10">
-      <Suspense fallback={<SkillSkeleton />}>
-        <SkillContent params={params} />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-5 pt-4 pb-10 md:px-7 md:pt-8 xl:px-10">
+          <SkillSkeleton />
+        </div>
+      }
+    >
+      <SkillContent params={params} />
+    </Suspense>
   );
 }
 
@@ -39,66 +46,83 @@ async function SkillContent({ params }: { params: Params }) {
   const { slug } = await params;
   if (!actor) redirect(`/sign-in?returnTo=${encodeURIComponent(`/s/${slug}`)}`);
   const skill = await orNotFound(getSkillBySlug(actor, slug));
-  const [posts, interests] = await Promise.all([
+  const [posts, interests, setup] = await Promise.all([
     orNotFound(listSkillPosts(actor, slug, { limit: 20 })),
     getInterestProfile(actor.id),
+    getCompanionSetup(actor),
   ]);
   const isInterest = interests.some((row) => row.skillId === skill.id);
 
   return (
-    <>
-      <BackButton fallbackHref="/explore" />
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
-        <PatternTile
-          accent={skill.accent.toLowerCase() as PatternAccent}
-          className="h-24 w-full shrink-0 md:size-28"
-        />
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h1 className="text-hero wrap-break-word text-foreground md:text-hero-web">
-            {skill.name}
-          </h1>
-          {skill.hint ? (
-            <p className="self-start rounded-full bg-muted px-3 py-1 text-meta text-foreground">
-              {skill.hint}
-            </p>
+    <div className="flex">
+      <div className="min-w-0 flex-1">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 pt-4 pb-10 md:px-7 md:pt-8 xl:px-10">
+          <BackButton fallbackHref="/explore" />
+          <header className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
+            <PatternTile
+              accent={skill.accent.toLowerCase() as PatternAccent}
+              className="h-24 w-full shrink-0 md:size-28"
+            />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <h1 className="text-hero wrap-break-word text-foreground md:text-hero-web">
+                {skill.name}
+              </h1>
+              {skill.hint ? (
+                <p className="self-start rounded-full bg-muted px-3 py-1 text-meta text-foreground">
+                  {skill.hint}
+                </p>
+              ) : null}
+              {skill.description ? (
+                <p className="max-w-2xl text-body-lg text-foreground md:text-body-lg-web">
+                  {skill.description}
+                </p>
+              ) : null}
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                <InterestToggle skillId={skill.id} skillName={skill.name} initial={isInterest} />
+                {/* From 1280px the companion is docked beside the page, so the button isn't needed. */}
+                <AskAboutLink
+                  target={{ skill: skill.id }}
+                  label="What is this and how do I start?"
+                  className="xl:hidden"
+                />
+                {/* Only skills added by makers can be reported (RPT-01). */}
+                {skill.origin === "CUSTOM" ? (
+                  <ReportButton targetType="SKILL" targetId={skill.id} targetLabel="this skill" />
+                ) : null}
+              </div>
+            </div>
+          </header>
+
+          {skill.relatedSkills.length > 0 ? (
+            <section aria-labelledby="related-skills" className="flex flex-col gap-2">
+              <h2 id="related-skills" className="text-overline text-foreground-secondary uppercase">
+                Related skills
+              </h2>
+              <ul className="flex flex-wrap gap-2">
+                {skill.relatedSkills.map((related) => (
+                  <li key={related.id}>
+                    <SkillChipLink skill={related} className="px-3.5 py-1.5 text-control-sm" />
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
-          {skill.description ? (
-            <p className="max-w-2xl text-body-lg text-foreground md:text-body-lg-web">
-              {skill.description}
-            </p>
-          ) : null}
-          <div className="mt-1 flex flex-wrap items-center gap-3">
-            <InterestToggle skillId={skill.id} skillName={skill.name} initial={isInterest} />
-            {/* Only skills added by makers can be reported (RPT-01). */}
-            {skill.origin === "CUSTOM" ? (
-              <ReportButton targetType="SKILL" targetId={skill.id} targetLabel="this skill" />
-            ) : null}
-          </div>
+
+          <section aria-labelledby="skill-posts" className="flex flex-col gap-3">
+            <h2 id="skill-posts" className="text-section text-foreground">
+              Ideas and projects
+            </h2>
+            <SkillPosts slug={skill.slug} name={skill.name} initialPage={posts} />
+          </section>
         </div>
-      </header>
-
-      {skill.relatedSkills.length > 0 ? (
-        <section aria-labelledby="related-skills" className="flex flex-col gap-2">
-          <h2 id="related-skills" className="text-overline text-foreground-secondary uppercase">
-            Related skills
-          </h2>
-          <ul className="flex flex-wrap gap-2">
-            {skill.relatedSkills.map((related) => (
-              <li key={related.id}>
-                <SkillChipLink skill={related} className="px-3.5 py-1.5 text-control-sm" />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <section aria-labelledby="skill-posts" className="flex flex-col gap-3">
-        <h2 id="skill-posts" className="text-section text-foreground">
-          Ideas and projects
-        </h2>
-        <SkillPosts slug={skill.slug} name={skill.name} initialPage={posts} />
-      </section>
-    </>
+      </div>
+      <CompanionDock
+        setup={setup}
+        isVerified={actor.isEmailVerified}
+        context={{ type: "SKILL", id: skill.id }}
+        title={skill.name}
+      />
+    </div>
   );
 }
 

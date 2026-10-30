@@ -18,6 +18,7 @@ import {
   submitFeedback,
 } from "@/server/modules/ai";
 import { blockUser } from "@/server/modules/blocks";
+import { actOnReport, createReport, listReportGroups } from "@/server/modules/reports";
 
 import { resetDatabase } from "../helpers/database";
 import { actorFor, createMedia, createPost, createSkill, createUser } from "../helpers/factories";
@@ -550,5 +551,86 @@ describe("ai companion", () => {
       (await db.consent.findFirstOrThrow({ where: { userId: asha.userId } })).revokedAt,
     ).not.toBeNull();
     expect(await setConsents(asha.actor, { AI_IMAGES: true })).toMatchObject({ AI_IMAGES: true });
+  });
+  describe("reporting an answer (P4-02)", () => {
+    async function answered() {
+      const asha = await member();
+      const result = await sendMessage(
+        asha.actor,
+        { text: "How do I start crochet?" },
+        { provider: createFakeAIProvider({ reply: () => "Start with a magic ring." }), loadImage },
+      );
+      return { asha, result };
+    }
+
+    it("lets a member report an answer in their own chat; moderators read that answer only", async () => {
+      const { asha, result } = await answered();
+      const moderator = await db.user.create({
+        data: { email: "mod-ai@example.test", role: "MODERATOR", emailVerified: new Date() },
+      });
+
+      await createReport(asha.actor, {
+        targetType: "AI_MESSAGE",
+        targetId: result.assistantMessage.id,
+        reason: "OTHER",
+        note: "Wrong advice",
+      });
+
+      const { items } = await listReportGroups(actorFor(moderator, "MODERATOR"), {
+        status: "OPEN",
+      });
+      expect(items).toHaveLength(1);
+      expect(items[0]).toMatchObject({
+        targetType: "AI_MESSAGE",
+        target: { label: "Start with a magic ring.", href: null, detail: "AI answer" },
+      });
+      expect(JSON.stringify(items)).not.toContain("How do I start crochet?");
+    });
+
+    it("treats someone else's answer and the member's own question as not found", async () => {
+      const { result } = await answered();
+      const ravi = await member();
+      const { asha, result: own } = await answered();
+
+      await expect(
+        createReport(ravi.actor, {
+          targetType: "AI_MESSAGE",
+          targetId: result.assistantMessage.id,
+          reason: "OTHER",
+        }),
+      ).rejects.toMatchObject({ status: 404 });
+      await expect(
+        createReport(asha.actor, {
+          targetType: "AI_MESSAGE",
+          targetId: own.userMessage.id,
+          reason: "OTHER",
+        }),
+      ).rejects.toMatchObject({ status: 404 });
+    });
+
+    it("can be dismissed but not hidden, and the text is gone once the chat is deleted", async () => {
+      const { asha, result } = await answered();
+      const admin = await db.user.create({
+        data: { email: "admin-ai@example.test", role: "ADMIN", emailVerified: new Date() },
+      });
+      const moderator = actorFor(admin, "ADMIN");
+      await createReport(asha.actor, {
+        targetType: "AI_MESSAGE",
+        targetId: result.assistantMessage.id,
+        reason: "OTHER",
+      });
+      const [group] = (await listReportGroups(moderator, { status: "OPEN" })).items;
+
+      await expect(
+        actOnReport(moderator, group?.reportId ?? "", { action: "HIDE_TARGET" }),
+      ).rejects.toMatchObject({ status: 422 });
+
+      await deleteConversation(asha.actor, result.conversation.id);
+      const [after] = (await listReportGroups(moderator, { status: "OPEN" })).items;
+      expect(after?.target.label).toBeNull();
+
+      await actOnReport(moderator, group?.reportId ?? "", { action: "DISMISS" });
+      expect((await listReportGroups(moderator, { status: "OPEN" })).items).toHaveLength(0);
+    });
   });
 });

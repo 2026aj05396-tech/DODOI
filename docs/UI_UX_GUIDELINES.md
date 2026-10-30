@@ -240,7 +240,7 @@ Primitives live in `src/components/ui/` (built in P0-10 on Radix via the `radix-
 | **LogOutDialog** | 1i | `sheet` dialog: grab handle (mobile), "Log out of dodoi?", "Your collections, journal and progress stay saved. Log back in anytime.", `destructive` Log out + outline Cancel. `components/auth/log-out-dialog.tsx` |
 | **Profile account card** | 1i | Own profile, below 1280px: bordered paper card, 52px rows — "Settings and privacy" (→ `/settings`) · "Log out" (danger, bold) |
 | **EmptyFeedArt** | — | Built from system (PO request): mood board of three craft prints (washi tape = craft patterns), coral thread drawn in with `animate-dd-draw`, `dd-twinkle` sparkles; fans out on hover; scaled to 0.84 below 640px. `components/feed/empty-feed-art.tsx` |
-| **AI pill / companion panel / chat bubbles** | 1c, 1e, 1f, 2c | P4 |
+| **AI pill / companion panel / chat bubbles** | 1c, 1e, 1f, 2c | **Built P4-02** (`components/layout/ask-dodoi.tsx`, `components/companion/`); the pill hides inside `/companion` |
 | **JournalTimeline** | 1g | P2 |
 | **EmptyState / ErrorState / OfflineBanner / Skeleton / Toast / CollectionPicker** | — | Not designed — build from system (DC-11 rule) |
 
@@ -397,6 +397,8 @@ Built from designs `1f` (mobile chat, image troubleshooting) and `2c` (docked co
 | Docked panel | From 1280px on post and skill pages: right column, "Talking about: {title}"; the sidebar becomes the 76px icon rail (DC-12) |
 | Free-tier notice | While `AI_TIER=free` (local, test) a muted line under the chat header: "Test version: Google may read your questions and photos. Don't share anything personal."; also in the photo consent sheet. Hidden on a paid tier |
 | States | Typing indicator; empty ("Ask me about a craft, a technique or what to try next"); quota, off, blocked and error messages (F-23 step 5); offline: the field is disabled with "You're offline" |
+| Built (P4-02, 2026-10-30) | `src/components/companion/` (`ChatPanel` for page and dock, `ConversationList`, bubbles, `AnswerText`, typing indicator, interests sheet); routes `/companion`, `/companion/new`, `/companion/{id}`. Phones: the chat is a full-screen layer over the shell (`1f`); tablet: rail + chat page; 1280px+: list and chat side by side. The dock on post and skill pages is `aside[data-companion-dock]` (380px): the static shell swaps sidebar → rail with CSS `group-has-[[data-companion-dock]]`; with the dock open the post keeps the tablet single-column layout (about 820px is too narrow for two columns). Answers render as paragraphs, numbered/bulleted lines and bold only, with exact dodoi skill names as links; never as HTML |
+| Deviations (PO to confirm) | Sidebar "Ask dodoi" card says "Stuck on a stitch? Ask me about it." (the design says "Show me a photo") until the photo button ships in P4-04; the muted "uncertainty line" is not built because the model has no marker for it (the fixed "Answers can be wrong." line is shown); the "Show me a diagram" and community chips are not built |
 | Not built | "Show me a diagram" (in `1f`, not in scope); "Ask the crochet community" is a coming-soon button until P3-03 |
 | Accessibility | Chat log is an `aria-live="polite"` region; the field keeps focus after sending; all controls 44px; reduced motion removes the typing animation |
 

@@ -43,9 +43,13 @@ function GroupCard({
   onAct: (action: "HIDE_TARGET" | "DISMISS" | "RESTORE_TARGET") => void;
   isBusy: boolean;
 }) {
-  const kind = { SKILL: "Skill", PROFILE: "Profile", POST: "Post", COMMENT: "Comment" }[
-    group.targetType
-  ];
+  const kind = {
+    SKILL: "Skill",
+    PROFILE: "Profile",
+    POST: "Post",
+    COMMENT: "Comment",
+    AI_MESSAGE: "AI answer",
+  }[group.targetType];
   const label = group.target.label ?? "Deleted";
   return (
     <li className="flex flex-col gap-3 rounded-card border border-border bg-background p-4">
@@ -90,7 +94,8 @@ function GroupCard({
       <div className="flex flex-wrap gap-2">
         {tab === "OPEN" ? (
           <>
-            {!group.target.isHidden && group.target.label ? (
+            {/* An AI answer has nothing to hide: the reports are dismissed once read. */}
+            {group.targetType !== "AI_MESSAGE" && !group.target.isHidden && group.target.label ? (
               <Button size="sm" disabled={isBusy} onClick={() => onAct("HIDE_TARGET")}>
                 Hide {kind.toLowerCase()}
               </Button>

@@ -87,6 +87,15 @@ export async function findMessageForFeedback(id: string) {
   });
 }
 
+/** Reported answers for the moderators' list: the text of those messages only. */
+export async function findAnswersByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  return db.aIMessage.findMany({
+    where: { id: { in: ids }, role: "ASSISTANT" },
+    select: { id: true, content: true },
+  });
+}
+
 export async function upsertFeedback(data: {
   messageId: string;
   userId: string;

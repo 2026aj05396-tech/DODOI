@@ -80,6 +80,10 @@ export default defineConfig({
         CLOUDINARY_API_KEY: "e2e-key",
         CLOUDINARY_API_SECRET: "e2e-secret",
         CLOUDINARY_API_BASE: MOCK_CLOUDINARY_API,
+        // The companion is off, so no run reaches Google whatever .env.local holds; the free tier
+        // shows its test-version notice (P4-02).
+        AI_ENABLED: "false",
+        AI_TIER: "free",
       },
     },
   ],

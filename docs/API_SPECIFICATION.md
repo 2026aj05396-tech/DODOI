@@ -480,5 +480,5 @@ All need a signed-in, verified user unless noted; all answer `503 AI_UNAVAILABLE
 
 Not built yet: `POST /api/ai/plan` (P4-03) and the admin endpoints (P4-05). Built details (P4-01): the quota errors are `429 AI_QUOTA` with `Retry-After` and `fields.resetAt` (ISO time); a blocked request answers `422 AI_BLOCKED` and stores the question as BLOCKED; context can only be a post the user can see (published, not hidden, not by someone blocked) or an active skill; the answer is capped at 8,000 characters.
 
-Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only).
+Reports of an AI answer use the existing `POST /api/reports` with `targetType: "AI_MESSAGE"` (CONFIRMED: added to the report types in P4-02, visible to Moderators with the conversation text of that message only). **Built P4-02:** `targetId` is the answer's message id; only an answer in the reporter's own chat can be reported (anything else, including their own question, is `404`); the moderators' list shows that answer's text (up to 400 characters) and nothing else from the chat, with no link; `HIDE_TARGET` / `RESTORE_TARGET` answer `422 NOT_HIDEABLE` (an answer has nothing to hide), so moderators can only Dismiss; audit target `ai_message`.
 

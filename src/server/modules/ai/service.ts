@@ -15,6 +15,7 @@ import type {
   AIConversationDetail,
   AIConversationSummary,
   AIMessageView,
+  CompanionSetup,
   SendAIMessageResult,
 } from "@/lib/types/ai";
 import type { Paginated } from "@/lib/types/api";
@@ -64,6 +65,7 @@ import {
   deleteUsageBefore,
   findActiveConsents,
   findConversation,
+  findAnswersByIds,
   findConversations,
   findImageIdsOfConversations,
   findMessageForFeedback,
@@ -148,6 +150,21 @@ async function defaultLoadImage(url: string): Promise<{ data: string; bytes: num
   if (!response.ok) throw new Error("photo not available");
   const buffer = Buffer.from(await response.arrayBuffer());
   return { data: buffer.toString("base64"), bytes: buffer.length };
+}
+
+/** What the chat screens render with: on or off, the free-tier notice, consents, skill links. */
+export async function getCompanionSetup(
+  actor: Actor,
+  { provider = defaultProvider }: Pick<Options, "provider"> = {},
+): Promise<CompanionSetup> {
+  const user = requireSignedIn(actor);
+  const [consents, skills] = await Promise.all([getConsents(user), getActivePredefinedSkills()]);
+  return {
+    isAvailable: provider !== null,
+    showFreeTierNotice: serverEnv.AI_TIER === "free",
+    consents,
+    skills: skills.map(({ name, slug }) => ({ name, slug })),
+  };
 }
 
 // --- Consents (AIC-07) ------------------------------------------------------------------------
@@ -518,6 +535,21 @@ export async function sendMessage(
     userMessage: userView,
     assistantMessage: assistantView,
   };
+}
+
+/**
+ * For reports (P4-02): whether `messageId` is a companion answer in the actor's own conversation.
+ * Nobody else's chats can be reported, so no one learns that another person's message exists.
+ */
+export async function isOwnAnswer(actor: Actor, messageId: string): Promise<boolean> {
+  const user = requireSignedIn(actor);
+  const row = await findMessageForFeedback(messageId);
+  return row !== null && row.role === "ASSISTANT" && row.conversation.userId === user.id;
+}
+
+/** For the moderators' reports list: the reported answers' text (and nothing around it). */
+export async function getAnswersForModeration(ids: string[]): Promise<Map<string, string>> {
+  return new Map((await findAnswersByIds(ids)).map((row) => [row.id, row.content]));
 }
 
 // --- Conversations ----------------------------------------------------------------------------------

@@ -101,6 +101,8 @@ enum ReportTargetType {
   PROFILE
   POST
   COMMENT
+  /// An AI companion answer, reported by the member it was written for (P4-02).
+  AI_MESSAGE
 }
 
 enum ReportReason {

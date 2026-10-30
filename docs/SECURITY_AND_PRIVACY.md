@@ -96,6 +96,7 @@ Password reset and sign-in responses must not reveal whether an email exists (id
 | Block | Blocker | User | — | Blocker |
 | Notification / preferences | Recipient | System | Recipient | System (90 days; built P2-07 — every read, mark-read and preference call is scoped to the signed-in user) |
 | Reports queue | Moderator, Admin | User (report) | Moderator, Admin (action) | — |
+| Report of an AI answer (P4-02) | Moderator, Admin: that answer's text only | The member who received it, in their own chat | Dismiss only | Report stays after the chat is deleted or purged; the text does not |
 | User role | Admin | — | Admin (USER ↔ MODERATOR) | — |
 | AI conversation / messages (P4) | Owner | Verified (own) | — | Owner (and the 30-day job) |
 | AI consent (P4) | Owner | Owner | Owner (withdraw) | — |

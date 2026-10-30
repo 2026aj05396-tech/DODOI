@@ -27,10 +27,10 @@ const REASONS: { value: ReportReason; label: string }[] = [
 const NOTE_MAX = 500;
 
 export type ReportTarget = {
-  targetType: "SKILL" | "PROFILE" | "POST" | "COMMENT";
+  targetType: "SKILL" | "PROFILE" | "POST" | "COMMENT" | "AI_MESSAGE";
   /** Skill id, username for a profile, post id or comment id. */
   targetId: string;
-  /** "this profile", "this skill", "this comment" (used in the title). */
+  /** "this profile", "this skill", "this comment", "this answer" (used in the title). */
   targetLabel: string;
 };
 

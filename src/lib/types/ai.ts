@@ -35,3 +35,14 @@ export type SendAIMessageResult = {
 };
 
 export type AIConsents = { AI_IMAGES: boolean; AI_PROFILE_CONTEXT: boolean };
+
+/** What the companion screens need when they render (AIC-06, AIC-07, F-23 step 4). */
+export type CompanionSetup = {
+  /** False while the companion is off: the screens show "The companion is resting". */
+  isAvailable: boolean;
+  /** True on the free tier (local and test): the chat shows the "Test version" notice. */
+  showFreeTierNotice: boolean;
+  consents: AIConsents;
+  /** Real dodoi skills; exact names in an answer become links to `/s/{slug}`. */
+  skills: { name: string; slug: string }[];
+};
