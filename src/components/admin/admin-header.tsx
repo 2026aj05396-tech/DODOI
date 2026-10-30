@@ -12,6 +12,7 @@ const SECTIONS = [
   { href: "/admin/skills", label: "Skills" },
   { href: "/admin/reports", label: "Reports" },
   { href: "/admin/coverage", label: "Coverage" },
+  { href: "/admin/ai", label: "AI" },
 ] as const;
 
 /** Admin top bar (not designed: built from the design system, P1-17). Scrolls sideways on phones. */

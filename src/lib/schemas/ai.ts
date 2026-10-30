@@ -31,6 +31,25 @@ export const sendAIMessageSchema = z
   });
 export type SendAIMessageInput = z.output<typeof sendAIMessageSchema>;
 
+/** POST /api/ai/plan: what the member wants to make, and optionally the craft (a skill id). */
+export const planRequestSchema = z.object({
+  text: z
+    .string()
+    .trim()
+    .min(1, "Tell me what you'd like to make.")
+    .max(AI_TEXT_MAX_LENGTH, `Keep it to ${AI_TEXT_MAX_LENGTH} characters or fewer.`),
+  skillId: id.optional(),
+});
+export type PlanRequestInput = z.output<typeof planRequestSchema>;
+
+/** What the model must return; anything else is retried once (AI_INTEGRATION §11). */
+export const aiPlanSchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  craft: z.string().trim().min(1).max(60),
+  materials: z.array(z.string().trim().min(1).max(120)).min(1).max(20),
+  steps: z.array(z.string().trim().min(1).max(300)).min(1).max(15),
+});
+
 export const aiConversationParamsSchema = z.object({ id });
 export const aiMessageParamsSchema = z.object({ id });
 
@@ -48,3 +67,13 @@ export const consentsSchema = z
   .object({ AI_IMAGES: z.boolean(), AI_PROFILE_CONTEXT: z.boolean() })
   .partial();
 export type ConsentsInput = z.output<typeof consentsSchema>;
+
+const day = z.iso.date();
+
+/** GET /api/admin/ai/usage: UTC days, both inclusive; the last 30 days when left out. */
+export const aiUsageQuerySchema = z.object({ from: day.optional(), to: day.optional() });
+export type AIUsageQuery = z.output<typeof aiUsageQuerySchema>;
+
+/** PUT /api/admin/ai/switch. */
+export const aiSwitchSchema = z.object({ enabled: z.boolean() });
+export type AISwitchInput = z.output<typeof aiSwitchSchema>;

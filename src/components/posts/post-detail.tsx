@@ -1,7 +1,8 @@
-import { EyeOff, Pencil, Sparkles } from "lucide-react";
+import { EyeOff, Pencil } from "lucide-react";
 import Link from "next/link";
 
 import { CommentsSection } from "@/components/comments/comments-section";
+import { AskAboutLink } from "@/components/companion/ask-about-link";
 import { StartProjectButton } from "@/components/journal/start-project-button";
 import { PostMenu } from "@/components/safety/post-menu";
 import { SkillChipLink } from "@/components/skills/skill-chip-link";
@@ -57,6 +58,7 @@ export function PostDetail({
   isEmailVerified,
   like,
   follow,
+  isCompanionDocked,
 }: {
   post: PostDetailData;
   related: PostCardData[];
@@ -70,6 +72,8 @@ export function PostDetail({
   like: PostLikeState | null;
   /** Follow button state for the creator; null for signed-out visitors. */
   follow: FollowState | null;
+  /** The companion shows in a column beside the post from 1280px, so the button is not needed there. */
+  isCompanionDocked: boolean;
 }) {
   const path = `/p/${post.id}`;
   const skills = [...post.skills].sort(
@@ -79,14 +83,28 @@ export function PostDetail({
   return (
     <div className="pb-28 md:pb-14">
       {/* From 768px Back sits above the post; phones have the round one over the photo. */}
-      <div className="hidden md:mx-auto md:flex md:max-w-2xl md:px-7 md:pt-4 lg:max-w-6xl xl:px-10">
+      <div
+        className={cn(
+          "hidden md:mx-auto md:flex md:max-w-2xl md:px-7 md:pt-4 lg:max-w-6xl xl:px-10",
+          isCompanionDocked && "xl:max-w-2xl",
+        )}
+      >
         <BackButton fallbackHref="/" />
       </div>
-      <article className="md:mx-auto md:max-w-2xl md:px-7 md:pt-2 lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-start lg:gap-9 xl:gap-12 xl:px-10 xl:pt-2">
-        <div className="relative lg:sticky lg:top-8">
+      {/* With the companion docked (1280px+) the post gets about 820px, so it keeps the tablet layout. */}
+      <article
+        className={cn(
+          "md:mx-auto md:max-w-2xl md:px-7 md:pt-2 lg:grid lg:max-w-6xl lg:grid-cols-2 lg:items-start lg:gap-9 xl:gap-12 xl:px-10 xl:pt-2",
+          isCompanionDocked && "xl:block xl:max-w-2xl",
+        )}
+      >
+        <div className={cn("relative lg:sticky lg:top-8", isCompanionDocked && "xl:static")}>
           <PostGallery
             media={post.media}
-            frameClassName="max-h-[56svh] md:rounded-card lg:max-h-none"
+            frameClassName={cn(
+              "max-h-[56svh] md:rounded-card lg:max-h-none",
+              isCompanionDocked && "xl:max-h-[56svh]",
+            )}
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 flex justify-between p-4 md:hidden">
             <BackButton fallbackHref="/" appearance="overlay" className="pointer-events-auto" />
@@ -99,7 +117,12 @@ export function PostDetail({
           </div>
         </div>
 
-        <div className="flex flex-col gap-6 px-5 pt-5 md:px-0 md:pt-7 lg:pt-0">
+        <div
+          className={cn(
+            "flex flex-col gap-6 px-5 pt-5 md:px-0 md:pt-7 lg:pt-0",
+            isCompanionDocked && "xl:pt-7",
+          )}
+        >
           {post.isHidden ? (
             <p
               role="status"
@@ -198,6 +221,14 @@ export function PostDetail({
             <ShareButton title={post.title} path={path} variant="outline" />
           </div>
 
+          {post.isPublished && !post.isHidden ? (
+            <AskAboutLink
+              target={{ post: post.id }}
+              label="Ask about this"
+              className={cn("hidden self-start md:inline-flex", isCompanionDocked && "xl:hidden")}
+            />
+          ) : null}
+
           {like?.likeCount != null ? (
             <p className="text-body text-foreground-secondary">
               {like.likeCount === 1 ? "1 like" : `${like.likeCount} likes`}
@@ -273,13 +304,7 @@ export function PostDetail({
             className="h-13 px-3 leading-tight whitespace-normal"
           />
         ) : (
-          <ComingSoonAction
-            label="Ask about this"
-            shape="outline"
-            badge="dot"
-            icon={<Sparkles aria-hidden className="size-4" />}
-            className="h-13 px-3"
-          />
+          <AskAboutLink target={{ post: post.id }} label="Ask about this" className="h-13 px-3" />
         )}
         <SaveToCollectionButton
           postId={post.id}

@@ -12,7 +12,8 @@ export type AuditEntry = {
   actorId: string | null;
   /** `<target>.<verb>`, e.g. "post.publish", "skill.hide". */
   action: string;
-  targetType: "post" | "comment" | "theme" | "skill" | "media" | "user" | "report";
+  targetType:
+    "post" | "comment" | "theme" | "skill" | "media" | "user" | "report" | "ai_message" | "setting";
   targetId: string;
   /** Changed field names and similar; never sensitive content. */
   metadata?: Prisma.InputJsonValue;

@@ -431,7 +431,7 @@ model AuditLog {
 ### 4.7 Reports (OD-12) and rate limits (OD-27)
 
 ```prisma
-enum ReportTargetType { SKILL PROFILE }                 // POST, COMMENT, MESSAGE added in later phases
+enum ReportTargetType { SKILL PROFILE POST COMMENT AI_MESSAGE }   // MESSAGE (P3) is added later
 enum ReportReason     { OFFENSIVE SPAM IMPERSONATION OTHER }
 enum ReportStatus     { OPEN ACTIONED DISMISSED }
 
@@ -776,6 +776,10 @@ model Consent {
   @@id([userId, type])
 }
 ```
+
+**Built (P4-05, migration `app_setting`, 2026-10-30):** `AppSetting { key (pk), value Json, updatedById?, updatedAt }` → table `app_setting`, for switches an admin changes without a deploy. First use: `ai_enabled` (`false` = the companion is switched off; no row = on). `updatedById` has no foreign key; the audit log is the record of who changed it.
+
+**Built (P4-02, migration `report_ai_message`, 2026-10-30):** `ReportTargetType` gains `AI_MESSAGE`; `Report.targetId` holds the `ai_message` id with no foreign key (like the other targets), so the report outlives the message: when the chat is deleted or purged after 30 days the report stays and the moderators' list shows the answer as "Deleted".
 
 **Built (P4-01, migration `ai_companion`, 2026-10-29):** all five models as above, with `AIMessage.imageMediaId` → `MediaAsset` (SetNull; the orphan cleanups treat a photo referenced by a message as used), `AIUsage.userId` SetNull, the rest Cascade, an extra index on `AIConversation.updatedAt` for the retention job. Table names `ai_conversation`, `ai_message`, `ai_usage`, `ai_feedback`, `consent`.
 

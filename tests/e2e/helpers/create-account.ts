@@ -14,6 +14,8 @@ import { PrismaClient } from "@/generated/prisma/client";
 //   tsx create-account.ts reset-token <email>          (prints a fresh raw token)
 //   tsx create-account.ts notifications <email>        (gives the account a post with a comment, three
 //       likes and a new follower, as three makers' notifications; prints the post title)
+//   tsx create-account.ts ai-conversation <email>      (gives the account one saved companion chat with an
+//       answer that mentions the Crochet skill; prints the conversation id)
 //   tsx create-account.ts reset-rate-limits
 
 async function main(): Promise<void> {
@@ -126,6 +128,25 @@ async function main(): Promise<void> {
         ],
       });
       process.stdout.write(title);
+    } else if (command === "ai-conversation") {
+      const owner = await db.user.findUniqueOrThrow({ where: { email } });
+      const conversation = await db.aIConversation.create({
+        data: {
+          userId: owner.id,
+          title: "How do I start crochet?",
+          messages: {
+            create: [
+              { role: "USER", content: "How do I start crochet?" },
+              {
+                role: "ASSISTANT",
+                content: "Start with a magic ring. Crochet is friendly for beginners.",
+                promptVersion: "e2e",
+              },
+            ],
+          },
+        },
+      });
+      process.stdout.write(conversation.id);
     } else if (command === "verification-token" || command === "reset-token") {
       const user = await db.user.findUniqueOrThrow({ where: { email } });
       const rawToken = randomBytes(32).toString("base64url");

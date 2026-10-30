@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { CompanionDock } from "@/components/companion/companion-dock";
 import { PostDetail } from "@/components/posts/post-detail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OPEN_GRAPH_DEFAULTS, TWITTER_DEFAULTS } from "@/lib/constants/share-metadata";
 import { getActor } from "@/server/auth";
 import { NotFoundError } from "@/server/lib/errors";
 import { orNotFound } from "@/server/lib/not-found";
+import { getCompanionSetup } from "@/server/modules/ai";
 import { getCommentCount } from "@/server/modules/comments";
 import { getPostDetail, getPostProgress, getRelatedPosts } from "@/server/modules/content";
 import { getFollowState } from "@/server/modules/follows";
@@ -62,16 +64,31 @@ async function PostContent({ params }: { params: Params }) {
     actor ? orNotFound(getPostLikeState(actor, id)) : null,
   ]);
   const follow = actor && post.creator ? await getFollowState(actor, post.creator.username) : null;
+  // From 1280px a signed-in reader gets the companion docked beside a published post (`2c`).
+  const setup = actor && post.isPublished && !post.isHidden ? await getCompanionSetup(actor) : null;
   return (
-    <PostDetail
-      post={post}
-      related={related}
-      progress={progress}
-      commentCount={commentCount}
-      isEmailVerified={actor?.isEmailVerified ?? false}
-      like={like}
-      follow={follow}
-    />
+    <div className="flex">
+      <div className="min-w-0 flex-1">
+        <PostDetail
+          post={post}
+          related={related}
+          progress={progress}
+          commentCount={commentCount}
+          isEmailVerified={actor?.isEmailVerified ?? false}
+          like={like}
+          follow={follow}
+          isCompanionDocked={setup !== null}
+        />
+      </div>
+      {actor && setup ? (
+        <CompanionDock
+          setup={setup}
+          isVerified={actor.isEmailVerified}
+          context={{ type: "POST", id: post.id }}
+          title={post.title}
+        />
+      ) : null}
+    </div>
   );
 }
 

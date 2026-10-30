@@ -101,6 +101,8 @@ enum ReportTargetType {
   PROFILE
   POST
   COMMENT
+  /// An AI companion answer, reported by the member it was written for (P4-02).
+  AI_MESSAGE
 }
 
 enum ReportReason {
@@ -1040,4 +1042,16 @@ model Consent {
 
   @@id([userId, type])
   @@map("consent")
+}
+
+/// Small switches an admin can change without a deploy (P4-05: `ai_enabled`, the companion's kill
+/// switch). A missing row means the default. `updatedById` is kept for reference; the audit log is
+/// the record of who changed what.
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("app_setting")
 }

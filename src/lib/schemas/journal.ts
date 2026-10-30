@@ -24,6 +24,8 @@ export const createProjectSchema = z.object({
   title: projectFields.title,
   skillId: projectFields.skillId.default(null),
   visibility: projectFields.visibility.default("PRIVATE"),
+  /** The checklist of a plan from the companion (P4-03); empty for a plain project. */
+  materials: z.array(z.string().trim().min(1).max(120)).max(30).default([]),
 });
 export type CreateProjectInput = z.output<typeof createProjectSchema>;
 

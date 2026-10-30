@@ -27,6 +27,7 @@ import {
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { enforceRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
 import { recordAudit } from "@/server/modules/admin";
+import { getAnswersForModeration, isOwnAnswer } from "@/server/modules/ai";
 import { getCommentsForModeration, setCommentHidden } from "@/server/modules/comments";
 import {
   getPostsForModeration,
@@ -116,6 +117,11 @@ async function resolveTarget(user: AuthenticatedActor, input: CreateReportInput)
     }
     return { targetType: "COMMENT", targetId: input.targetId };
   }
+  if (input.targetType === "AI_MESSAGE") {
+    // Only an answer in the reporter's own chat (AIC-06); anything else looks like it isn't there.
+    if (!(await isOwnAnswer(user, input.targetId))) throw notFound();
+    return { targetType: "AI_MESSAGE", targetId: input.targetId };
+  }
   const userId = await getUserIdByUsername(input.targetId);
   if (!userId) throw notFound();
   if (userId === user.id) {
@@ -159,12 +165,13 @@ export async function listReportGroups(
   const targets = page.map(({ targetType, targetId }) => ({ targetType, targetId }));
   const idsOf = (type: ReportTargetType) =>
     targets.flatMap((t) => (t.targetType === type ? t.targetId : []));
-  const [reports, skills, profiles, posts, comments] = await Promise.all([
+  const [reports, skills, profiles, posts, comments, answers] = await Promise.all([
     findReportsForTargets(targets, [...statuses]),
     getSkillsForModeration(idsOf("SKILL")),
     getProfilesForModeration(idsOf("PROFILE")),
     getPostsForModeration(idsOf("POST")),
     getCommentsForModeration(idsOf("COMMENT")),
+    getAnswersForModeration(idsOf("AI_MESSAGE")),
   ]);
 
   const items = page.map((group): ReportGroup => {
@@ -177,6 +184,7 @@ export async function listReportGroups(
     const profile = group.targetType === "PROFILE" ? profiles.get(group.targetId) : undefined;
     const post = group.targetType === "POST" ? posts.get(group.targetId) : undefined;
     const comment = group.targetType === "COMMENT" ? comments.get(group.targetId) : undefined;
+    const answer = group.targetType === "AI_MESSAGE" ? answers.get(group.targetId) : undefined;
     const isHidden = skill
       ? skill.status === "HIDDEN"
       : (profile?.isHidden ?? post?.isHidden ?? comment?.isHidden ?? false);
@@ -206,7 +214,15 @@ export async function listReportGroups(
                   detail: "Comment",
                   isHidden,
                 }
-              : { label: null, href: null, detail: null, isHidden: false },
+              : group.targetType === "AI_MESSAGE"
+                ? {
+                    // Only the reported answer; its chat is gone after 30 days or when deleted.
+                    label: answer?.slice(0, 400) ?? null,
+                    href: null,
+                    detail: "AI answer",
+                    isHidden: false,
+                  }
+                : { label: null, href: null, detail: null, isHidden: false },
       reportCount: group._count._all,
       reasons,
       notes: mine.flatMap((report) =>
@@ -240,6 +256,10 @@ async function setHidden(target: Target, hidden: boolean): Promise<void> {
       return setPostHidden(target.targetId, hidden);
     case "COMMENT":
       return setCommentHidden(target.targetId, hidden);
+    case "AI_MESSAGE":
+      throw new UnprocessableError("An AI answer can't be hidden. Dismiss its reports instead.", {
+        code: "NOT_HIDEABLE",
+      });
   }
 }
 
@@ -248,6 +268,7 @@ const AUDIT_TARGET = {
   PROFILE: "user",
   POST: "post",
   COMMENT: "comment",
+  AI_MESSAGE: "ai_message",
 } as const;
 
 /**

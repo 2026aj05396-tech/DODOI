@@ -3,10 +3,12 @@ import "server-only";
 import { z } from "zod";
 
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants/pagination";
+import { aiPlanSchema, type AIUsageQuery } from "@/lib/schemas/ai";
 import type {
   AIFeedbackInput,
   AIListQuery,
   ConsentsInput,
+  PlanRequestInput,
   SendAIMessageInput,
 } from "@/lib/schemas/ai";
 import type {
@@ -15,6 +17,11 @@ import type {
   AIConversationDetail,
   AIConversationSummary,
   AIMessageView,
+  AIPlan,
+  AISwitchState,
+  AIUsageReport,
+  AIUsageTotals,
+  CompanionSetup,
   SendAIMessageResult,
 } from "@/lib/types/ai";
 import type { Paginated } from "@/lib/types/api";
@@ -30,7 +37,7 @@ import {
   mediaProvider as defaultMediaProvider,
   type MediaProvider,
 } from "@/server/integrations/media";
-import type { Actor, AuthenticatedActor } from "@/server/lib/actor";
+import { requireAdmin, type Actor, type AuthenticatedActor } from "@/server/lib/actor";
 import { serverEnv } from "@/server/lib/env";
 import {
   ForbiddenError,
@@ -39,10 +46,12 @@ import {
   ServiceUnavailableError,
   UnauthenticatedError,
   UnprocessableError,
+  ValidationError,
 } from "@/server/lib/errors";
 import { logger } from "@/server/lib/logger";
 import { decodeCursor, encodeCursor } from "@/server/lib/pagination";
 import { consumeRateLimit, type RateLimitRule } from "@/server/lib/rate-limit";
+import { recordAudit } from "@/server/modules/admin";
 import {
   deleteUnusedMedia,
   getMedia,
@@ -58,12 +67,17 @@ import {
 import { getProfileSkills } from "@/server/modules/users";
 
 import { buildSystemPrompt, PROMPT_VERSION } from "./prompts/companion";
+import { buildPlanSystemPrompt, PLAN_JSON_SCHEMA, wrapPlanRequest } from "./prompts/plan";
 import {
   countProviderRequestsSince,
   deleteConversations,
   deleteUsageBefore,
   findActiveConsents,
   findConversation,
+  findAnswersByIds,
+  findSetting,
+  findUsageByDay,
+  upsertSetting,
   findConversations,
   findImageIdsOfConversations,
   findMessageForFeedback,
@@ -139,6 +153,13 @@ function resting(): ServiceUnavailableError {
   return new ServiceUnavailableError(RESTING, { code: "AI_UNAVAILABLE" });
 }
 
+const SWITCH_KEY = "ai_enabled";
+
+/** The admin kill switch (AIC-10): off only when an admin turned it off; the default is on. */
+async function isSwitchedOff(): Promise<boolean> {
+  return (await findSetting(SWITCH_KEY)) === false;
+}
+
 function startOfUtcDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
@@ -148,6 +169,21 @@ async function defaultLoadImage(url: string): Promise<{ data: string; bytes: num
   if (!response.ok) throw new Error("photo not available");
   const buffer = Buffer.from(await response.arrayBuffer());
   return { data: buffer.toString("base64"), bytes: buffer.length };
+}
+
+/** What the chat screens render with: on or off, the free-tier notice, consents, skill links. */
+export async function getCompanionSetup(
+  actor: Actor,
+  { provider = defaultProvider }: Pick<Options, "provider"> = {},
+): Promise<CompanionSetup> {
+  const user = requireSignedIn(actor);
+  const [consents, skills] = await Promise.all([getConsents(user), getActivePredefinedSkills()]);
+  return {
+    isAvailable: provider !== null && !(await isSwitchedOff()),
+    showFreeTierNotice: serverEnv.AI_TIER === "free",
+    consents,
+    skills: skills.map(({ id, name, slug }) => ({ id, name, slug })),
+  };
 }
 
 // --- Consents (AIC-07) ------------------------------------------------------------------------
@@ -366,7 +402,7 @@ export async function sendMessage(
   }: Options = {},
 ): Promise<SendAIMessageResult> {
   const user = requireVerified(actor);
-  if (!provider) throw resting();
+  if (!provider || (await isSwitchedOff())) throw resting();
   if ((await countProviderRequestsSince(startOfUtcDay(now))) >= serverEnv.AI_DAILY_REQUEST_CAP) {
     throw resting();
   }
@@ -520,6 +556,121 @@ export async function sendMessage(
   };
 }
 
+/**
+ * For reports (P4-02): whether `messageId` is a companion answer in the actor's own conversation.
+ * Nobody else's chats can be reported, so no one learns that another person's message exists.
+ */
+export async function isOwnAnswer(actor: Actor, messageId: string): Promise<boolean> {
+  const user = requireSignedIn(actor);
+  const row = await findMessageForFeedback(messageId);
+  return row !== null && row.role === "ASSISTANT" && row.conversation.userId === user.id;
+}
+
+/** For the moderators' reports list: the reported answers' text (and nothing around it). */
+export async function getAnswersForModeration(ids: string[]): Promise<Map<string, string>> {
+  return new Map((await findAnswersByIds(ids)).map((row) => [row.id, row.content]));
+}
+
+// --- Project plans (P4-03, AIC-04) ------------------------------------------------------------------
+
+const PLAN_MAX_OUTPUT_TOKENS = 1_200;
+const PLAN_FAILED = "I couldn't put a plan together. Try again.";
+
+function parsePlan(text: string): z.output<typeof aiPlanSchema> | null {
+  try {
+    const parsed = aiPlanSchema.safeParse(JSON.parse(text));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * POST /api/ai/plan: a materials checklist and steps for what the member wants to make. A request
+ * like a message (same limits, same global cap); the answer is checked against `aiPlanSchema` and
+ * asked for once more when it doesn't fit (AI_INTEGRATION §11). Nothing is stored here: the plan
+ * becomes a project only when the member starts it.
+ */
+export async function createPlan(
+  actor: Actor,
+  input: PlanRequestInput,
+  { provider = defaultProvider, now = new Date() }: Pick<Options, "provider" | "now"> = {},
+): Promise<AIPlan> {
+  const user = requireVerified(actor);
+  if (!provider || (await isSwitchedOff())) throw resting();
+  if ((await countProviderRequestsSince(startOfUtcDay(now))) >= serverEnv.AI_DAILY_REQUEST_CAP) {
+    throw resting();
+  }
+
+  const skills = await getActivePredefinedSkills();
+  let chosen: string | null = null;
+  if (input.skillId) {
+    chosen = (await getActiveSkillSummaries([input.skillId])).get(input.skillId)?.name ?? null;
+    if (!chosen) throw new NotFoundError("We couldn't find that skill.");
+  }
+
+  await enforceQuotas(user, false, provider.model, now);
+
+  const request = {
+    system: buildPlanSystemPrompt(skills.map((skill) => skill.name)),
+    messages: [
+      {
+        role: "user" as const,
+        content: [{ type: "text" as const, text: wrapPlanRequest(input.text, chosen) }],
+      },
+    ],
+    maxOutputTokens: PLAN_MAX_OUTPUT_TOKENS,
+    jsonSchema: PLAN_JSON_SCHEMA as unknown as Record<string, unknown>,
+  };
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    let result;
+    try {
+      result = await provider.generate(request);
+    } catch (error) {
+      await insertUsage({
+        userId: user.id,
+        model: provider.model,
+        inputTokens: 0,
+        outputTokens: 0,
+        costMicros: 0,
+        latencyMs: 0,
+        status: "ERROR",
+        hasImage: false,
+      });
+      logger.error("AI provider failed", {
+        status: error instanceof AIProviderError ? error.status : null,
+      });
+      throw resting();
+    }
+    await insertUsage({
+      userId: user.id,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      costMicros: costMicros(result.inputTokens, result.outputTokens),
+      latencyMs: result.latencyMs,
+      status: result.kind === "ok" ? "OK" : "BLOCKED",
+      hasImage: false,
+    });
+    if (result.kind === "blocked") {
+      throw new UnprocessableError(BLOCKED_ANSWER, { code: "AI_BLOCKED" });
+    }
+    const plan = parsePlan(result.text);
+    if (!plan) continue;
+    const match = skills.find((skill) => skill.name.toLowerCase() === plan.craft.toLowerCase());
+    const skillId = input.skillId ?? match?.id ?? null;
+    return {
+      title: plan.title,
+      craft: chosen ?? match?.name ?? plan.craft,
+      skillId,
+      materials: plan.materials,
+      steps: plan.steps,
+    };
+  }
+  throw new ServiceUnavailableError(PLAN_FAILED, { code: "AI_UNAVAILABLE" });
+}
+
 // --- Conversations ----------------------------------------------------------------------------------
 
 /** GET /api/ai/conversations: newest activity first. */
@@ -626,4 +777,107 @@ export async function purgeExpiredConversations({
 /** Daily job: usage rows (counts only) older than 12 months. */
 export async function purgeOldUsage(now = new Date()): Promise<number> {
   return deleteUsageBefore(new Date(now.getTime() - USAGE_RETENTION_DAYS * DAY_MS));
+}
+
+// --- Admin: usage and the kill switch (P4-05, AIC-10) -----------------------------------------------
+
+const DEFAULT_RANGE_DAYS = 30;
+const MAX_RANGE_DAYS = 366;
+
+const emptyTotals = (): AIUsageTotals => ({
+  requests: 0,
+  inputTokens: 0,
+  outputTokens: 0,
+  costMicros: 0,
+  errors: 0,
+  blocked: 0,
+});
+
+function isoDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * GET /api/admin/ai/usage: requests, tokens, estimated cost, errors and blocked per UTC day, and
+ * today's count against the global cap. Numbers only. Quota refusals never reached the provider
+ * and are left out, like in the global cap.
+ */
+export async function getUsageReport(
+  actor: Actor,
+  query: AIUsageQuery,
+  { now = new Date() }: Pick<Options, "now"> = {},
+): Promise<AIUsageReport> {
+  requireAdmin(actor);
+  const today = startOfUtcDay(now);
+  const to = query.to ? new Date(`${query.to}T00:00:00.000Z`) : today;
+  const from = query.from
+    ? new Date(`${query.from}T00:00:00.000Z`)
+    : new Date(to.getTime() - (DEFAULT_RANGE_DAYS - 1) * DAY_MS);
+  const days = Math.round((to.getTime() - from.getTime()) / DAY_MS) + 1;
+  if (days < 1 || days > MAX_RANGE_DAYS) {
+    throw new ValidationError(`Choose a range of 1 to ${MAX_RANGE_DAYS} days.`, {
+      fields: { from: "Choose a range of 1 to 366 days." },
+    });
+  }
+
+  const [rows, used] = await Promise.all([
+    findUsageByDay(from, new Date(to.getTime() + DAY_MS)),
+    countProviderRequestsSince(today),
+  ]);
+  const byDate = new Map<string, AIUsageTotals>();
+  for (let index = 0; index < days; index += 1) {
+    byDate.set(isoDay(new Date(from.getTime() + index * DAY_MS)), emptyTotals());
+  }
+  const totals = emptyTotals();
+  for (const row of rows) {
+    if (row.status === "QUOTA") continue;
+    const day = byDate.get(isoDay(row.day));
+    if (!day) continue;
+    for (const target of [day, totals]) {
+      target.requests += Number(row.requests);
+      target.inputTokens += Number(row.inputTokens);
+      target.outputTokens += Number(row.outputTokens);
+      target.costMicros += Number(row.costMicros);
+      if (row.status === "ERROR") target.errors += Number(row.requests);
+      if (row.status === "BLOCKED") target.blocked += Number(row.requests);
+    }
+  }
+  return {
+    from: isoDay(from),
+    to: isoDay(to),
+    totals,
+    byDay: [...byDate].map(([date, day]) => ({ date, ...day })),
+    dailyCap: { used, limit: serverEnv.AI_DAILY_REQUEST_CAP },
+  };
+}
+
+/** The switch as the admin screen shows it. */
+export async function getAiSwitch(
+  actor: Actor,
+  { provider = defaultProvider }: Pick<Options, "provider"> = {},
+): Promise<AISwitchState> {
+  requireAdmin(actor);
+  const isSwitchedOffNow = await isSwitchedOff();
+  return {
+    isOn: provider !== null && !isSwitchedOffNow,
+    isConfigured: provider !== null,
+    isSwitchedOff: isSwitchedOffNow,
+  };
+}
+
+/** PUT /api/admin/ai/switch: stored in the database, on top of `AI_ENABLED`; audited. */
+export async function setAiSwitch(
+  actor: Actor,
+  enabled: boolean,
+  options: Pick<Options, "provider"> = {},
+): Promise<AISwitchState> {
+  const admin = requireAdmin(actor);
+  await upsertSetting(SWITCH_KEY, enabled, admin.id);
+  await recordAudit({
+    actorId: admin.id,
+    action: enabled ? "ai.switch_on" : "ai.switch_off",
+    targetType: "setting",
+    targetId: SWITCH_KEY,
+  });
+  return getAiSwitch(actor, options);
 }

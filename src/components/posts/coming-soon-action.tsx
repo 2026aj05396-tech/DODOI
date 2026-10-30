@@ -3,7 +3,7 @@ import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { cn } from "@/lib/utils/cn";
 
 // A post action whose feature is not built yet (DC-21): the designed pill shape in muted colours
-// with a "Soon" pill. Save waits for P1-25, Start as my project for P2, Ask about this for P4.
+// with a "Soon" pill. Save waits for P1-25, Start as my project for P2 (non-tutorial posts).
 
 const SHAPES = {
   /** Where the design has a primary (coral) button. */

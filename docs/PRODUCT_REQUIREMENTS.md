@@ -280,7 +280,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 
 | ID | Requirement |
 |---|---|
-| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29) |
+| NAV-01 | Coming-soon items in Phase 1: Create (tab/button), Community (tab/link), Messages, Journal, notifications bell, "Ask dodoi" pill/card, Follow, "Start as my project", "Ask about this", profile Projects/Posts tabs, following count — **Follow and the following count are live from P2-06;** **Create is live from P2-02** (2026-10-29); **"Ask dodoi" and "Ask about this" are live from P4-02** (2026-10-30) |
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |

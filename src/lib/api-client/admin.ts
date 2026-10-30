@@ -7,6 +7,7 @@ import type {
   UpdateAdminThemeInput,
 } from "@/lib/schemas/admin";
 import type { AdminPost, AdminPostSummary, AdminSkill, AdminTheme } from "@/lib/types/admin";
+import type { AISwitchState, AIUsageReport } from "@/lib/types/ai";
 import type { Paginated } from "@/lib/types/api";
 
 import { postJson, requestJson } from "./request";
@@ -61,4 +62,13 @@ export function updateAdminSkill(id: string, input: UpdateAdminSkillInput): Prom
 
 export function setRelatedSkills(id: string, input: SetRelatedSkillsInput): Promise<AdminSkill> {
   return requestJson("PUT", `/api/admin/skills/${id}/related`, input);
+}
+
+export function getAiUsage(range: { from: string; to: string }): Promise<AIUsageReport> {
+  const query = new URLSearchParams(range);
+  return requestJson("GET", `/api/admin/ai/usage?${query}`);
+}
+
+export function setAiSwitch(enabled: boolean): Promise<AISwitchState> {
+  return requestJson("PUT", "/api/admin/ai/switch", { enabled });
 }

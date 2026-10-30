@@ -75,6 +75,12 @@ const eslintConfig = defineConfig([
     files: ["src/server/**"],
     rules: restrictImports(MODULE_INTERNALS, APP_ROUTES, ALL_COMPONENTS),
   },
+  // The AI evals test the prompt files themselves, which are internal to the `ai` module; going
+  // through the module's index would pull in its database code (P4-06).
+  {
+    files: ["tests/ai-evals/**"],
+    rules: restrictImports(APP_ROUTES, ALL_COMPONENTS),
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

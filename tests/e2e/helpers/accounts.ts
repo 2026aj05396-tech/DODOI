@@ -53,6 +53,11 @@ export function createNotifications(email: string): string {
   return run(["notifications", email]).trim();
 }
 
+/** Gives an existing account one saved companion chat; returns its id. */
+export function createAIConversation(email: string): string {
+  return run(["ai-conversation", email]).trim();
+}
+
 /** A valid email-verification token for an existing account (stands in for the emailed link). */
 export function createVerificationToken(email: string): string {
   return run(["verification-token", email]).trim();
