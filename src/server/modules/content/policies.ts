@@ -5,7 +5,14 @@ import type { Actor } from "@/server/lib/actor";
 // users upload their own avatar (P1-12), post media and journal photos (P2-01). Covers stay
 // admin-only.
 
-const USER_PURPOSES: readonly MediaPurpose[] = ["avatar", "post", "entry", "ai", "help"];
+const USER_PURPOSES: readonly MediaPurpose[] = [
+  "avatar",
+  "post",
+  "entry",
+  "ai",
+  "help",
+  "community",
+];
 
 export function canManageMedia(actor: Actor): boolean {
   return actor?.role === "ADMIN";

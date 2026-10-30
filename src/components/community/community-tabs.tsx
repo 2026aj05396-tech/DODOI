@@ -4,31 +4,32 @@ import { ComingSoonTrigger } from "@/components/layout/coming-soon-trigger";
 import { ComingSoonBadge } from "@/components/ui/coming-soon";
 import { cn } from "@/lib/utils/cn";
 
-// Community tabs (design `1h`): Your circles · Help requests · Sessions. Help requests is live
-// from P3-03; circles (P3-01) and sessions (P3-04) stay coming soon until they are built.
+// Community tabs (design `1h`): Your circles · Help requests · Sessions. Your circles is live from
+// P3-01 and Help requests from P3-03; sessions (P3-04) stays coming soon until it is built.
 
 const TAB =
   "relative flex min-h-11 items-center gap-2 border-b-2 px-1 text-control-lg whitespace-nowrap";
+const ACTIVE = "border-foreground font-bold text-foreground";
+const IDLE = "border-transparent text-muted-foreground hover:text-foreground";
 
-export function CommunityTabs() {
+export function CommunityTabs({ active }: { active: "circles" | "help" }) {
   return (
     <nav aria-label="Community" className="overflow-x-auto border-b border-border">
       <ul className="flex gap-7">
         <li>
-          <ComingSoonTrigger
-            label="Your circles"
-            hasVisibleLabel
-            className={cn(TAB, "border-transparent text-muted-foreground")}
+          <Link
+            href="/community/circles"
+            aria-current={active === "circles" ? "page" : undefined}
+            className={cn(TAB, active === "circles" ? ACTIVE : IDLE)}
           >
             Your circles
-            <ComingSoonBadge size="dot" decorative className="absolute top-1.5 -right-2.5" />
-          </ComingSoonTrigger>
+          </Link>
         </li>
         <li>
           <Link
             href="/community"
-            aria-current="page"
-            className={cn(TAB, "border-foreground font-bold text-foreground")}
+            aria-current={active === "help" ? "page" : undefined}
+            className={cn(TAB, active === "help" ? ACTIVE : IDLE)}
           >
             Help requests
           </Link>

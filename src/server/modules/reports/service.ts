@@ -30,6 +30,13 @@ import { recordAudit } from "@/server/modules/admin";
 import { getAnswersForModeration, isOwnAnswer } from "@/server/modules/ai";
 import { getCommentsForModeration, setCommentHidden } from "@/server/modules/comments";
 import {
+  getCommunitiesForModeration,
+  getCommunityPostsForModeration,
+  getReportableCommunityTarget,
+  setCommunityHidden,
+  setCommunityPostHidden,
+} from "@/server/modules/communities";
+import {
   getPostsForModeration,
   getPublishedPostAuthor,
   setPostHidden,
@@ -139,6 +146,23 @@ async function resolveTarget(user: AuthenticatedActor, input: CreateReportInput)
     }
     return { targetType: input.targetType, targetId: target.id };
   }
+  if (input.targetType === "COMMUNITY" || input.targetType === "COMMUNITY_POST") {
+    // Only what the reporter can see (not hidden, not by someone blocked), and not their own.
+    const isCommunity = input.targetType === "COMMUNITY";
+    const target = await getReportableCommunityTarget(
+      user,
+      isCommunity ? "COMMUNITY" : "POST",
+      input.targetId,
+    );
+    if (!target) throw notFound();
+    if (target.authorId === user.id) {
+      throw new UnprocessableError(
+        isCommunity ? "You can't report your own community." : "You can't report your own post.",
+        { code: "SELF_REPORT" },
+      );
+    }
+    return { targetType: input.targetType, targetId: target.id };
+  }
   if (input.targetType === "AI_MESSAGE") {
     // Only an answer in the reporter's own chat (AIC-06); anything else looks like it isn't there.
     if (!(await isOwnAnswer(user, input.targetId))) throw notFound();
@@ -187,17 +211,29 @@ export async function listReportGroups(
   const targets = page.map(({ targetType, targetId }) => ({ targetType, targetId }));
   const idsOf = (type: ReportTargetType) =>
     targets.flatMap((t) => (t.targetType === type ? t.targetId : []));
-  const [reports, skills, profiles, posts, comments, answers, helpRequests, helpResponses] =
-    await Promise.all([
-      findReportsForTargets(targets, [...statuses]),
-      getSkillsForModeration(idsOf("SKILL")),
-      getProfilesForModeration(idsOf("PROFILE")),
-      getPostsForModeration(idsOf("POST")),
-      getCommentsForModeration(idsOf("COMMENT")),
-      getAnswersForModeration(idsOf("AI_MESSAGE")),
-      getHelpRequestsForModeration(idsOf("HELP_REQUEST")),
-      getHelpResponsesForModeration(idsOf("HELP_RESPONSE")),
-    ]);
+  const [
+    reports,
+    skills,
+    profiles,
+    posts,
+    comments,
+    answers,
+    helpRequests,
+    helpResponses,
+    communities,
+    communityPosts,
+  ] = await Promise.all([
+    findReportsForTargets(targets, [...statuses]),
+    getSkillsForModeration(idsOf("SKILL")),
+    getProfilesForModeration(idsOf("PROFILE")),
+    getPostsForModeration(idsOf("POST")),
+    getCommentsForModeration(idsOf("COMMENT")),
+    getAnswersForModeration(idsOf("AI_MESSAGE")),
+    getHelpRequestsForModeration(idsOf("HELP_REQUEST")),
+    getHelpResponsesForModeration(idsOf("HELP_RESPONSE")),
+    getCommunitiesForModeration(idsOf("COMMUNITY")),
+    getCommunityPostsForModeration(idsOf("COMMUNITY_POST")),
+  ]);
 
   const items = page.map((group): ReportGroup => {
     const mine = reports.filter(
@@ -214,6 +250,10 @@ export async function listReportGroups(
       group.targetType === "HELP_REQUEST" ? helpRequests.get(group.targetId) : undefined;
     const helpResponse =
       group.targetType === "HELP_RESPONSE" ? helpResponses.get(group.targetId) : undefined;
+    const community =
+      group.targetType === "COMMUNITY" ? communities.get(group.targetId) : undefined;
+    const communityPost =
+      group.targetType === "COMMUNITY_POST" ? communityPosts.get(group.targetId) : undefined;
     const isHidden = skill
       ? skill.status === "HIDDEN"
       : (profile?.isHidden ??
@@ -221,6 +261,8 @@ export async function listReportGroups(
         comment?.isHidden ??
         helpRequest?.isHidden ??
         helpResponse?.isHidden ??
+        community?.isHidden ??
+        communityPost?.isHidden ??
         false);
     return {
       reportId: mine[0]?.id ?? "",
@@ -255,22 +297,36 @@ export async function listReportGroups(
                     detail: "Help request",
                     isHidden,
                   }
-                : helpResponse
+                : community
                   ? {
-                      label: helpResponse.body.slice(0, 140),
-                      href: isHidden ? null : `/community/help/${helpResponse.requestId}`,
-                      detail: "Help response",
+                      label: community.name,
+                      href: isHidden ? null : `/community/circles/${community.slug}`,
+                      detail: "Community",
                       isHidden,
                     }
-                  : group.targetType === "AI_MESSAGE"
+                  : communityPost
                     ? {
-                        // Only the reported answer; its chat is gone after 30 days or when deleted.
-                        label: answer?.slice(0, 400) ?? null,
-                        href: null,
-                        detail: "AI answer",
-                        isHidden: false,
+                        label: communityPost.body.slice(0, 140),
+                        href: isHidden ? null : `/community/circles/${communityPost.slug}`,
+                        detail: communityPost.isReply ? "Community reply" : "Community post",
+                        isHidden,
                       }
-                    : { label: null, href: null, detail: null, isHidden: false },
+                    : helpResponse
+                      ? {
+                          label: helpResponse.body.slice(0, 140),
+                          href: isHidden ? null : `/community/help/${helpResponse.requestId}`,
+                          detail: "Help response",
+                          isHidden,
+                        }
+                      : group.targetType === "AI_MESSAGE"
+                        ? {
+                            // Only the reported answer; its chat is gone after 30 days or when deleted.
+                            label: answer?.slice(0, 400) ?? null,
+                            href: null,
+                            detail: "AI answer",
+                            isHidden: false,
+                          }
+                        : { label: null, href: null, detail: null, isHidden: false },
       reportCount: group._count._all,
       reasons,
       notes: mine.flatMap((report) =>
@@ -308,6 +364,10 @@ async function setHidden(target: Target, hidden: boolean): Promise<void> {
       return setHelpRequestHidden(target.targetId, hidden);
     case "HELP_RESPONSE":
       return setHelpResponseHidden(target.targetId, hidden);
+    case "COMMUNITY":
+      return setCommunityHidden(target.targetId, hidden);
+    case "COMMUNITY_POST":
+      return setCommunityPostHidden(target.targetId, hidden);
     case "AI_MESSAGE":
       throw new UnprocessableError("An AI answer can't be hidden. Dismiss its reports instead.", {
         code: "NOT_HIDEABLE",
@@ -323,6 +383,8 @@ const AUDIT_TARGET = {
   AI_MESSAGE: "ai_message",
   HELP_REQUEST: "help_request",
   HELP_RESPONSE: "help_response",
+  COMMUNITY: "community",
+  COMMUNITY_POST: "community_post",
 } as const;
 
 /**

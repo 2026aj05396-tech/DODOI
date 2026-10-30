@@ -28,7 +28,15 @@ const NOTE_MAX = 500;
 
 export type ReportTarget = {
   targetType:
-    "SKILL" | "PROFILE" | "POST" | "COMMENT" | "AI_MESSAGE" | "HELP_REQUEST" | "HELP_RESPONSE";
+    | "SKILL"
+    | "PROFILE"
+    | "POST"
+    | "COMMENT"
+    | "AI_MESSAGE"
+    | "HELP_REQUEST"
+    | "HELP_RESPONSE"
+    | "COMMUNITY"
+    | "COMMUNITY_POST";
   /** Skill id, username for a profile, post id or comment id. */
   targetId: string;
   /** "this profile", "this skill", "this comment", "this answer" (used in the title). */

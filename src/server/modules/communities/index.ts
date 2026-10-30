@@ -1,0 +1,25 @@
+// Public API of the communities module (CODE_QUALITY §3.2): communities and their discussions (P3-01).
+export {
+  COMMUNITY_CREATE_RATE_LIMIT,
+  COMMUNITY_EDIT_WINDOW_MS,
+  COMMUNITY_OWNED_LIMIT,
+  COMMUNITY_POST_RATE_LIMIT,
+  createCommunity,
+  createCommunityPost,
+  deleteCommunity,
+  deleteCommunityPost,
+  getCommunitiesForModeration,
+  getCommunityBySlug,
+  getCommunityManageView,
+  getCommunityPostsForModeration,
+  getReportableCommunityTarget,
+  joinCommunity,
+  leaveCommunity,
+  listCommunities,
+  listCommunityPosts,
+  moderateCommunity,
+  setCommunityHidden,
+  setCommunityPostHidden,
+  updateCommunityPost,
+} from "./service";
+export { removeUserFromCommunities as deleteCommunityContentOfUser } from "./repository";

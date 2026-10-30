@@ -106,6 +106,9 @@ enum ReportTargetType {
   /// A help request or one of its responses (P3-03).
   HELP_REQUEST
   HELP_RESPONSE
+  /// A community or one of its discussion posts or replies (P3-01).
+  COMMUNITY
+  COMMUNITY_POST
 }
 
 enum ReportReason {
@@ -182,6 +185,10 @@ model User {
   notificationPreferences NotificationPreference[]
   helpRequests            HelpRequest[]
   helpResponses           HelpResponse[]
+  communitiesCreated      Community[]
+  communityMemberships    CommunityMember[]
+  communityPosts          CommunityPost[]
+  communityLogEntries     CommunityModerationLog[]
   blocking                Block[]                  @relation("Blocking")
   blockedBy               Block[]                  @relation("BlockedBy")
 
@@ -287,6 +294,7 @@ model Skill {
   postSkills   PostSkill[]
   projects     Project[]
   helpRequests HelpRequest[]
+  communities  Community[]
   relatedFrom  SkillRelation[] @relation("SkillRelationFrom")
   relatedTo    SkillRelation[] @relation("SkillRelationTo")
 
@@ -440,15 +448,16 @@ model MediaAsset {
   altText     String?   @map("alt_text") @db.VarChar(300)
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  owner         User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  postMedia     PostMedia[]
-  stepMedia     PostStep[]
-  profileAvatar Profile?            @relation("ProfileAvatar")
-  skillCovers   Skill[]             @relation("SkillCover")
-  themeCovers   Theme[]             @relation("ThemeCover")
-  entryMedia    ProjectEntryMedia[]
-  aiMessages    AIMessage[]
-  helpMedia     HelpRequestMedia[]
+  owner          User?                @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  postMedia      PostMedia[]
+  stepMedia      PostStep[]
+  profileAvatar  Profile?             @relation("ProfileAvatar")
+  skillCovers    Skill[]              @relation("SkillCover")
+  themeCovers    Theme[]              @relation("ThemeCover")
+  entryMedia     ProjectEntryMedia[]
+  aiMessages     AIMessage[]
+  helpMedia      HelpRequestMedia[]
+  communityMedia CommunityPostMedia[]
 
   @@index([ownerId])
   @@map("media_asset")
@@ -1138,4 +1147,111 @@ model HelpResponse {
   @@index([requestId, createdAt])
   @@index([authorId])
   @@map("help_response")
+}
+
+enum CommunityRole {
+  OWNER
+  MODERATOR
+  MEMBER
+}
+
+/// A public community around one skill (COM-01). Names are unique case-insensitively.
+model Community {
+  id             String    @id @default(cuid())
+  name           String    @db.VarChar(40)
+  /// Lower-cased name without extra spaces: the uniqueness key (COM-02).
+  normalizedName String    @unique @map("normalized_name") @db.VarChar(160)
+  slug           String    @unique @db.VarChar(60)
+  skillId        String    @map("skill_id")
+  description    String    @db.VarChar(300)
+  /// Up to 5 rules of up to 150 characters, checked in the service.
+  rules          String[]
+  /// Null once the creator's account is deleted and the community was handed over (COM-08).
+  createdById    String?   @map("created_by_id")
+  /// Hidden after a report (COM-06): not found for anyone.
+  hiddenAt       DateTime? @map("hidden_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  createdBy User?                    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  skill     Skill                    @relation(fields: [skillId], references: [id], onDelete: Restrict)
+  members   CommunityMember[]
+  posts     CommunityPost[]
+  log       CommunityModerationLog[]
+
+  @@index([skillId, createdAt(sort: Desc)])
+  @@index([createdById])
+  @@map("community")
+}
+
+model CommunityMember {
+  communityId String        @map("community_id")
+  userId      String        @map("user_id")
+  role        CommunityRole @default(MEMBER)
+  /// Set when a moderator removed the member: they cannot rejoin until the owner allows it.
+  removedAt   DateTime?     @map("removed_at")
+  joinedAt    DateTime      @default(now()) @map("joined_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([communityId, userId])
+  @@index([userId])
+  @@map("community_member")
+}
+
+/// A discussion post, or a reply when `parentId` is set (one level only, COM-05).
+model CommunityPost {
+  id          String    @id @default(cuid())
+  communityId String    @map("community_id")
+  authorId    String?   @map("author_id")
+  parentId    String?   @map("parent_id")
+  body        String    @db.VarChar(2000)
+  hiddenAt    DateTime? @map("hidden_at")
+  editedAt    DateTime? @map("edited_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  /// The newest reply or the post itself, so the list shows newest activity first.
+  activityAt  DateTime  @default(now()) @map("activity_at")
+
+  community Community            @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author    User?                @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  parent    CommunityPost?       @relation("CommunityReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   CommunityPost[]      @relation("CommunityReplies")
+  photos    CommunityPostMedia[]
+
+  @@index([communityId, activityAt(sort: Desc)])
+  @@index([parentId])
+  @@index([authorId])
+  @@map("community_post")
+}
+
+model CommunityPostMedia {
+  postId   String @map("post_id")
+  mediaId  String @map("media_id")
+  position Int
+
+  post  CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset    @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([postId, position])
+  @@unique([postId, mediaId])
+  @@index([mediaId])
+  @@map("community_post_media")
+}
+
+/// Who did what in a community (COM-06). Never holds content.
+model CommunityModerationLog {
+  id          String   @id @default(cuid())
+  communityId String   @map("community_id")
+  actorId     String?  @map("actor_id")
+  /// post.hide, post.restore, post.delete, member.remove, member.allow, role.change
+  action      String   @db.VarChar(40)
+  targetType  String   @map("target_type") @db.VarChar(20)
+  targetId    String   @map("target_id") @db.VarChar(40)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([communityId, createdAt(sort: Desc)])
+  @@map("community_moderation_log")
 }

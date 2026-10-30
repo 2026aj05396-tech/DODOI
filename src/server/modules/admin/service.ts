@@ -23,7 +23,9 @@ export type AuditEntry = {
     | "ai_message"
     | "setting"
     | "help_request"
-    | "help_response";
+    | "help_response"
+    | "community"
+    | "community_post";
   targetId: string;
   /** Changed field names and similar; never sensitive content. */
   metadata?: Prisma.InputJsonValue;

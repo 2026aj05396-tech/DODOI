@@ -14,12 +14,12 @@ export const metadata: Metadata = {
 };
 
 // Community (P3-03, design `1h`; tablet and desktop built from the system): the Help requests tab.
-// Your circles (P3-01) and Sessions (P3-04) stay coming soon until they are built.
+// Sessions (P3-04) stays coming soon until it is built; Your circles (P3-01) lives at /community/circles.
 export default function CommunityPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5 px-5 pt-4 pb-10 md:px-7 md:pt-8 xl:px-10">
       <h1 className="text-greeting text-foreground md:text-greeting-web">Community</h1>
-      <CommunityTabs />
+      <CommunityTabs active="help" />
       <Suspense fallback={<HelpSkeleton />}>
         <HelpContent />
       </Suspense>
