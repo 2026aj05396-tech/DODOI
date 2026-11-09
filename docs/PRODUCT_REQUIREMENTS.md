@@ -284,7 +284,7 @@ CONFIRMED: the Phase 1 UI keeps the full navigation layout from the design, with
 | NAV-02 | A coming-soon item never performs its future action or calls an unbuilt API |
 | NAV-03 | Coming-soon items are perceivable and accessible: `aria-disabled="true"` plus an accessible explanation |
 | NAV-04 | Coming-soon items are **not tappable** (CONFIRMED, DC-19/DC-21). Cards/sections: dashed border, muted text, butter "Coming soon" pill. Nav tabs, icons and small buttons: muted, small butter "Soon" pill, tooltip "Coming soon" only |
-| NAV-05 | Desktop right rail in Phase 1 (CONFIRMED, DC-20/DC-22): "New to you" card; "Help other makers" coming-soon card showing the user's can-help skills as chips; "Live sessions" coming-soon card. Post detail uses the full sidebar in P1 (DC-23) |
+| NAV-05 | Desktop right rail in Phase 1 (CONFIRMED, DC-20/DC-22): "New to you" card; "Help other makers" coming-soon card showing the user's can-help skills as chips; "Live sessions" coming-soon card (live from P3-07: **Schedule a session**). Post detail uses the full sidebar in P1 (DC-23) |
 
 ### 5.11 Reporting in Phase 1 (RPT) — CONFIRMED (OD-12)
 
@@ -475,6 +475,7 @@ Detailed specs will be written before each phase begins. Source: master doc §5.
 | SES-03 | Times are stored in UTC and shown in the viewer's own time zone (from the browser), with **IST** shown beside it when the viewer is somewhere else. Past times cannot be proposed; a new time must be at least 1 hour ahead |
 | SES-04 | In-app notifications (no email or push in this phase): proposed, accepted, declined, rescheduled, cancelled, and a reminder one hour before. Types `SESSION_*` |
 | SES-05 | A shown link carries the note "Opens another site. Only join if you're comfortable"; sessions are never recorded or monitored by dodoi. Report the person (profile report) for misuse; the link is removed from the app 24 hours after the session ends |
+| SES-06 | A member can start a session without first opening a profile, conversation or help reply: **Schedule a session** (Community → Sessions and the desktop right rail) opens a person picker (search, or suggestions from follows and followers) and then the proposal form. Sessions has its own item in the sidebar and tablet rail; phones use the Sessions tab under Community. Proposals waiting for your answer are listed first. The picker lists only members who can be messaged (PO to confirm). Added 2026-11-04 (P3-07) |
 
 **Use what you have (USE)**
 

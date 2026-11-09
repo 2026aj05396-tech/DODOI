@@ -15,6 +15,7 @@ import {
   HOME,
   MESSAGES,
   SAVED,
+  SESSIONS,
   isActivePath,
   profileNavItem,
   type NavItem,
@@ -84,6 +85,7 @@ export function IconRailView({
       <RailLink item={HOME} pathname={pathname} />
       <RailLink item={EXPLORE} pathname={pathname} />
       <RailLink item={COMMUNITY} pathname={pathname} />
+      <RailLink item={SESSIONS} pathname={pathname} />
       <RailLink
         item={MESSAGES}
         pathname={pathname}

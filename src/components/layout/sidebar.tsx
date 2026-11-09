@@ -19,6 +19,7 @@ import {
   JOURNAL,
   MESSAGES,
   SAVED,
+  SESSIONS,
   isActivePath,
   profileNavItem,
   type NavItem,
@@ -110,6 +111,7 @@ export function SidebarView({
       <SidebarLink item={HOME} pathname={pathname} />
       <SidebarLink item={EXPLORE} pathname={pathname} />
       <SidebarLink item={COMMUNITY} pathname={pathname} />
+      <SidebarLink item={SESSIONS} pathname={pathname} />
       <SidebarLink item={MESSAGES} pathname={pathname} badge={<UnreadDot className="ml-auto" />} />
       <SidebarLink item={SAVED} pathname={pathname} />
       <SidebarLink item={JOURNAL} pathname={pathname} />

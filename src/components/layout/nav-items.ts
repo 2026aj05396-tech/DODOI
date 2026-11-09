@@ -1,5 +1,6 @@
 import {
   Bookmark,
+  CalendarClock,
   House,
   MessageSquare,
   NotebookPen,
@@ -38,6 +39,13 @@ export const COMMUNITY: NavItem = {
   icon: Users,
   href: "/community",
 };
+/** Live from P3-04; reachable from the sidebar and rail since the sessions entry point change. */
+export const SESSIONS: NavItem = {
+  key: "sessions",
+  label: "Sessions",
+  icon: CalendarClock,
+  href: "/community/sessions",
+};
 /** Live from P3-02: direct messages (F-29). */
 export const MESSAGES: NavItem = {
   key: "messages",
@@ -66,8 +74,12 @@ export function profileNavItem(username: string | null): NavItem {
   };
 }
 
-/** True when `pathname` is the item's page or one of its sub-pages. */
+/**
+ * True when `pathname` is the item's page or one of its sub-pages. Community does not light up on
+ * Sessions pages, which have their own entry.
+ */
 export function isActivePath(pathname: string, href: string | undefined): boolean {
   if (!href) return false;
+  if (href === COMMUNITY.href && isActivePath(pathname, SESSIONS.href)) return false;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
