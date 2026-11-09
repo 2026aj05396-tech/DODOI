@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { listSessions } from "@/lib/api-client/sessions";
 import type { SessionView } from "@/lib/types/sessions";
 
+import { ScheduleSessionButton } from "./schedule-session-button";
 import { SessionCard } from "./session-card";
 
 // The Sessions tab (F-30 step 4, SES-02): upcoming first, then past. Each card carries the buttons
@@ -22,7 +23,7 @@ const EMPTY: Record<Scope, { title: string; description: string }> = {
   upcoming: {
     title: "No sessions coming up",
     description:
-      "Propose one from a maker's profile, a conversation or a reply to your help request.",
+      "Use Schedule a session to pick a maker, or propose one from a profile, a conversation or a reply to your help request.",
   },
   past: {
     title: "No past sessions yet",
@@ -47,16 +48,37 @@ export function SessionsView({
       : { staleTime: 0 }),
   });
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  // Proposals waiting for your answer come first, so nobody has to hunt for them.
+  const needsAnswer = scope === "upcoming" ? items.filter((session) => session.canRespond) : [];
+  const rest = needsAnswer.length > 0 ? items.filter((session) => !session.canRespond) : items;
+
+  function renderList(list: SessionView[]) {
+    return (
+      <ul className="grid gap-3 md:grid-cols-2">
+        {list.map((session) => (
+          <li key={session.id}>
+            <SessionCard
+              session={session}
+              onChanged={() => void queryClient.invalidateQueries({ queryKey: ["sessions"] })}
+            />
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5">
-      <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
-        <ToggleChip pressed={scope === "upcoming"} onPressedChange={() => setScope("upcoming")}>
-          Upcoming
-        </ToggleChip>
-        <ToggleChip pressed={scope === "past"} onPressedChange={() => setScope("past")}>
-          Past
-        </ToggleChip>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="group" aria-label="Show" className="flex flex-wrap gap-2">
+          <ToggleChip pressed={scope === "upcoming"} onPressedChange={() => setScope("upcoming")}>
+            Upcoming
+          </ToggleChip>
+          <ToggleChip pressed={scope === "past"} onPressedChange={() => setScope("past")}>
+            Past
+          </ToggleChip>
+        </div>
+        <ScheduleSessionButton />
       </div>
 
       {query.isPending ? (
@@ -77,16 +99,21 @@ export function SessionsView({
           description={EMPTY[scope].description}
         />
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2">
-          {items.map((session) => (
-            <li key={session.id}>
-              <SessionCard
-                session={session}
-                onChanged={() => void queryClient.invalidateQueries({ queryKey: ["sessions"] })}
-              />
-            </li>
-          ))}
-        </ul>
+        <>
+          {needsAnswer.length > 0 ? (
+            <section aria-labelledby="needs-answer" className="flex flex-col gap-3">
+              <h2 id="needs-answer" className="text-section text-foreground">
+                Needs your answer
+              </h2>
+              {renderList(needsAnswer)}
+            </section>
+          ) : null}
+          {rest.length > 0 ? (
+            <section aria-label={needsAnswer.length > 0 ? "Other sessions" : undefined}>
+              {renderList(rest)}
+            </section>
+          ) : null}
+        </>
       )}
 
       {query.hasNextPage ? (

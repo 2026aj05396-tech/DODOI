@@ -50,11 +50,15 @@ async function FormContent({ searchParams }: { searchParams: SearchParams }) {
   const profile = await orNotFound(getProfile(actor, username));
   if (profile.isPrivate ? false : profile.isOwner) redirect("/community/sessions");
   const helpRequestId = first(query.request).trim();
+  // Members who never set a display name show their username as the name: say it once.
+  const showUsername = profile.displayName.trim().toLowerCase() !== profile.username.toLowerCase();
   return (
     <>
       <p className="text-body text-foreground">
-        With <span className="font-bold">{profile.displayName}</span>{" "}
-        <span className="text-foreground-secondary">@{profile.username}</span>
+        With <span className="font-bold">{profile.displayName}</span>
+        {showUsername ? (
+          <span className="text-foreground-secondary"> @{profile.username}</span>
+        ) : null}
       </p>
       <ProposeSessionForm
         invitee={{ username: profile.username, displayName: profile.displayName }}

@@ -335,8 +335,10 @@ describe("creative sessions", () => {
     it("cancel what is still open between the two people", async () => {
       const asha = await member();
       const ravi = await member();
-      const open = await propose(asha, ravi, { startsAt: at(40) });
-      const accepted = await propose(ravi, asha, { startsAt: at(50) });
+      // A block uses the real clock, so these sessions must be ahead of today, not of the fixed NOW.
+      const inRealHours = (hours: number) => new Date(Date.now() + hours * HOUR).toISOString();
+      const open = await propose(asha, ravi, { startsAt: inRealHours(40) });
+      const accepted = await propose(ravi, asha, { startsAt: inRealHours(50) });
       await respondToSession(asha.actor, accepted.id, { action: "ACCEPT" }, { now: NOW });
 
       await blockUser(asha.actor, ravi.username);
